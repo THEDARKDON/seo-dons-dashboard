@@ -15,7 +15,7 @@ export function Header() {
             Welcome back, {user?.firstName || 'User'}!
           </h2>
           <p className="text-sm text-muted-foreground">
-            Here's what's happening with your sales today.
+            Here&apos;s what&apos;s happening with your sales today.
           </p>
         </div>
 

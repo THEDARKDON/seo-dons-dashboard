@@ -62,7 +62,7 @@ export function DealDeleteButton({ dealId, dealName }: DealDeleteButtonProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Deal</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{dealName}"? This action cannot be undone.
+              Are you sure you want to delete &quot;{dealName}&quot;? This action cannot be undone.
               All associated commissions and activities will remain but will no longer be linked to this deal.
             </AlertDialogDescription>
           </AlertDialogHeader>

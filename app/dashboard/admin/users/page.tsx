@@ -235,7 +235,7 @@ DO UPDATE SET
   caller_id_number = EXCLUDED.caller_id_number;`}
           </pre>
           <p className="text-sm text-muted-foreground mt-4">
-            Replace <code>user-id-here</code> with the user's ID from the table above.
+            Replace <code>user-id-here</code> with the user&apos;s ID from the table above.
           </p>
         </CardContent>
       </Card>

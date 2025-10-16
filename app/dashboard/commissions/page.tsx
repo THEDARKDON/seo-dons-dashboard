@@ -182,7 +182,7 @@ export default async function CommissionsPage() {
           <ul className="space-y-2 text-sm text-blue-900">
             <li>• <strong>First Month:</strong> 50% of deal value</li>
             <li>• <strong>Ongoing:</strong> 10% per month (recurring)</li>
-            <li>• Commissions are automatically created when deals are marked as "Closed Won"</li>
+            <li>• Commissions are automatically created when deals are marked as &quot;Closed Won&quot;</li>
             <li>• Payouts are processed monthly after approval</li>
           </ul>
         </CardContent>

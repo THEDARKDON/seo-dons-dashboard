@@ -200,7 +200,7 @@ export default async function AchievementsPage() {
           {availableAchievements.length === 0 ? (
             <Card className="md:col-span-3">
               <CardContent className="pt-6 text-center text-muted-foreground">
-                You've earned all available achievements! Great work! 🎉
+                You&apos;ve earned all available achievements! Great work! 🎉
               </CardContent>
             </Card>
           ) : (
