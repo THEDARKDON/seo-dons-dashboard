@@ -9,8 +9,8 @@ const nextConfig = {
       bodySizeLimit: '2mb',
     },
   },
-  // Disable output file tracing to prevent manifest errors
-  outputFileTracing: false,
+  // Use standalone output for better Vercel compatibility
+  output: 'standalone',
 }
 
 module.exports = nextConfig
