@@ -6,6 +6,7 @@ import { formatDateTime } from '@/lib/utils';
 import { Phone, Calendar, Mail, MessageSquare } from 'lucide-react';
 
 interface DealActivitiesProps {
+  dealId?: string;
   activities: any[];
 }
 
@@ -25,7 +26,7 @@ const outcomeColors = {
   not_interested: 'destructive',
 } as const;
 
-export function DealActivities({ activities }: DealActivitiesProps) {
+export function DealActivities({ dealId, activities }: DealActivitiesProps) {
   if (activities.length === 0) {
     return (
       <Card>
