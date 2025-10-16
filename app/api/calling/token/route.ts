@@ -6,6 +6,8 @@ import { createClient } from '@/lib/supabase/server';
 const AccessToken = require('twilio').jwt.AccessToken;
 const VoiceGrant = AccessToken.VoiceGrant;
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const { userId } = await auth();

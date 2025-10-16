@@ -30,7 +30,8 @@
       "Bash(git remote add:*)",
       "Bash(git branch:*)",
       "Bash(git push:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(npx vercel:*)"
     ],
     "deny": [],
     "ask": []
