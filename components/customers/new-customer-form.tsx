@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useUser } from '@clerk/nextjs';
 import { supabase } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,6 +11,7 @@ import Link from 'next/link';
 
 export function NewCustomerForm() {
   const router = useRouter();
+  const { user: clerkUser } = useUser();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -18,7 +20,26 @@ export function NewCustomerForm() {
     setLoading(true);
     setError('');
 
+    if (!clerkUser) {
+      setError('You must be logged in to create customers');
+      setLoading(false);
+      return;
+    }
+
     const formData = new FormData(e.currentTarget);
+
+    // Get the current user's Supabase ID
+    const { data: currentUser } = await supabase
+      .from('users')
+      .select('id')
+      .eq('clerk_id', clerkUser.id)
+      .single();
+
+    if (!currentUser) {
+      setError('User not found in database. Please contact support.');
+      setLoading(false);
+      return;
+    }
 
     const { error: submitError } = await supabase.from('customers').insert({
       first_name: formData.get('first_name') as string,
@@ -37,6 +58,8 @@ export function NewCustomerForm() {
       linkedin_url: formData.get('linkedin_url') as string || null,
       notes: formData.get('notes') as string || null,
       status: 'active',
+      owned_by: currentUser.id,
+      created_by: currentUser.id,
     });
 
     if (submitError) {

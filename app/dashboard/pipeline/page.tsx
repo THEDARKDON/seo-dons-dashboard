@@ -21,8 +21,8 @@ async function getPipelineData(userId: string) {
       return { deals: [] };
     }
 
-    // Get deals (managers/admins see all, BDRs see only their own)
-    const query = supabase
+    // Get deals - BDRs/SDRs see only their own, managers/admins see all
+    let query = supabase
       .from('deals')
       .select(`
         *,
@@ -32,9 +32,9 @@ async function getPipelineData(userId: string) {
       .order('stage_position', { ascending: true })
       .order('created_at', { ascending: false });
 
-    // Apply filter based on role
+    // Filter for BDRs/SDRs only - managers and admins see everything
     if (user.role === 'bdr') {
-      query.eq('assigned_to', user.id);
+      query = query.eq('assigned_to', user.id);
     }
 
     const { data: deals } = await query;

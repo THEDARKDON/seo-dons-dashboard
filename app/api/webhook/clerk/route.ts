@@ -70,29 +70,36 @@ export async function POST(req: NextRequest) {
   const eventType = evt.type
   const userData = evt.data
 
+  console.log('📥 Clerk Webhook Received:', eventType)
+  console.log('👤 User Data:', JSON.stringify(userData, null, 2))
+
   try {
     switch (eventType) {
       case 'user.created':
-        await handleUserCreated(userData)
+        const createdUser = await handleUserCreated(userData)
+        console.log('✅ User created successfully:', createdUser?.clerk_id)
         break
 
       case 'user.updated':
-        await handleUserUpdated(userData)
+        const updatedUser = await handleUserUpdated(userData)
+        console.log('✅ User updated successfully:', updatedUser?.clerk_id)
         break
 
       case 'user.deleted':
-        await handleUserDeleted(userData)
+        const deletedUser = await handleUserDeleted(userData)
+        console.log('✅ User deleted successfully:', deletedUser?.clerk_id)
         break
 
       default:
-        console.log(`Unhandled event type: ${eventType}`)
+        console.log(`⚠️ Unhandled event type: ${eventType}`)
     }
 
-    return NextResponse.json({ received: true })
-  } catch (error) {
-    console.error('Webhook processing error:', error)
+    return NextResponse.json({ received: true, event: eventType })
+  } catch (error: any) {
+    console.error('❌ Webhook processing error:', error)
+    console.error('Error details:', error.message, error.details)
     return NextResponse.json(
-      { error: 'Processing failed' },
+      { error: 'Processing failed', details: error.message },
       { status: 500 }
     )
   }

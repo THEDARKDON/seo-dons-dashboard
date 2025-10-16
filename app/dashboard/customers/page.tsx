@@ -2,14 +2,27 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { createClient } from '@/lib/supabase/server';
+import { auth } from '@clerk/nextjs/server';
 import { formatDate } from '@/lib/utils';
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
 
-async function getCustomers() {
+async function getCustomers(userId: string) {
   const supabase = await createClient();
 
-  const { data: customers } = await supabase
+  // Get user's Supabase ID and role
+  const { data: user } = await supabase
+    .from('users')
+    .select('id, role')
+    .eq('clerk_id', userId)
+    .single();
+
+  if (!user) {
+    return [];
+  }
+
+  // Build query - BDRs see only their customers, managers/admins see all
+  let query = supabase
     .from('customers')
     .select(`
       *,
@@ -17,11 +30,24 @@ async function getCustomers() {
     `)
     .order('created_at', { ascending: false });
 
+  // Filter for BDRs only - managers and admins see everything
+  if (user.role === 'bdr') {
+    query = query.eq('owned_by', user.id);
+  }
+
+  const { data: customers } = await query;
+
   return customers || [];
 }
 
 export default async function CustomersPage() {
-  const customers = await getCustomers();
+  const { userId } = await auth();
+
+  if (!userId) {
+    return <div>Please sign in</div>;
+  }
+
+  const customers = await getCustomers(userId);
 
   // Calculate stats for each customer
   const customersWithStats = customers.map((customer) => {

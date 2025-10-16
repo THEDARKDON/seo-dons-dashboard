@@ -22,7 +22,7 @@ async function getLeadsData(userId: string) {
       return { leads: [], stats: { total: 0, new: 0, contacted: 0, qualified: 0, converted: 0 } };
     }
 
-    // Get leads (managers/admins see all, BDRs see only their own)
+    // Get leads - BDRs/SDRs see only their own, managers/admins see all
     let query = supabase
       .from('leads')
       .select(`
@@ -31,7 +31,7 @@ async function getLeadsData(userId: string) {
       `)
       .order('created_at', { ascending: false });
 
-    // Apply filter based on role
+    // Filter for BDRs/SDRs only - managers and admins see everything
     if (user.role === 'bdr') {
       query = query.eq('assigned_to', user.id);
     }
