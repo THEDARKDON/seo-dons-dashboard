@@ -9,6 +9,8 @@ const nextConfig = {
       bodySizeLimit: '2mb',
     },
   },
+  // Disable output file tracing to prevent manifest errors
+  outputFileTracing: false,
 }
 
 module.exports = nextConfig
