@@ -8,10 +8,10 @@ export default async function DebugPage() {
   // Check what Clerk gives us
   const clerkUserId = userId;
 
-  // Try to find user in Supabase
+  // Try to find user in Supabase - avoid fetching problematic fields
   const { data: user, error } = await supabase
     .from('users')
-    .select('*')
+    .select('clerk_id, email, role, is_active, created_at')
     .eq('clerk_id', userId)
     .single();
 
@@ -19,7 +19,7 @@ export default async function DebugPage() {
   const { data: allUsers } = await supabase
     .from('users')
     .select('clerk_id, email, role, is_active')
-    .limit(10);
+    .limit(20);
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-4xl">
