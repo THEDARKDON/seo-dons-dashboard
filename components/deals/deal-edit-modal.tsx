@@ -6,7 +6,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/lib/supabase/client';
 import { toast } from 'sonner';
@@ -90,7 +89,12 @@ export function DealEditModal({ open, onOpenChange, deal }: DealEditModalProps) 
 
           <div className="space-y-2">
             <Label htmlFor="customer_id">Customer</Label>
-            <Select id="customer_id" name="customer_id" defaultValue={deal.customer_id || ''}>
+            <select
+              id="customer_id"
+              name="customer_id"
+              defaultValue={deal.customer_id || ''}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
               <option value="">-- Select Customer (Optional) --</option>
               {customers.map((customer) => (
                 <option key={customer.id} value={customer.id}>
@@ -98,7 +102,7 @@ export function DealEditModal({ open, onOpenChange, deal }: DealEditModalProps) 
                   {customer.company && ` - ${customer.company}`}
                 </option>
               ))}
-            </Select>
+            </select>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
@@ -116,14 +120,20 @@ export function DealEditModal({ open, onOpenChange, deal }: DealEditModalProps) 
 
             <div className="space-y-2">
               <Label htmlFor="stage">Stage *</Label>
-              <Select id="stage" name="stage" defaultValue={deal.stage} required>
+              <select
+                id="stage"
+                name="stage"
+                defaultValue={deal.stage}
+                required
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
                 <option value="prospecting">Prospecting</option>
                 <option value="qualification">Qualification</option>
                 <option value="proposal">Proposal</option>
                 <option value="negotiation">Negotiation</option>
                 <option value="closed_won">Closed Won</option>
                 <option value="closed_lost">Closed Lost</option>
-              </Select>
+              </select>
             </div>
           </div>
 
