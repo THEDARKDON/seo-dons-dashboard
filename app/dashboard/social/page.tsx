@@ -85,8 +85,9 @@ const statusColors = {
   failed: 'destructive',
 } as const;
 
-export default async function SocialMediaPage({ searchParams }: { searchParams: { success?: string; error?: string } }) {
+export default async function SocialMediaPage({ searchParams }: { searchParams: Promise<{ success?: string; error?: string }> }) {
   const { userId } = await auth();
+  const { success, error } = await searchParams;
 
   if (!userId) {
     return <div>Please sign in</div>;
@@ -122,17 +123,17 @@ export default async function SocialMediaPage({ searchParams }: { searchParams: 
       </div>
 
       {/* Success/Error Messages */}
-      {searchParams.success && (
+      {success && (
         <Card className="border-green-200 bg-green-50">
           <CardContent className="pt-6">
             <p className="text-green-800">✓ LinkedIn connected successfully!</p>
           </CardContent>
         </Card>
       )}
-      {searchParams.error && (
+      {error && (
         <Card className="border-red-200 bg-red-50">
           <CardContent className="pt-6">
-            <p className="text-red-800">✗ Error: {searchParams.error}</p>
+            <p className="text-red-800">✗ Error: {error}</p>
           </CardContent>
         </Card>
       )}
