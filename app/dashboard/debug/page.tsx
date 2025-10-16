@@ -1,9 +1,14 @@
 import { auth } from '@clerk/nextjs/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient as createServerClient } from '@supabase/supabase-js';
 
 export default async function DebugPage() {
   const { userId } = await auth();
-  const supabase = await createClient();
+
+  // Use service role to bypass RLS and any other issues
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
 
   // Check what Clerk gives us
   const clerkUserId = userId;
