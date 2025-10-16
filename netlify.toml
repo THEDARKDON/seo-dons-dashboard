@@ -7,6 +7,7 @@
 
 [build.environment]
   NODE_VERSION = "20"
+  SECRETS_SCAN_OMIT_KEYS = "TWILIO_API_BASE_URL"
 
 [[redirects]]
   from = "/api/*"
