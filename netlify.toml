@@ -1,5 +1,5 @@
 [build]
-  command = "npm run build"
+  command = "NODE_OPTIONS='--max-old-space-size=4096' npm run build"
   publish = ".next"
 
 [[plugins]]
@@ -8,6 +8,7 @@
 [build.environment]
   NODE_VERSION = "20"
   SECRETS_SCAN_OMIT_KEYS = "TWILIO_API_BASE_URL"
+  NODE_OPTIONS = "--max-old-space-size=4096"
 
 [[redirects]]
   from = "/api/*"

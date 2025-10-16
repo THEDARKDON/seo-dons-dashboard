@@ -9,11 +9,6 @@ const nextConfig = {
       bodySizeLimit: '2mb',
     },
   },
-  // Fix for Netlify deployment - ensure proper output configuration
-  output: 'standalone',
-  outputFileTracingIncludes: {
-    '/*': ['./node_modules/**/*'],
-  },
 }
 
 module.exports = nextConfig
