@@ -19,7 +19,7 @@ export class HubSpotService {
           hubspot_id: deal.id,
           deal_name: deal.properties.dealname,
           deal_value: parseFloat(deal.properties.amount || '0'),
-          stage: this.mapStage(deal.properties.dealstage),
+          stage: this.mapStage(deal.properties.dealstage || 'appointmentscheduled'),
           expected_close_date: deal.properties.closedate || null,
           source: 'hubspot',
         }, {
