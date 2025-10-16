@@ -9,8 +9,6 @@ const nextConfig = {
       bodySizeLimit: '2mb',
     },
   },
-  // Use standalone output for better Vercel compatibility
-  output: 'standalone',
 }
 
 module.exports = nextConfig
