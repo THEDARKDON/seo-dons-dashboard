@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/lib/supabase/client';
 import { useUser } from '@clerk/nextjs';
@@ -101,7 +100,11 @@ export default function NewCallPage() {
 
             <div className="space-y-2">
               <Label htmlFor="customer_id">Customer</Label>
-              <Select id="customer_id" name="customer_id">
+              <select
+                id="customer_id"
+                name="customer_id"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
                 <option value="">-- Select Customer (Optional) --</option>
                 {customers.map((customer) => (
                   <option key={customer.id} value={customer.id}>
@@ -109,20 +112,25 @@ export default function NewCallPage() {
                     {customer.company && ` - ${customer.company}`}
                   </option>
                 ))}
-              </Select>
+              </select>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="outcome">Outcome *</Label>
-                <Select id="outcome" name="outcome" required>
+                <select
+                  id="outcome"
+                  name="outcome"
+                  required
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
                   <option value="">Select outcome...</option>
                   <option value="successful">Successful</option>
                   <option value="no_answer">No Answer</option>
                   <option value="voicemail">Voicemail</option>
                   <option value="callback_scheduled">Callback Scheduled</option>
                   <option value="not_interested">Not Interested</option>
-                </Select>
+                </select>
               </div>
 
               <div className="space-y-2">
