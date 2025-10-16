@@ -31,7 +31,8 @@
       "Bash(git branch:*)",
       "Bash(git push:*)",
       "Bash(git log:*)",
-      "Bash(npx vercel:*)"
+      "Bash(npx vercel:*)",
+      "Bash(mv:*)"
     ],
     "deny": [],
     "ask": []
