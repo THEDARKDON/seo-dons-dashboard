@@ -10,7 +10,17 @@ async function getUserSettings(userId: string) {
   const { data: user } = await supabase
     .from('users')
     .select(`
-      *,
+      id,
+      clerk_id,
+      email,
+      first_name,
+      last_name,
+      role,
+      team_id,
+      avatar_url,
+      is_active,
+      created_at,
+      updated_at,
       voip:user_voip_settings(*)
     `)
     .eq('clerk_id', userId)
