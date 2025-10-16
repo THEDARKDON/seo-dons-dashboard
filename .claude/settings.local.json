@@ -32,7 +32,9 @@
       "Bash(git push:*)",
       "Bash(git log:*)",
       "Bash(npx vercel:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(git config:*)",
+      "Bash(gh repo view:*)"
     ],
     "deny": [],
     "ask": []
