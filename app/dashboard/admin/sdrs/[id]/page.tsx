@@ -131,8 +131,8 @@ async function getSDRDetails(adminUserId: string, sdrId: string) {
   };
 }
 
-export default async function SDRDetailPage(props: { params: Promise<{ id: string }> }) {
-  const params = await props.params;
+export default async function SDRDetailPage(props: { params: { id: string } }) {
+  const params = props.params;
   const { userId } = await auth();
 
   if (!userId) {

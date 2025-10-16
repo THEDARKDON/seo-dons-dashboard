@@ -71,8 +71,8 @@ async function getLeadData(leadId: string, userId: string) {
   }
 }
 
-export default async function LeadDetailPage(props: { params: Promise<{ id: string }> }) {
-  const params = await props.params;
+export default async function LeadDetailPage(props: { params: { id: string } }) {
+  const params = props.params;
   const { userId } = await auth();
 
   if (!userId) {

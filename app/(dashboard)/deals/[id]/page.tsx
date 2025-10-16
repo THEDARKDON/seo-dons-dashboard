@@ -53,9 +53,8 @@ async function getDeal(dealId: string) {
   return { deal, commissions: commissions || [] };
 }
 
-export default async function DealDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const { deal, commissions } = await getDeal(id);
+export default async function DealDetailPage({ params }: { params: { id: string } }) {
+  const { deal, commissions } = await getDeal(params.id);
   const customer = deal.customers as any;
   const assignedUser = deal.users as any;
 

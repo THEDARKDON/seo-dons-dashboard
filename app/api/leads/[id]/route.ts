@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const { userId } = await auth();
@@ -13,7 +13,6 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id } = await params;
     const body = await request.json();
 
     const supabase = await createClient();
@@ -33,7 +32,7 @@ export async function PATCH(
     const { data: existingLead } = await supabase
       .from('leads')
       .select('id, assigned_to')
-      .eq('id', id)
+      .eq('id', params.id)
       .single();
 
     if (!existingLead) {
@@ -52,7 +51,7 @@ export async function PATCH(
         ...body,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', id)
+      .eq('id', params.id)
       .select()
       .single();
 
@@ -66,7 +65,7 @@ export async function PATCH(
 
     // Log activity
     await supabase.from('lead_activities').insert({
-      lead_id: id,
+      lead_id: params.id,
       user_id: user.id,
       activity_type: 'note',
       subject: 'Lead Updated',
@@ -85,7 +84,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const { userId } = await auth();
@@ -94,7 +93,6 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id } = await params;
     const supabase = await createClient();
 
     // Get user
@@ -112,7 +110,7 @@ export async function DELETE(
     const { data: existingLead } = await supabase
       .from('leads')
       .select('id, assigned_to')
-      .eq('id', id)
+      .eq('id', params.id)
       .single();
 
     if (!existingLead) {
@@ -128,7 +126,7 @@ export async function DELETE(
     const { error } = await supabase
       .from('leads')
       .delete()
-      .eq('id', id);
+      .eq('id', params.id);
 
     if (error) {
       console.error('Error deleting lead:', error);

@@ -65,9 +65,8 @@ const activityTypeIcons = {
   note: Mail,
 };
 
-export default async function CustomerDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const { customer, deals, activities } = await getCustomer(id);
+export default async function CustomerDetailPage({ params }: { params: { id: string } }) {
+  const { customer, deals, activities } = await getCustomer(params.id);
 
   const totalDeals = deals.length;
   const activeDeals = deals.filter((d) => !['closed_won', 'closed_lost'].includes(d.stage)).length;

@@ -85,15 +85,15 @@ const statusColors = {
   failed: 'destructive',
 } as const;
 
-export default async function SocialMediaPage({ searchParams }: { searchParams: Promise<{ success?: string; error?: string }> }) {
+export default async function SocialMediaPage({ searchParams }: { searchParams: { success?: string; error?: string } }) {
   const { userId } = await auth();
-  const { success, error } = await searchParams;
 
   if (!userId) {
     return <div>Please sign in</div>;
   }
 
   const { linkedInConnected, linkedInConnection, posts, templates, userId: dbUserId } = await getSocialData(userId);
+  const { success, error } = searchParams;
 
   // Calculate stats
   const totalPosts = posts.length;
