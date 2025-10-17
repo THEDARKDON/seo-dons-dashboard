@@ -1,19 +1,22 @@
 import { Suspense } from 'react';
 import { createClient } from '@/lib/supabase/server';
-import { auth, currentUser } from '@clerk/nextjs/server';
+import { auth } from '@clerk/nextjs/server';
 import { LeadsList } from '@/components/leads/leads-list';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, Upload, Kanban } from 'lucide-react';
 import Link from 'next/link';
-import { getOrCreateUser } from '@/lib/supabase/helpers';
 
-async function getLeadsData(userId: string, clerkUser: any) {
+async function getLeadsData(userId: string) {
   try {
     const supabase = await createClient();
 
-    // Get or create user
-    const user = await getOrCreateUser(userId, clerkUser);
+    // Get user's Supabase ID and role
+    const { data: user } = await supabase
+      .from('users')
+      .select('id, role')
+      .eq('clerk_id', userId)
+      .single();
 
     if (!user) {
       return { leads: [], stats: { total: 0, new: 0, contacted: 0, qualified: 0, converted: 0 } };
@@ -53,13 +56,12 @@ async function getLeadsData(userId: string, clerkUser: any) {
 
 export default async function LeadsPage() {
   const { userId } = await auth();
-  const clerkUser = await currentUser();
 
   if (!userId) {
     return <div>Please sign in</div>;
   }
 
-  const { leads, stats } = await getLeadsData(userId, clerkUser);
+  const { leads, stats } = await getLeadsData(userId);
 
   return (
     <div className="space-y-6">

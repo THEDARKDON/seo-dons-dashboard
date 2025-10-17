@@ -1,18 +1,20 @@
 import { MetricCard } from '@/components/dashboard/metric-card';
 import { DollarSign, Phone, Calendar, Briefcase, Trophy } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { auth, currentUser } from '@clerk/nextjs/server';
+import { auth } from '@clerk/nextjs/server';
 import { createClient } from '@/lib/supabase/server';
 import { AchievementService } from '@/lib/services/achievement-service';
-import { getOrCreateUser } from '@/lib/supabase/helpers';
 import Link from 'next/link';
 
 export default async function DashboardPage() {
   const { userId } = await auth();
-  const clerkUser = await currentUser();
   const supabase = await createClient();
 
-  const user = await getOrCreateUser(userId!, clerkUser);
+  const { data: user } = await supabase
+    .from('users')
+    .select('id, first_name, last_name, email, role')
+    .eq('clerk_id', userId)
+    .single();
 
   // Get current month's start date
   const now = new Date();
