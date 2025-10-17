@@ -41,3 +41,6 @@ next-env.d.ts
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# claude local settings (may contain sensitive permissions)
+.claude/settings.local.json
