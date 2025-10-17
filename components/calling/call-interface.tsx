@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Phone, PhoneOff, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
 import { toast } from 'sonner';
+import { Device, Call } from '@twilio/voice-sdk';
 
 interface CallInterfaceProps {
   phoneNumber: string;
@@ -26,17 +27,25 @@ export function CallInterface({
   const [duration, setDuration] = useState(0);
   const [muted, setMuted] = useState(false);
   const [speakerOn, setSpeakerOn] = useState(true);
-  const [callSid, setCallSid] = useState<string | null>(null);
 
+  const deviceRef = useRef<Device | null>(null);
+  const callRef = useRef<Call | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    // Initiate call
-    initiateCall();
+    // Initialize Twilio Device and make call
+    initializeDevice();
 
     return () => {
+      // Cleanup
       if (timerRef.current) {
         clearInterval(timerRef.current);
+      }
+      if (callRef.current) {
+        callRef.current.disconnect();
+      }
+      if (deviceRef.current) {
+        deviceRef.current.destroy();
       }
     };
   }, []);
@@ -61,53 +70,121 @@ export function CallInterface({
     };
   }, [callStatus]);
 
-  const initiateCall = async () => {
+  const initializeDevice = async () => {
     try {
-      const response = await fetch('/api/calling/make-call', {
+      // Get access token
+      const response = await fetch('/api/calling/token');
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to get access token');
+      }
+
+      // Create Twilio Device
+      const device = new Device(data.token, {
+        logLevel: 1,
+        codecPreferences: [Call.Codec.Opus, Call.Codec.PCMU],
+      });
+
+      deviceRef.current = device;
+
+      // Setup device event listeners
+      device.on('registered', () => {
+        console.log('Twilio Device registered');
+      });
+
+      device.on('error', (error) => {
+        console.error('Twilio Device error:', error);
+        toast.error('Device error: ' + error.message);
+        setCallStatus('ended');
+      });
+
+      // Register the device
+      await device.register();
+
+      // Make the call
+      makeCall(device, data.phoneNumber);
+    } catch (error: any) {
+      console.error('Error initializing device:', error);
+      toast.error(error.message || 'Failed to initialize calling');
+      setCallStatus('ended');
+    }
+  };
+
+  const makeCall = async (device: Device, callerIdNumber: string) => {
+    try {
+      setCallStatus('ringing');
+
+      // Make outbound call with parameters
+      const call = await device.connect({
+        params: {
+          To: phoneNumber,
+          CallerId: callerIdNumber,
+        },
+      });
+
+      callRef.current = call;
+
+      // Setup call event listeners
+      call.on('accept', () => {
+        console.log('Call accepted');
+        setCallStatus('connected');
+        toast.success('Call connected');
+
+        // Save call record to database
+        saveCallRecord(call.parameters.CallSid);
+      });
+
+      call.on('disconnect', () => {
+        console.log('Call disconnected');
+        setCallStatus('ended');
+      });
+
+      call.on('cancel', () => {
+        console.log('Call canceled');
+        setCallStatus('ended');
+      });
+
+      call.on('reject', () => {
+        console.log('Call rejected');
+        toast.error('Call was rejected');
+        setCallStatus('ended');
+      });
+
+      call.on('error', (error) => {
+        console.error('Call error:', error);
+        toast.error('Call error: ' + error.message);
+        setCallStatus('ended');
+      });
+    } catch (error: any) {
+      console.error('Error making call:', error);
+      toast.error(error.message || 'Failed to make call');
+      setCallStatus('ended');
+    }
+  };
+
+  const saveCallRecord = async (callSid: string) => {
+    try {
+      await fetch('/api/calling/save-call', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          callSid,
           toNumber: phoneNumber,
           customerId,
           dealId,
         }),
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to make call');
-      }
-
-      setCallSid(data.callSid);
-      setCallStatus('ringing');
-
-      // Simulate call progression (in production, use SignalWire events)
-      setTimeout(() => {
-        setCallStatus('connected');
-      }, 3000);
-    } catch (error: any) {
-      console.error('Error initiating call:', error);
-      toast.error(error.message || 'Failed to initiate call');
-      setCallStatus('ended');
+    } catch (error) {
+      console.error('Error saving call record:', error);
     }
   };
 
-  const handleEndCall = async () => {
-    setCallStatus('ended');
-
-    if (callSid) {
-      // End call via API (we'll implement this)
-      try {
-        await fetch('/api/calling/end-call', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ callSid }),
-        });
-      } catch (error) {
-        console.error('Error ending call:', error);
-      }
+  const handleEndCall = () => {
+    if (callRef.current) {
+      callRef.current.disconnect();
     }
+    setCallStatus('ended');
 
     if (onEnd) {
       onEnd();
@@ -115,13 +192,21 @@ export function CallInterface({
   };
 
   const toggleMute = () => {
-    setMuted(!muted);
-    // In production, control actual audio stream
+    if (callRef.current) {
+      if (muted) {
+        callRef.current.mute(false);
+      } else {
+        callRef.current.mute(true);
+      }
+      setMuted(!muted);
+    }
   };
 
   const toggleSpeaker = () => {
+    // Note: Speaker control depends on browser capabilities
+    // This is a placeholder for future implementation
     setSpeakerOn(!speakerOn);
-    // In production, control audio output
+    toast.info('Speaker control not yet implemented');
   };
 
   const formatDuration = (seconds: number) => {
@@ -146,7 +231,7 @@ export function CallInterface({
   const getStatusLabel = () => {
     switch (callStatus) {
       case 'connecting':
-        return 'Connecting...';
+        return 'Initializing...';
       case 'ringing':
         return 'Ringing...';
       case 'connected':
@@ -183,6 +268,7 @@ export function CallInterface({
               size="icon"
               className="h-12 w-12 rounded-full"
               onClick={toggleMute}
+              disabled={callStatus !== 'connected'}
             >
               {muted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
             </Button>
@@ -201,6 +287,7 @@ export function CallInterface({
               size="icon"
               className="h-12 w-12 rounded-full"
               onClick={toggleSpeaker}
+              disabled={callStatus !== 'connected'}
             >
               {speakerOn ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
             </Button>
