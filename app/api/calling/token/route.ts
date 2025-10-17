@@ -67,27 +67,36 @@ export async function GET() {
     const identity = `${user.first_name}_${user.last_name}_${user.id}`.replace(/\s/g, '_');
 
     // Create access token
-    const token = new AccessToken(accountSid, apiKey, apiSecret, {
-      identity: identity,
-      ttl: 3600, // 1 hour
-    });
+    try {
+      const token = new AccessToken(accountSid, apiKey, apiSecret, {
+        identity: identity,
+        ttl: 3600, // 1 hour
+      });
 
-    // Create a Voice grant with TwiML App SID
-    const voiceGrant = new VoiceGrant({
-      outgoingApplicationSid: twimlAppSid,
-      incomingAllow: true,
-    });
+      // Create a Voice grant with TwiML App SID
+      const voiceGrant = new VoiceGrant({
+        outgoingApplicationSid: twimlAppSid,
+        incomingAllow: true,
+      });
 
-    token.addGrant(voiceGrant);
+      token.addGrant(voiceGrant);
 
-    console.log('[token] Generated token for identity:', identity);
+      const jwt = token.toJwt();
 
-    return NextResponse.json({
-      token: token.toJwt(),
-      identity: identity,
-      phoneNumber: voipSettings?.assigned_phone_number || '+447700158258',
-      userId: user.id,
-    });
+      console.log('[token] Generated token for identity:', identity);
+      console.log('[token] Token length:', jwt.length);
+      console.log('[token] Token preview:', jwt.substring(0, 50) + '...');
+
+      return NextResponse.json({
+        token: jwt,
+        identity: identity,
+        phoneNumber: voipSettings?.assigned_phone_number || '+447700158258',
+        userId: user.id,
+      });
+    } catch (tokenError: any) {
+      console.error('[token] Error creating token:', tokenError);
+      throw new Error('Failed to create access token: ' + tokenError.message);
+    }
   } catch (error: any) {
     console.error('Error generating calling token:', error);
     return NextResponse.json(
