@@ -36,17 +36,30 @@ export async function GET() {
       .single();
 
     const accountSid = process.env.TWILIO_ACCOUNT_SID!;
-    const apiKey = process.env.TWILIO_API_KEY || accountSid;
-    const apiSecret = process.env.TWILIO_API_SECRET || process.env.TWILIO_AUTH_TOKEN!;
     const twimlAppSid = process.env.TWILIO_TWIML_APP_SID!;
+
+    // For access tokens, use API Key if available, otherwise fall back to Account SID
+    let apiKey: string;
+    let apiSecret: string;
+
+    if (process.env.TWILIO_API_KEY && process.env.TWILIO_API_SECRET) {
+      apiKey = process.env.TWILIO_API_KEY;
+      apiSecret = process.env.TWILIO_API_SECRET;
+      console.log('[token] Using API Key for token generation');
+    } else {
+      apiKey = accountSid;
+      apiSecret = process.env.TWILIO_AUTH_TOKEN!;
+      console.log('[token] Using Account SID and Auth Token for token generation');
+    }
 
     console.log('[token] Environment check:', {
       hasAccountSid: !!accountSid,
-      hasApiKey: !!process.env.TWILIO_API_KEY,
-      hasApiSecret: !!process.env.TWILIO_API_SECRET,
+      hasApiKey: !!apiKey,
+      hasApiSecret: !!apiSecret,
       hasTwimlAppSid: !!twimlAppSid,
       accountSid: accountSid?.substring(0, 10) + '...',
       apiKey: apiKey?.substring(0, 10) + '...',
+      apiSecretLength: apiSecret?.length,
       twimlAppSid: twimlAppSid?.substring(0, 10) + '...',
     });
 
