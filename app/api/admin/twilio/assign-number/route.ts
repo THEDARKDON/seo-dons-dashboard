@@ -42,31 +42,59 @@ export async function POST(req: Request) {
       );
     }
 
-    // Upsert VoIP settings for the user
-    const { data, error } = await supabase
+    // First, check if settings exist for this user
+    const { data: existingSettings } = await supabase
       .from('user_voip_settings')
-      .upsert(
-        {
-          user_id: targetUserId,
+      .select('*')
+      .eq('user_id', targetUserId)
+      .maybeSingle();
+
+    console.log('Existing settings for user:', existingSettings);
+
+    let data, error;
+
+    if (existingSettings) {
+      // Update existing settings
+      const result = await supabase
+        .from('user_voip_settings')
+        .update({
           assigned_phone_number: phoneNumber,
           caller_id_number: callerIdNumber || phoneNumber,
           auto_record: autoRecord !== false,
           auto_transcribe: autoTranscribe !== false,
           updated_at: new Date().toISOString(),
-        },
-        {
-          onConflict: 'user_id',
-        }
-      )
-      .select()
-      .single();
+        })
+        .eq('user_id', targetUserId)
+        .select()
+        .single();
+
+      data = result.data;
+      error = result.error;
+    } else {
+      // Insert new settings
+      const result = await supabase
+        .from('user_voip_settings')
+        .insert({
+          user_id: targetUserId,
+          assigned_phone_number: phoneNumber,
+          caller_id_number: callerIdNumber || phoneNumber,
+          auto_record: autoRecord !== false,
+          auto_transcribe: autoTranscribe !== false,
+        })
+        .select()
+        .single();
+
+      data = result.data;
+      error = result.error;
+    }
 
     if (error) {
       console.error('Error assigning phone number:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
       throw error;
     }
 
-    console.log('✅ Phone number assigned:', { targetUserId, phoneNumber });
+    console.log('✅ Phone number assigned successfully:', { targetUserId, phoneNumber, data });
 
     return NextResponse.json({
       success: true,
