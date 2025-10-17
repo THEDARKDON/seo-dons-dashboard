@@ -4,6 +4,10 @@ import { auth } from '@clerk/nextjs/server';
 import { PhoneNumberManager } from '@/components/admin/phone-number-manager';
 import { redirect } from 'next/navigation';
 
+// Disable caching for this page
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 async function getPhoneNumberData() {
   const supabase = await createClient();
 

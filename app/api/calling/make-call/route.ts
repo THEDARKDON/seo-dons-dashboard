@@ -20,30 +20,40 @@ export async function POST(req: Request) {
 
     // Get user from database
     const supabase = await createClient();
-    const { data: user } = await supabase
+
+    console.log('[make-call] Clerk User ID:', userId);
+
+    const { data: user, error: userError } = await supabase
       .from('users')
-      .select('id')
+      .select('id, email, first_name, last_name')
       .eq('clerk_id', userId)
       .single();
 
-    if (!user) {
+    if (userError || !user) {
+      console.error('[make-call] User lookup failed:', userError);
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
+
+    console.log('[make-call] Supabase User:', user);
 
     // Get user's VoIP settings (with error logging for debugging)
     const { data: voipSettings, error: voipError } = await supabase
       .from('user_voip_settings')
       .select('*')
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
+
+    console.log('[make-call] VoIP Settings:', voipSettings);
+    console.log('[make-call] VoIP Error:', voipError);
 
     if (voipError) {
-      console.error('Error fetching VoIP settings:', voipError);
-      console.log('User ID:', user.id);
+      console.error('[make-call] Error fetching VoIP settings:', voipError);
+      console.log('[make-call] User ID:', user.id);
     }
 
     // Check if user has a phone number assigned
     if (!voipSettings?.assigned_phone_number) {
+      console.error('[make-call] No phone number assigned for user:', user.id);
       return NextResponse.json(
         { error: 'No phone number assigned to your account. Please contact an administrator.' },
         { status: 400 }
