@@ -42,14 +42,15 @@ export async function POST(req: Request) {
       console.log('User ID:', user.id);
     }
 
-    // Temporary: Use a placeholder number if not configured
-    // TODO: Replace with actual UK numbers once Twilio is properly configured
-    const fromNumber = voipSettings?.assigned_phone_number || '+447700158258';
-
+    // Check if user has a phone number assigned
     if (!voipSettings?.assigned_phone_number) {
-      console.warn('No phone number assigned to user. Using Twilio number directly.');
-      console.log('VoIP settings:', voipSettings);
+      return NextResponse.json(
+        { error: 'No phone number assigned to your account. Please contact an administrator.' },
+        { status: 400 }
+      );
     }
+
+    const fromNumber = voipSettings.assigned_phone_number;
 
     // Make the call via Twilio
     const callResponse = await makeOutboundCall({

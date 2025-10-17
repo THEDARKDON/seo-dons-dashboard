@@ -62,4 +62,9 @@ export async function POST(req: NextRequest) {
   }
 }
 
+// Also support GET for Twilio's webhook validation
+export async function GET(req: NextRequest) {
+  return new NextResponse('Twilio Voice Webhook Endpoint', { status: 200 });
+}
+
 export const dynamic = 'force-dynamic';
