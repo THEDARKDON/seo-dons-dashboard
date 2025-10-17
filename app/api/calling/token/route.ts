@@ -38,6 +38,17 @@ export async function GET() {
     const accountSid = process.env.TWILIO_ACCOUNT_SID!;
     const apiKey = process.env.TWILIO_API_KEY || accountSid;
     const apiSecret = process.env.TWILIO_API_SECRET || process.env.TWILIO_AUTH_TOKEN!;
+    const twimlAppSid = process.env.TWILIO_TWIML_APP_SID!;
+
+    console.log('[token] Environment check:', {
+      hasAccountSid: !!accountSid,
+      hasApiKey: !!process.env.TWILIO_API_KEY,
+      hasApiSecret: !!process.env.TWILIO_API_SECRET,
+      hasTwimlAppSid: !!twimlAppSid,
+      accountSid: accountSid?.substring(0, 10) + '...',
+      apiKey: apiKey?.substring(0, 10) + '...',
+      twimlAppSid: twimlAppSid?.substring(0, 10) + '...',
+    });
 
     // Create identity for this user
     const identity = `${user.first_name}_${user.last_name}_${user.id}`.replace(/\s/g, '_');
@@ -50,14 +61,13 @@ export async function GET() {
 
     // Create a Voice grant with TwiML App SID
     const voiceGrant = new VoiceGrant({
-      outgoingApplicationSid: process.env.TWILIO_TWIML_APP_SID!,
+      outgoingApplicationSid: twimlAppSid,
       incomingAllow: true,
     });
 
     token.addGrant(voiceGrant);
 
     console.log('[token] Generated token for identity:', identity);
-    console.log('[token] Using TwiML App SID:', process.env.TWILIO_TWIML_APP_SID);
 
     return NextResponse.json({
       token: token.toJwt(),
