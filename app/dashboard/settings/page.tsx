@@ -84,7 +84,7 @@ export default async function SettingsPage() {
               <div>
                 <label className="text-sm font-medium">Assigned Phone Number</label>
                 <p className="text-lg mt-1">
-                  {user.voip?.[0]?.assigned_phone_number || 'Not assigned'}
+                  {(Array.isArray(user.voip) ? user.voip[0]?.assigned_phone_number : user.voip?.assigned_phone_number) || 'Not assigned'}
                 </p>
                 <p className="text-sm text-gray-400 mt-1">
                   Contact an administrator to get a phone number assigned
@@ -94,7 +94,10 @@ export default async function SettingsPage() {
               <div>
                 <label className="text-sm font-medium">Caller ID Number</label>
                 <p className="text-lg mt-1">
-                  {user.voip?.[0]?.caller_id_number || user.voip?.[0]?.assigned_phone_number || 'Not configured'}
+                  {(Array.isArray(user.voip)
+                    ? (user.voip[0]?.caller_id_number || user.voip[0]?.assigned_phone_number)
+                    : (user.voip?.caller_id_number || user.voip?.assigned_phone_number)
+                  ) || 'Not configured'}
                 </p>
                 <p className="text-sm text-gray-400 mt-1">
                   This number will be displayed when you make calls
@@ -104,7 +107,7 @@ export default async function SettingsPage() {
               <div>
                 <label className="text-sm font-medium">Auto Record Calls</label>
                 <p className="text-lg mt-1">
-                  {user.voip?.[0]?.auto_record === false ? 'Disabled' : 'Enabled'}
+                  {(Array.isArray(user.voip) ? user.voip[0]?.auto_record : user.voip?.auto_record) === false ? 'Disabled' : 'Enabled'}
                 </p>
                 <p className="text-sm text-gray-400 mt-1">
                   All calls are automatically recorded by default
