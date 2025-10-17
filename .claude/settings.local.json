@@ -34,7 +34,9 @@
       "Bash(npx vercel:*)",
       "Bash(mv:*)",
       "Bash(git config:*)",
-      "Bash(gh repo view:*)"
+      "Bash(gh repo view:*)",
+      "Bash(git revert:*)",
+      "Bash(echo $NEXT_PUBLIC_APP_URL)"
     ],
     "deny": [],
     "ask": []

@@ -19,21 +19,11 @@ export async function POST(req: NextRequest) {
 
     console.log('📞 Twilio voice webhook:', { callSid, from, to, direction });
 
-    // Generate TwiML response
-    // This tells Twilio to connect the call and record it
+    // For outbound-api calls, the connection is already being made
+    // Just provide simple TwiML to handle the call
     const twiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say voice="alice">Connecting your call.</Say>
-  <Dial
-    callerId="${from}"
-    record="record-from-answer"
-    recordingStatusCallback="${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/twilio/recording"
-    recordingStatusCallbackEvent="completed"
-    timeout="60"
-  >
-    <Number>${to}</Number>
-  </Dial>
-  <Say voice="alice">Call ended.</Say>
+  <Say voice="alice">Connecting.</Say>
 </Response>`;
 
     console.log('✅ TwiML generated for call:', callSid);
