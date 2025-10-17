@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Phone, Plus, Search, ShoppingCart, UserPlus } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Phone, Plus, Search, ShoppingCart, UserPlus, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface User {
@@ -23,6 +24,21 @@ interface User {
   }>;
 }
 
+interface PurchasedNumber {
+  phoneNumber: string;
+  friendlyName: string;
+  sid: string;
+  capabilities: {
+    voice: boolean;
+    sms: boolean;
+  };
+  assigned: boolean;
+  assignedTo?: {
+    userId: string;
+    userName: string;
+  };
+}
+
 interface PhoneNumberManagerProps {
   initialUsers: User[];
 }
@@ -30,9 +46,28 @@ interface PhoneNumberManagerProps {
 export function PhoneNumberManager({ initialUsers }: PhoneNumberManagerProps) {
   const [users, setUsers] = useState(initialUsers);
   const [availableNumbers, setAvailableNumbers] = useState<any[]>([]);
+  const [purchasedNumbers, setPurchasedNumbers] = useState<PurchasedNumber[]>([]);
   const [loading, setLoading] = useState(false);
   const [searching, setSearching] = useState(false);
   const [areaCode, setAreaCode] = useState('');
+  const [selectedNumbers, setSelectedNumbers] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    fetchPurchasedNumbers();
+  }, []);
+
+  const fetchPurchasedNumbers = async () => {
+    try {
+      const response = await fetch('/api/admin/twilio/purchased-numbers');
+      const data = await response.json();
+
+      if (response.ok) {
+        setPurchasedNumbers(data.numbers);
+      }
+    } catch (error) {
+      console.error('Error fetching purchased numbers:', error);
+    }
+  };
 
   const searchNumbers = async () => {
     setSearching(true);
@@ -123,8 +158,8 @@ export function PhoneNumberManager({ initialUsers }: PhoneNumberManagerProps) {
         )
       );
 
-      // Refresh the page to get updated data
-      window.location.reload();
+      // Refresh purchased numbers to update assignment status
+      await fetchPurchasedNumbers();
     } catch (error: any) {
       console.error('Error assigning number:', error);
       toast.error(error.message || 'Failed to assign number');
@@ -249,23 +284,41 @@ export function PhoneNumberManager({ initialUsers }: PhoneNumberManagerProps) {
                       <p className="text-sm text-muted-foreground">No number assigned</p>
                     )}
 
-                    <div className="space-y-2">
-                      <Input
-                        placeholder="+44..."
-                        className="w-40"
-                        id={`number-${user.id}`}
-                        defaultValue={voipSettings?.assigned_phone_number || ''}
-                      />
+                    <div className="flex gap-2">
+                      <Select
+                        value={selectedNumbers[user.id] || voipSettings?.assigned_phone_number || ''}
+                        onValueChange={(value) => {
+                          setSelectedNumbers((prev) => ({ ...prev, [user.id]: value }));
+                        }}
+                      >
+                        <SelectTrigger className="w-64">
+                          <SelectValue placeholder="Select a phone number" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {purchasedNumbers.map((num) => (
+                            <SelectItem key={num.phoneNumber} value={num.phoneNumber}>
+                              {num.phoneNumber}
+                              {num.assigned && num.assignedTo?.userId !== user.id && (
+                                <span className="text-xs text-muted-foreground ml-2">
+                                  (Assigned to {num.assignedTo?.userName})
+                                </span>
+                              )}
+                              {num.assigned && num.assignedTo?.userId === user.id && (
+                                <span className="text-xs text-green-600 ml-2">(Current)</span>
+                              )}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <Button
                         size="sm"
                         onClick={() => {
-                          const input = document.getElementById(`number-${user.id}`) as HTMLInputElement;
-                          const phoneNumber = input?.value;
+                          const phoneNumber = selectedNumbers[user.id];
                           if (phoneNumber) {
                             assignNumber(user.id, phoneNumber);
                           }
                         }}
-                        disabled={loading}
+                        disabled={loading || !selectedNumbers[user.id]}
                       >
                         <Plus className="h-4 w-4 mr-2" />
                         Assign
