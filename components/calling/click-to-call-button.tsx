@@ -4,6 +4,11 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Phone, PhoneOff } from 'lucide-react';
 import { toast } from 'sonner';
+import { CallInterface } from './call-interface';
+import {
+  Dialog,
+  DialogContent,
+} from '@/components/ui/dialog';
 
 interface ClickToCallButtonProps {
   phoneNumber: string;
@@ -26,71 +31,45 @@ export function ClickToCallButton({
   size = 'default',
   showLabel = true,
 }: ClickToCallButtonProps) {
-  const [calling, setCalling] = useState(false);
+  const [showCallInterface, setShowCallInterface] = useState(false);
 
-  const handleCall = async () => {
+  const handleCall = () => {
     if (!phoneNumber) {
       toast.error('No phone number provided');
       return;
     }
 
-    setCalling(true);
+    setShowCallInterface(true);
+  };
 
-    try {
-      const response = await fetch('/api/calling/make-call', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          toNumber: phoneNumber,
-          customerId,
-          dealId,
-          leadId,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to make call');
-      }
-
-      toast.success(
-        customerName
-          ? `Calling ${customerName}...`
-          : `Calling ${phoneNumber}...`
-      );
-
-      // Open call interface (we'll implement this next)
-      // For now, just show success
-      setTimeout(() => {
-        setCalling(false);
-      }, 3000);
-    } catch (error: any) {
-      console.error('Error making call:', error);
-      toast.error(error.message || 'Failed to make call');
-      setCalling(false);
-    }
+  const handleCallEnd = () => {
+    setShowCallInterface(false);
   };
 
   return (
-    <Button
-      onClick={handleCall}
-      disabled={calling || !phoneNumber}
-      variant={variant}
-      size={size}
-      className="gap-2"
-    >
-      {calling ? (
-        <>
-          <PhoneOff className="h-4 w-4 animate-pulse" />
-          {showLabel && 'Calling...'}
-        </>
-      ) : (
-        <>
-          <Phone className="h-4 w-4" />
-          {showLabel && 'Call'}
-        </>
-      )}
-    </Button>
+    <>
+      <Button
+        onClick={handleCall}
+        disabled={!phoneNumber}
+        variant={variant}
+        size={size}
+        className="gap-2"
+      >
+        <Phone className="h-4 w-4" />
+        {showLabel && 'Call'}
+      </Button>
+
+      <Dialog open={showCallInterface} onOpenChange={setShowCallInterface}>
+        <DialogContent className="sm:max-w-md">
+          <CallInterface
+            phoneNumber={phoneNumber}
+            customerName={customerName}
+            customerId={customerId}
+            dealId={dealId}
+            onEnd={handleCallEnd}
+          />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
