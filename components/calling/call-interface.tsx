@@ -80,10 +80,11 @@ export function CallInterface({
         throw new Error(data.error || 'Failed to get access token');
       }
 
-      // Create Twilio Device
+      // Create Twilio Device with IE1 region configuration
       const device = new Device(data.token, {
         logLevel: 1,
         codecPreferences: [Call.Codec.Opus, Call.Codec.PCMU],
+        edge: 'dublin', // Use Dublin (Ireland) edge location
       });
 
       deviceRef.current = device;
