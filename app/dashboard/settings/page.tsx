@@ -4,6 +4,10 @@ import { createClient } from '@/lib/supabase/server';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { SettingsForm } from '@/components/settings/settings-form';
 
+// Disable caching
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 async function getUserSettings(userId: string) {
   const supabase = await createClient();
 
@@ -25,6 +29,8 @@ async function getUserSettings(userId: string) {
     `)
     .eq('clerk_id', userId)
     .single();
+
+  console.log('[Settings] User voip data:', user?.voip);
 
   return user;
 }

@@ -15,6 +15,10 @@ import {
 import { Users, Phone, Mail, Calendar, Shield } from 'lucide-react';
 import Link from 'next/link';
 
+// Disable caching
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 async function getUsersData(userId: string) {
   const supabase = await createClient();
 
