@@ -21,10 +21,13 @@ const supabase = createClient(
 )
 
 export async function POST(req: NextRequest) {
+  console.log('🔔 Clerk webhook endpoint hit at:', new Date().toISOString())
+
   // Get webhook secret from env
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET
 
   if (!WEBHOOK_SECRET) {
+    console.error('❌ CLERK_WEBHOOK_SECRET not configured')
     return NextResponse.json(
       { error: 'Webhook secret not configured' },
       { status: 500 }
