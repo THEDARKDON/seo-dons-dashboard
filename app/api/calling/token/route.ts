@@ -48,12 +48,16 @@ export async function GET() {
       ttl: 3600, // 1 hour
     });
 
-    // Create a Voice grant (no app SID needed for basic calling)
+    // Create a Voice grant with TwiML App SID
     const voiceGrant = new VoiceGrant({
+      outgoingApplicationSid: process.env.TWILIO_TWIML_APP_SID!,
       incomingAllow: true,
     });
 
     token.addGrant(voiceGrant);
+
+    console.log('[token] Generated token for identity:', identity);
+    console.log('[token] Using TwiML App SID:', process.env.TWILIO_TWIML_APP_SID);
 
     return NextResponse.json({
       token: token.toJwt(),
