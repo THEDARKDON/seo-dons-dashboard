@@ -16,14 +16,14 @@ export async function POST(req: NextRequest) {
     const from = formData.get('From') as string;
     const to = formData.get('To') as string;
     const direction = formData.get('Direction') as string;
+    const callStatus = formData.get('CallStatus') as string;
 
-    console.log('📞 Twilio voice webhook:', { callSid, from, to, direction });
+    console.log('📞 Twilio voice webhook:', { callSid, from, to, direction, callStatus });
 
-    // For outbound-api calls, the connection is already being made
-    // Just provide simple TwiML to handle the call
+    // This webhook is called when the call is answered
+    // We need to return empty TwiML because recording is handled by the API call parameters
     const twiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say voice="alice">Connecting.</Say>
 </Response>`;
 
     console.log('✅ TwiML generated for call:', callSid);
