@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useUser } from '@clerk/nextjs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +21,7 @@ import { supabase } from '@/lib/supabase/client';
 
 export function NewLeadForm() {
   const router = useRouter();
+  const { user: clerkUser } = useUser();
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -28,6 +30,19 @@ export function NewLeadForm() {
 
     try {
       const formData = new FormData(e.currentTarget);
+
+      // Get current user's Supabase ID
+      const { data: currentUser } = await supabase
+        .from('users')
+        .select('id')
+        .eq('clerk_id', clerkUser?.id)
+        .single();
+
+      if (!currentUser) {
+        toast.error('User not found');
+        setLoading(false);
+        return;
+      }
 
       const leadData = {
         first_name: formData.get('first_name') as string,
@@ -48,6 +63,7 @@ export function NewLeadForm() {
         notes: formData.get('notes') as string || null,
         lead_source: formData.get('lead_source') as string || 'Manual',
         status: 'new',
+        assigned_to: currentUser.id, // Assign to current user
       };
 
       // Validate required fields

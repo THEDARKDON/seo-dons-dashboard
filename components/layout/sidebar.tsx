@@ -23,6 +23,7 @@ import {
   UserPlus,
   Crown,
   UserCog,
+  PhoneCall,
 } from 'lucide-react';
 
 const navigation = [
@@ -46,6 +47,7 @@ const adminNavigation = [
   { name: 'Admin Dashboard', href: '/dashboard/admin', icon: Crown },
   { name: 'SDR Performance', href: '/dashboard/admin/sdrs', icon: Trophy },
   { name: 'User Management', href: '/dashboard/admin/users', icon: UserCog },
+  { name: 'Phone Numbers', href: '/dashboard/admin/phone-numbers', icon: PhoneCall },
   { name: 'Admin Settings', href: '/dashboard/admin/settings', icon: Settings },
 ];
 
