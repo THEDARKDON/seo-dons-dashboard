@@ -29,7 +29,7 @@ async function getSocialData(userId: string) {
         .from('linkedin_connections')
         .select('*')
         .eq('user_id', user.id)
-        .eq('is_active', true)
+        .eq('active', true)
         .single();
       linkedInConnection = data;
     } catch (e) {
@@ -56,7 +56,7 @@ async function getSocialData(userId: string) {
       const { data } = await supabase
         .from('post_templates')
         .select('*')
-        .eq('is_active', true)
+        .eq('active', true)
         .order('times_used', { ascending: false });
       templates = data || [];
     } catch (e) {

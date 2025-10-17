@@ -16,14 +16,14 @@ export default async function DebugPage() {
   // Try to find user in Supabase - avoid fetching problematic fields
   const { data: user, error } = await supabase
     .from('users')
-    .select('clerk_id, email, role, is_active, created_at')
+    .select('clerk_id, email, role, active, created_at')
     .eq('clerk_id', userId)
     .single();
 
   // Get all users to compare (only safe fields to avoid encoding issues)
   const { data: allUsers } = await supabase
     .from('users')
-    .select('clerk_id, email, role, is_active')
+    .select('clerk_id, email, role, active')
     .limit(20);
 
   return (
@@ -53,7 +53,7 @@ export default async function DebugPage() {
               <div className="mt-2 text-black text-sm space-y-1">
                 <p><strong>Email:</strong> {user.email}</p>
                 <p><strong>Role:</strong> {user.role}</p>
-                <p><strong>Active:</strong> {String(user.is_active)}</p>
+                <p><strong>Active:</strong> {String(user.active)}</p>
               </div>
             </div>
           )}

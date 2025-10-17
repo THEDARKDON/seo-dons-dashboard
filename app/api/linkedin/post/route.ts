@@ -36,7 +36,7 @@ export async function POST(req: Request) {
       .from('linkedin_connections')
       .select('*')
       .eq('user_id', user.id)
-      .eq('is_active', true)
+      .eq('active', true)
       .single();
 
     if (!linkedInConnection) {
