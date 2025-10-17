@@ -2,20 +2,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { createClient } from '@/lib/supabase/server';
-import { auth } from '@clerk/nextjs/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { formatDate } from '@/lib/utils';
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
+import { getOrCreateUser } from '@/lib/supabase/helpers';
 
-async function getCustomers(userId: string) {
+async function getCustomers(userId: string, clerkUser: any) {
   const supabase = await createClient();
 
-  // Get user's Supabase ID and role
-  const { data: user } = await supabase
-    .from('users')
-    .select('id, role')
-    .eq('clerk_id', userId)
-    .single();
+  // Get or create user
+  const user = await getOrCreateUser(userId, clerkUser);
 
   if (!user) {
     return [];
@@ -42,12 +39,13 @@ async function getCustomers(userId: string) {
 
 export default async function CustomersPage() {
   const { userId } = await auth();
+  const clerkUser = await currentUser();
 
   if (!userId) {
     return <div>Please sign in</div>;
   }
 
-  const customers = await getCustomers(userId);
+  const customers = await getCustomers(userId, clerkUser);
 
   // Calculate stats for each customer
   const customersWithStats = customers.map((customer) => {

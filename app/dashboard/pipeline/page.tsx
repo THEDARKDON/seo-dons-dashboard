@@ -1,21 +1,18 @@
 import { Suspense } from 'react';
 import { createClient } from '@/lib/supabase/server';
-import { auth } from '@clerk/nextjs/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { PipelineBoard } from '@/components/pipeline/pipeline-board';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
+import { getOrCreateUser } from '@/lib/supabase/helpers';
 
-async function getPipelineData(userId: string) {
+async function getPipelineData(userId: string, clerkUser: any) {
   try {
     const supabase = await createClient();
 
-    // Get user's Supabase ID and role
-    const { data: user } = await supabase
-      .from('users')
-      .select('id, role')
-      .eq('clerk_id', userId)
-      .single();
+    // Get or create user
+    const user = await getOrCreateUser(userId, clerkUser);
 
     if (!user) {
       return { deals: [] };
@@ -48,12 +45,13 @@ async function getPipelineData(userId: string) {
 
 export default async function PipelinePage() {
   const { userId } = await auth();
+  const clerkUser = await currentUser();
 
   if (!userId) {
     return <div>Please sign in</div>;
   }
 
-  const { deals } = await getPipelineData(userId);
+  const { deals } = await getPipelineData(userId, clerkUser);
 
   return (
     <div className="space-y-6">
