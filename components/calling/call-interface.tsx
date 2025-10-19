@@ -4,15 +4,18 @@ import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Phone, PhoneOff, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
+import { Phone, PhoneOff, Mic, MicOff, Volume2, VolumeX, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import { Device, Call } from '@twilio/voice-sdk';
+import { CalendarBookingModal } from '@/components/calendar/calendar-booking-modal';
 
 interface CallInterfaceProps {
   phoneNumber: string;
   customerName?: string;
   customerId?: string;
   dealId?: string;
+  leadId?: string;
+  customerEmail?: string;
   onEnd?: () => void;
 }
 
@@ -21,12 +24,16 @@ export function CallInterface({
   customerName,
   customerId,
   dealId,
+  leadId,
+  customerEmail,
   onEnd,
 }: CallInterfaceProps) {
   const [callStatus, setCallStatus] = useState<'connecting' | 'ringing' | 'connected' | 'ended'>('connecting');
   const [duration, setDuration] = useState(0);
   const [muted, setMuted] = useState(false);
   const [speakerOn, setSpeakerOn] = useState(true);
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [callRecordId, setCallRecordId] = useState<string | null>(null);
 
   const deviceRef = useRef<Device | null>(null);
   const callRef = useRef<Call | null>(null);
@@ -72,6 +79,17 @@ export function CallInterface({
 
   const initializeDevice = async () => {
     try {
+      // Request microphone permission first
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+        console.log('Microphone permission granted');
+      } catch (mediaError: any) {
+        console.error('Microphone permission error:', mediaError);
+        toast.error('Microphone access denied. Please allow microphone access in your browser.');
+        setCallStatus('ended');
+        return;
+      }
+
       // Get access token
       const response = await fetch('/api/calling/token');
       const data = await response.json();
@@ -85,6 +103,8 @@ export function CallInterface({
         logLevel: 1,
         codecPreferences: [Call.Codec.Opus, Call.Codec.PCMU],
         edge: 'dublin', // Use Dublin (Ireland) edge location
+        // Explicitly set audio constraints for better compatibility
+        enableImprovedSignalingErrorPrecision: true,
       });
 
       deviceRef.current = device;
@@ -166,7 +186,7 @@ export function CallInterface({
 
   const saveCallRecord = async (callSid: string) => {
     try {
-      await fetch('/api/calling/save-call', {
+      const response = await fetch('/api/calling/save-call', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -174,8 +194,14 @@ export function CallInterface({
           toNumber: phoneNumber,
           customerId,
           dealId,
+          leadId,
         }),
       });
+
+      const data = await response.json();
+      if (data.callId) {
+        setCallRecordId(data.callId);
+      }
     } catch (error) {
       console.error('Error saving call record:', error);
     }
@@ -243,6 +269,7 @@ export function CallInterface({
   };
 
   return (
+    <>
     <Card className="w-full max-w-md mx-auto">
       <CardHeader className="text-center">
         <CardTitle className="text-2xl">
@@ -296,10 +323,22 @@ export function CallInterface({
         )}
 
         {callStatus === 'ended' && (
-          <div className="text-center">
-            <p className="text-sm text-muted-foreground mb-4">
+          <div className="text-center space-y-3">
+            <p className="text-sm text-muted-foreground">
               Call duration: {formatDuration(duration)}
             </p>
+
+            {customerEmail && (
+              <Button
+                variant="default"
+                onClick={() => setShowBookingModal(true)}
+                className="w-full gap-2"
+              >
+                <Calendar className="h-4 w-4" />
+                Book Follow-up Meeting
+              </Button>
+            )}
+
             <Button variant="outline" onClick={onEnd} className="w-full">
               Close
             </Button>
@@ -307,5 +346,21 @@ export function CallInterface({
         )}
       </CardContent>
     </Card>
+
+      {/* Calendar Booking Modal */}
+      {customerEmail && (
+        <CalendarBookingModal
+          open={showBookingModal}
+          onOpenChange={setShowBookingModal}
+          customerEmail={customerEmail}
+          customerName={customerName}
+          customerId={customerId}
+          dealId={dealId}
+          leadId={leadId}
+          callRecordId={callRecordId || undefined}
+          phoneNumber={phoneNumber}
+        />
+      )}
+    </>
   );
 }

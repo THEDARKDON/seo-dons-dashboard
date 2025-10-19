@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { SettingsForm } from '@/components/settings/settings-form';
+import { CalendarConnectButton } from '@/components/calendar/calendar-connect-button';
 
 // Disable caching
 export const dynamic = 'force-dynamic';
@@ -108,6 +109,27 @@ export default async function SettingsPage() {
                 </p>
                 <p className="text-sm text-gray-400 mt-1">
                   All calls are automatically recorded by default
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Calendar Integration */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Calendar Integration</CardTitle>
+            <CardDescription>
+              Connect your Google Calendar to book meetings after calls
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium block mb-2">Google Calendar</label>
+                <CalendarConnectButton />
+                <p className="text-sm text-gray-400 mt-2">
+                  Connect your Google Calendar to automatically create meetings and send invites to leads after calls
                 </p>
               </div>
             </div>
