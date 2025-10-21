@@ -137,8 +137,10 @@ export class GoogleCalendarService {
     console.log('[GoogleCalendar] Got user email:', userInfo.email);
 
     // Calculate token expiry
-    const expiryDate = new Date();
-    expiryDate.setSeconds(expiryDate.getSeconds() + (tokens.expiry_date || 3600));
+    // Google returns expiry_date in milliseconds, or we default to 1 hour from now
+    const expiryDate = tokens.expiry_date
+      ? new Date(tokens.expiry_date)
+      : new Date(Date.now() + 3600 * 1000);
 
     // Save to database
     const supabase = await createClient();
@@ -185,8 +187,10 @@ export class GoogleCalendarService {
       throw new Error('Failed to refresh access token');
     }
 
-    const expiryDate = new Date();
-    expiryDate.setSeconds(expiryDate.getSeconds() + (credentials.expiry_date || 3600));
+    // Google returns expiry_date in milliseconds, or we default to 1 hour from now
+    const expiryDate = credentials.expiry_date
+      ? new Date(credentials.expiry_date)
+      : new Date(Date.now() + 3600 * 1000);
 
     return {
       access_token: credentials.access_token,
