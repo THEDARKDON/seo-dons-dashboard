@@ -183,6 +183,7 @@ export default async function DealDetailPage({ params }: { params: { id: string 
                         customerId={deal.customer_id}
                         dealId={deal.id}
                         customerName={`${customer.first_name} ${customer.last_name}`}
+                        customerEmail={customer.email}
                         size="sm"
                         variant="outline"
                         showLabel={false}

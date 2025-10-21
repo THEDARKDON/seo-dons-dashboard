@@ -155,6 +155,7 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
                   phoneNumber={customer.phone}
                   customerId={customer.id}
                   customerName={`${customer.first_name} ${customer.last_name}`}
+                  customerEmail={customer.email}
                   size="sm"
                   variant="outline"
                 />

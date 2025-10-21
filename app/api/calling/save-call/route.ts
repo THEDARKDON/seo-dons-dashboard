@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { callSid, toNumber, leadId, customerId, dealId, duration } = body;
+    const { callSid, toNumber, leadId, customerId, dealId } = body;
 
     // Get user from database
     const supabase = await createClient();
@@ -46,9 +46,7 @@ export async function POST(req: Request) {
         direction: 'outbound',
         from_number: fromNumber,
         to_number: toNumber,
-        status: 'completed',
-        duration: duration || null,
-        ended_at: new Date().toISOString(),
+        status: 'initiated',
       })
       .select()
       .single();

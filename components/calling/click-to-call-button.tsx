@@ -16,6 +16,7 @@ interface ClickToCallButtonProps {
   dealId?: string;
   leadId?: string;
   customerName?: string;
+  customerEmail?: string;
   variant?: 'default' | 'outline' | 'ghost';
   size?: 'default' | 'sm' | 'lg' | 'icon';
   showLabel?: boolean;
@@ -27,6 +28,7 @@ export function ClickToCallButton({
   dealId,
   leadId,
   customerName,
+  customerEmail,
   variant = 'default',
   size = 'default',
   showLabel = true,
@@ -64,8 +66,10 @@ export function ClickToCallButton({
           <CallInterface
             phoneNumber={phoneNumber}
             customerName={customerName}
+            customerEmail={customerEmail}
             customerId={customerId}
             dealId={dealId}
+            leadId={leadId}
             onEnd={handleCallEnd}
           />
         </DialogContent>

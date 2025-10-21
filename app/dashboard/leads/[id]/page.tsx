@@ -185,6 +185,7 @@ export default async function LeadDetailPage(props: { params: { id: string } }) 
                         phoneNumber={lead.phone}
                         leadId={lead.id}
                         customerName={`${lead.first_name} ${lead.last_name}`}
+                        customerEmail={lead.email}
                         size="sm"
                         variant="ghost"
                         showLabel={false}
