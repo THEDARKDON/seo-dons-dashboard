@@ -105,6 +105,8 @@ export class GoogleCalendarService {
   }
 
   async handleCallback(code: string, userId: string): Promise<void> {
+    console.log('[GoogleCalendar] handleCallback - userId:', userId);
+
     const oauth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET,
@@ -112,15 +114,19 @@ export class GoogleCalendarService {
     );
 
     // Exchange code for tokens
+    console.log('[GoogleCalendar] Exchanging code for tokens...');
     const { tokens } = await oauth2Client.getToken(code);
 
     if (!tokens.access_token || !tokens.refresh_token) {
       throw new Error('Failed to get tokens from Google');
     }
 
+    console.log('[GoogleCalendar] Got tokens, access_token:', !!tokens.access_token, 'refresh_token:', !!tokens.refresh_token);
+
     oauth2Client.setCredentials(tokens);
 
     // Get user's email from Google
+    console.log('[GoogleCalendar] Getting user info from Google...');
     const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
     const { data: userInfo } = await oauth2.userinfo.get();
 
@@ -128,13 +134,16 @@ export class GoogleCalendarService {
       throw new Error('Failed to get user email from Google');
     }
 
+    console.log('[GoogleCalendar] Got user email:', userInfo.email);
+
     // Calculate token expiry
     const expiryDate = new Date();
     expiryDate.setSeconds(expiryDate.getSeconds() + (tokens.expiry_date || 3600));
 
     // Save to database
     const supabase = await createClient();
-    await supabase
+    console.log('[GoogleCalendar] Saving to database...');
+    const { data, error } = await supabase
       .from('user_calendar_integrations')
       .upsert({
         user_id: userId,
@@ -148,7 +157,15 @@ export class GoogleCalendarService {
         updated_at: new Date().toISOString(),
       }, {
         onConflict: 'user_id,provider'
-      });
+      })
+      .select();
+
+    if (error) {
+      console.error('[GoogleCalendar] Database error:', error);
+      throw error;
+    }
+
+    console.log('[GoogleCalendar] Successfully saved integration:', data);
   }
 
   private async refreshAccessToken(refreshToken: string): Promise<{ access_token: string; expiry_date: string }> {
@@ -253,15 +270,18 @@ export class GoogleCalendarService {
   }
 
   async isConnected(userId: string): Promise<boolean> {
+    console.log('[GoogleCalendar] isConnected - userId:', userId);
     const supabase = await createClient();
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('user_calendar_integrations')
       .select('id')
       .eq('user_id', userId)
       .eq('provider', 'google')
       .eq('is_active', true)
       .single();
+
+    console.log('[GoogleCalendar] isConnected - query result:', { data: !!data, error });
 
     return !!data;
   }
@@ -277,14 +297,17 @@ export class GoogleCalendarService {
   }
 
   async getIntegration(userId: string) {
+    console.log('[GoogleCalendar] getIntegration - userId:', userId);
     const supabase = await createClient();
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('user_calendar_integrations')
       .select('email, calendar_id, is_active, created_at')
       .eq('user_id', userId)
       .eq('provider', 'google')
       .single();
+
+    console.log('[GoogleCalendar] getIntegration - query result:', { data, error });
 
     return data;
   }
