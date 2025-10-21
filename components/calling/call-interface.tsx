@@ -212,10 +212,8 @@ export function CallInterface({
       callRef.current.disconnect();
     }
     setCallStatus('ended');
-
-    if (onEnd) {
-      onEnd();
-    }
+    // Don't call onEnd() here - let user see the booking button
+    // onEnd() will be called when user clicks "Close" button
   };
 
   const toggleMute = () => {
