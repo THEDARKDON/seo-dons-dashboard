@@ -28,6 +28,8 @@ export function CallInterface({
   customerEmail,
   onEnd,
 }: CallInterfaceProps) {
+  console.log('[CallInterface] Props:', { phoneNumber, customerName, customerEmail, leadId });
+
   const [callStatus, setCallStatus] = useState<'connecting' | 'ringing' | 'connected' | 'ended'>('connecting');
   const [duration, setDuration] = useState(0);
   const [muted, setMuted] = useState(false);
@@ -326,15 +328,22 @@ export function CallInterface({
               Call duration: {formatDuration(duration)}
             </p>
 
-            {customerEmail && (
+            {customerEmail ? (
               <Button
                 variant="default"
-                onClick={() => setShowBookingModal(true)}
+                onClick={() => {
+                  console.log('[CallInterface] Opening booking modal for:', customerEmail);
+                  setShowBookingModal(true);
+                }}
                 className="w-full gap-2"
               >
                 <Calendar className="h-4 w-4" />
                 Book Follow-up Meeting
               </Button>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                No email available for this contact
+              </p>
             )}
 
             <Button variant="outline" onClick={onEnd} className="w-full">
