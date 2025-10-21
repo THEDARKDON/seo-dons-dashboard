@@ -262,6 +262,7 @@ export function LeadsList({ initialLeads }: LeadsListProps) {
                         phoneNumber={lead.phone}
                         leadId={lead.id}
                         customerName={`${lead.first_name} ${lead.last_name}`}
+                        customerEmail={lead.email}
                         variant="outline"
                         size="sm"
                       />
