@@ -69,7 +69,7 @@ export async function GET(request: Request) {
     }
 
     // Format response
-    const formattedUsers = users?.map((user) => ({
+    const formattedUsers = users?.map((user: any) => ({
       id: user.id,
       email: user.email,
       first_name: user.first_name,
