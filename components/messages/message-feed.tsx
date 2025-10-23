@@ -31,7 +31,7 @@ export function MessageFeed({ conversation }: MessageFeedProps) {
     try {
       setLoading(true);
       const response = await fetch(
-        `/api/messages/${conversation.id}?type=${conversation.type}&limit=50`
+        `/api/messages/list?conversationId=${conversation.id}&type=${conversation.type}&limit=50`
       );
       const data = await response.json();
       setMessages(data.messages || []);
@@ -79,7 +79,7 @@ export function MessageFeed({ conversation }: MessageFeedProps) {
 
   const handleDeleteMessage = async (messageId: string) => {
     try {
-      const response = await fetch(`/api/messages/${messageId}/delete`, {
+      const response = await fetch(`/api/messages/message/${messageId}/delete`, {
         method: 'DELETE',
       });
 

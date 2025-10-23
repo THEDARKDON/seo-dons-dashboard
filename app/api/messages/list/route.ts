@@ -4,10 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(
-  request: Request,
-  { params }: { params: { conversationId: string } }
-) {
+export async function GET(request: Request) {
   try {
     const { userId } = await auth();
 
@@ -28,11 +25,18 @@ export async function GET(
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const { conversationId } = params;
     const { searchParams } = new URL(request.url);
+    const conversationId = searchParams.get('conversationId');
     const type = searchParams.get('type'); // 'channel' or 'dm'
     const limit = parseInt(searchParams.get('limit') || '50');
     const before = searchParams.get('before'); // Message ID for pagination
+
+    if (!conversationId || !type) {
+      return NextResponse.json(
+        { error: 'conversationId and type are required' },
+        { status: 400 }
+      );
+    }
 
     // Verify access and fetch messages
     let query = supabase
