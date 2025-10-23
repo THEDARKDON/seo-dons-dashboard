@@ -149,3 +149,104 @@ export interface Streak {
   created_at: string
   updated_at: string
 }
+
+// Messaging Types
+export type ChannelType = 'public' | 'private' | 'team'
+export type ChannelMemberRole = 'owner' | 'admin' | 'member'
+export type UserPresenceStatus = 'online' | 'away' | 'dnd' | 'offline'
+
+export interface Channel {
+  id: string
+  name: string
+  description: string | null
+  type: ChannelType
+  team_id: string | null
+  created_by: string | null
+  is_archived: boolean
+  last_message_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface ChannelMember {
+  id: string
+  channel_id: string
+  user_id: string
+  role: ChannelMemberRole
+  joined_at: string
+  last_read_at: string
+  notifications_enabled: boolean
+}
+
+export interface DirectMessage {
+  id: string
+  participant_1_id: string
+  participant_2_id: string
+  last_message_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface Message {
+  id: string
+  content: string
+  sender_id: string
+  channel_id: string | null
+  dm_id: string | null
+  parent_message_id: string | null
+  thread_reply_count: number
+  mentions: string[] | null
+  attachments: MessageAttachment[] | null
+  edited_at: string | null
+  deleted_at: string | null
+  is_deleted: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface MessageAttachment {
+  type: string
+  url: string
+  name: string
+  size: number
+}
+
+export interface MessageReaction {
+  id: string
+  message_id: string
+  user_id: string
+  emoji: string
+  created_at: string
+}
+
+export interface MessageReadReceipt {
+  id: string
+  user_id: string
+  message_id: string
+  read_at: string
+}
+
+export interface UserPresence {
+  user_id: string
+  status: UserPresenceStatus
+  custom_status: string | null
+  last_seen_at: string
+  updated_at: string
+}
+
+// Extended types with relations
+export interface MessageWithSender extends Message {
+  sender: Pick<User, 'id' | 'first_name' | 'last_name' | 'email' | 'avatar_url'>
+}
+
+export interface ChannelWithDetails extends Channel {
+  member_count?: number
+  unread_count?: number
+  last_message?: MessageWithSender
+}
+
+export interface DirectMessageWithDetails extends DirectMessage {
+  other_participant: Pick<User, 'id' | 'first_name' | 'last_name' | 'email' | 'avatar_url'>
+  unread_count?: number
+  last_message?: MessageWithSender
+}

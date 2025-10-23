@@ -24,10 +24,12 @@ import {
   Crown,
   UserCog,
   PhoneCall,
+  MessageSquare,
 } from 'lucide-react';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'Messages', href: '/dashboard/messages', icon: MessageSquare },
   { name: 'Leads', href: '/dashboard/leads', icon: UserPlus },
   { name: 'Pipeline', href: '/dashboard/pipeline', icon: Kanban },
   { name: 'Deals', href: '/dashboard/deals', icon: Briefcase },
