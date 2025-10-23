@@ -10,9 +10,10 @@ import type { MessageWithSender } from '@/lib/supabase/types';
 
 interface MessageFeedProps {
   conversation: Conversation;
+  onStartDM?: (userId: string, userName: string) => void;
 }
 
-export function MessageFeed({ conversation }: MessageFeedProps) {
+export function MessageFeed({ conversation, onStartDM }: MessageFeedProps) {
   const [messages, setMessages] = useState<MessageWithSender[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
@@ -144,6 +145,12 @@ export function MessageFeed({ conversation }: MessageFeedProps) {
               key={message.id}
               message={message}
               onDelete={handleDeleteMessage}
+              onStartDM={(userId) => {
+                const userName = message.sender
+                  ? `${message.sender.first_name || ''} ${message.sender.last_name || ''}`.trim()
+                  : 'User';
+                onStartDM?.(userId, userName);
+              }}
             />
           ))
         )}

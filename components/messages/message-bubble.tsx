@@ -13,13 +13,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { UserProfilePopover } from './user-profile-popover';
 
 interface MessageBubbleProps {
   message: MessageWithSender;
   onDelete: (messageId: string) => void;
+  onStartDM?: (userId: string) => void;
 }
 
-export function MessageBubble({ message, onDelete }: MessageBubbleProps) {
+export function MessageBubble({ message, onDelete, onStartDM }: MessageBubbleProps) {
   const { user } = useUser();
   const [showActions, setShowActions] = useState(false);
 
@@ -52,25 +54,59 @@ export function MessageBubble({ message, onDelete }: MessageBubbleProps) {
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
     >
-      {/* Avatar */}
+      {/* Avatar with Profile Popover */}
       <div className="flex-shrink-0">
-        {message.sender?.avatar_url ? (
-          <img
-            src={message.sender.avatar_url}
-            alt={getSenderName()}
-            className="w-10 h-10 rounded-full"
-          />
+        {message.sender && !isOwnMessage && onStartDM ? (
+          <UserProfilePopover
+            user={message.sender}
+            onSendMessage={onStartDM}
+          >
+            <button className="cursor-pointer hover:opacity-80 transition-opacity">
+              {message.sender?.avatar_url ? (
+                <img
+                  src={message.sender.avatar_url}
+                  alt={getSenderName()}
+                  className="w-10 h-10 rounded-full"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-medium">
+                  {getSenderInitials()}
+                </div>
+              )}
+            </button>
+          </UserProfilePopover>
         ) : (
-          <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-medium">
-            {getSenderInitials()}
-          </div>
+          <>
+            {message.sender?.avatar_url ? (
+              <img
+                src={message.sender.avatar_url}
+                alt={getSenderName()}
+                className="w-10 h-10 rounded-full"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-medium">
+                {getSenderInitials()}
+              </div>
+            )}
+          </>
         )}
       </div>
 
       {/* Message Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline gap-2">
-          <span className="font-semibold text-sm">{getSenderName()}</span>
+          {message.sender && !isOwnMessage && onStartDM ? (
+            <UserProfilePopover
+              user={message.sender}
+              onSendMessage={onStartDM}
+            >
+              <button className="font-semibold text-sm hover:underline cursor-pointer">
+                {getSenderName()}
+              </button>
+            </UserProfilePopover>
+          ) : (
+            <span className="font-semibold text-sm">{getSenderName()}</span>
+          )}
           <span className="text-xs text-gray-500">
             {formatTime(message.created_at)}
           </span>

@@ -12,11 +12,15 @@ import { formatDistanceToNow } from 'date-fns';
 interface ConversationSidebarProps {
   selectedConversationId?: string;
   onSelectConversation: (conversation: Conversation) => void;
+  onNewDM?: () => void;
+  onRefresh?: () => void;
 }
 
 export function ConversationSidebar({
   selectedConversationId,
   onSelectConversation,
+  onNewDM,
+  onRefresh,
 }: ConversationSidebarProps) {
   const [channels, setChannels] = useState<any[]>([]);
   const [directMessages, setDirectMessages] = useState<any[]>([]);
@@ -146,9 +150,13 @@ export function ConversationSidebar({
       <div className="p-4 border-b bg-white">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold">Messages</h2>
-          <Button size="sm" variant="outline" onClick={loadConversations}>
-            <Plus className="h-4 w-4" />
-          </Button>
+          <div className="flex gap-2">
+            {activeTab === 'dms' && onNewDM && (
+              <Button size="sm" variant="default" onClick={onNewDM} title="New Direct Message">
+                <Plus className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Search */}
