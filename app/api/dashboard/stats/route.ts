@@ -123,15 +123,15 @@ export async function GET(request: NextRequest) {
       .gte('created_at', monthStart.toISOString());
 
     // Calculate success rate
-    const { data: successfulCalls } = await supabase
+    const { count: successfulCallsCount } = await supabase
       .from('call_recordings')
-      .select('id', { count: 'exact', head: true })
+      .select('*', { count: 'exact', head: true })
       .eq('user_id', user.id)
       .eq('status', 'completed')
       .gte('created_at', monthStart.toISOString());
 
     const successRate = callsMonthCount && callsMonthCount > 0
-      ? Math.round(((successfulCalls || 0) / callsMonthCount) * 100)
+      ? Math.round(((successfulCallsCount || 0) / callsMonthCount) * 100)
       : 0;
 
     const callsStats = {
