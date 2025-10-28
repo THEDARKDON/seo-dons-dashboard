@@ -162,31 +162,27 @@ export async function PATCH(request: NextRequest) {
     todayEnd.setHours(23, 59, 59, 999);
 
     // Count calls made today
-    const { data: callsToday } = await supabase
+    const { count: callCount } = await supabase
       .from('call_recordings')
-      .select('id', { count: 'exact', head: true })
+      .select('*', { count: 'exact', head: true })
       .eq('user_id', user.id)
       .gte('created_at', todayStart.toISOString())
       .lte('created_at', todayEnd.toISOString());
-
-    const callCount = callsToday || 0;
 
     // Count appointments booked today
-    const { data: appointmentsToday } = await supabase
+    const { count: appointmentCount } = await supabase
       .from('appointments')
-      .select('id', { count: 'exact', head: true })
+      .select('*', { count: 'exact', head: true })
       .eq('user_id', user.id)
       .gte('created_at', todayStart.toISOString())
       .lte('created_at', todayEnd.toISOString());
-
-    const appointmentCount = appointmentsToday || 0;
 
     // Update calls task
     await supabase
       .from('daily_tasks')
       .update({
-        current_value: callCount,
-        completed: callCount >= 50,
+        current_value: callCount || 0,
+        completed: (callCount || 0) >= 50,
         updated_at: new Date().toISOString(),
       })
       .eq('user_id', user.id)
@@ -197,8 +193,8 @@ export async function PATCH(request: NextRequest) {
     await supabase
       .from('daily_tasks')
       .update({
-        current_value: appointmentCount,
-        completed: appointmentCount >= 3,
+        current_value: appointmentCount || 0,
+        completed: (appointmentCount || 0) >= 3,
         updated_at: new Date().toISOString(),
       })
       .eq('user_id', user.id)
@@ -212,7 +208,7 @@ export async function PATCH(request: NextRequest) {
       .eq('user_id', user.id)
       .eq('task_date', today);
 
-    return NextResponse.json({ tasks, synced: { calls: callCount, appointments: appointmentCount } });
+    return NextResponse.json({ tasks, synced: { calls: callCount || 0, appointments: appointmentCount || 0 } });
   } catch (error) {
     console.error('Error in daily-tasks PATCH:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
