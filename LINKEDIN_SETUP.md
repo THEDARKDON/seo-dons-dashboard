@@ -55,8 +55,11 @@ NEXT_PUBLIC_LINKEDIN_REDIRECT_URI=https://www.seodonscrm.co.uk/api/linkedin/call
 
 1. Go to your Vercel project settings
 2. Navigate to "Environment Variables"
-3. Add the three variables above
-4. Redeploy your application
+3. Add the three variables above (make sure they're set for Production, Preview, and Development)
+4. **CRITICAL**: After adding variables, you MUST trigger a new deployment:
+   - **Option A**: Push a new commit to GitHub (triggers auto-deploy)
+   - **Option B**: Go to Vercel Dashboard → Deployments → Click ⋯ menu on latest deployment → "Redeploy"
+   - Environment variables are only loaded during build time, not on existing deployments!
 
 ## Testing
 
