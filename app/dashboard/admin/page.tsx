@@ -319,7 +319,7 @@ export default async function AdminDashboard() {
       </Card>
 
       {/* Quick Links */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-4">
         <Link href="/dashboard/admin/sdrs">
           <Card className="cursor-pointer hover:bg-accent/50 transition-colors">
             <CardHeader>
@@ -333,6 +333,14 @@ export default async function AdminDashboard() {
             <CardHeader>
               <CardTitle className="text-base">Call Analytics</CardTitle>
               <CardDescription>All call recordings and stats</CardDescription>
+            </CardHeader>
+          </Card>
+        </Link>
+        <Link href="/dashboard/admin/call-review">
+          <Card className="cursor-pointer hover:bg-accent/50 transition-colors">
+            <CardHeader>
+              <CardTitle className="text-base">Call Review Dashboard</CardTitle>
+              <CardDescription>Review and rate SDR call quality</CardDescription>
             </CardHeader>
           </Card>
         </Link>

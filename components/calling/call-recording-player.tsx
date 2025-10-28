@@ -7,7 +7,8 @@ import { Slider } from '@/components/ui/slider';
 import { Play, Pause, Volume2, Download, SkipBack, SkipForward, Loader2 } from 'lucide-react';
 
 interface CallRecordingPlayerProps {
-  callSid: string;
+  callSid?: string;
+  recordingSid?: string;
   durationSeconds: number;
   callDetails?: {
     customerName?: string;
@@ -17,6 +18,7 @@ interface CallRecordingPlayerProps {
 
 export function CallRecordingPlayer({
   callSid,
+  recordingSid,
   durationSeconds,
   callDetails
 }: CallRecordingPlayerProps) {
@@ -28,8 +30,9 @@ export function CallRecordingPlayer({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Use proxy URL for secure access
-  const proxyUrl = `/api/recordings/${callSid}`;
+  // Use proxy URL for secure access - prefer recording_sid over call_sid
+  const sid = recordingSid || callSid;
+  const proxyUrl = `/api/recordings/${sid}`;
 
   useEffect(() => {
     // Preload audio

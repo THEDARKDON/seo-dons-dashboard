@@ -64,8 +64,9 @@ export default async function CallDetailPage({ params }: { params: { id: string 
       </div>
 
       {/* Recording Player */}
-      {call.recording_url && call.call_sid && (
+      {call.recording_url && (call.recording_sid || call.call_sid) && (
         <CallRecordingPlayer
+          recordingSid={call.recording_sid}
           callSid={call.call_sid}
           durationSeconds={call.recording_duration_seconds || call.duration_seconds || 0}
           callDetails={{

@@ -181,9 +181,14 @@ export default async function SDRDetailPage(props: { params: { id: string } }) {
             </div>
           </div>
         </div>
-        <Link href="/dashboard/admin/sdrs">
-          <Button variant="outline">← Back to SDR List</Button>
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/dashboard/admin/call-review">
+            <Button variant="default">View Call Review Dashboard</Button>
+          </Link>
+          <Link href="/dashboard/admin/sdrs">
+            <Button variant="outline">← Back to SDR List</Button>
+          </Link>
+        </div>
       </div>
 
       {/* Key Metrics */}

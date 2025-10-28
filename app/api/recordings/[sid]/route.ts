@@ -30,12 +30,22 @@ export async function GET(
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Verify user has access to this recording
-    const { data: recording } = await supabase
+    // Try to find recording by recording_sid first, then fall back to call_sid
+    let { data: recording } = await supabase
       .from('call_recordings')
-      .select('id, user_id, recording_url, call_sid')
-      .eq('call_sid', params.sid)
+      .select('id, user_id, recording_url, call_sid, recording_sid')
+      .eq('recording_sid', params.sid)
       .single();
+
+    // Fallback: try call_sid if not found by recording_sid
+    if (!recording) {
+      const { data: callRecord } = await supabase
+        .from('call_recordings')
+        .select('id, user_id, recording_url, call_sid, recording_sid')
+        .eq('call_sid', params.sid)
+        .single();
+      recording = callRecord;
+    }
 
     if (!recording) {
       return NextResponse.json({ error: 'Recording not found' }, { status: 404 });
@@ -46,11 +56,14 @@ export async function GET(
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
+    // Use recording_sid if available, otherwise use call_sid
+    const recordingSid = recording.recording_sid || params.sid;
+
     // Fetch recording from Twilio
     const twilioClient = twilio(accountSid, authToken);
 
     // Get recording details
-    const twilioRecording = await twilioClient.recordings(params.sid).fetch();
+    const twilioRecording = await twilioClient.recordings(recordingSid).fetch();
 
     // Construct the media URL (MP3 format)
     const mediaUrl = `https://api.twilio.com${twilioRecording.uri.replace('.json', '.mp3')}`;
