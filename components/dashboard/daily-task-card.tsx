@@ -115,7 +115,7 @@ export function DailyTaskCard({ tasks, onTaskToggle }: DailyTaskCardProps) {
           <Checkbox
             checked={isComplete}
             onCheckedChange={() => handleToggle(task.task_type, isComplete)}
-            disabled={loading === task.task_type || (hasTarget && task.current_value < task.target_value)}
+            disabled={loading === task.task_type || (hasTarget && task.target_value !== null && task.current_value < task.target_value)}
             className="h-5 w-5"
           />
         </div>
