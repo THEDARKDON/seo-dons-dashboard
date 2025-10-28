@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS appointments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
     customer_id UUID REFERENCES customers(id) ON DELETE SET NULL,
-    lead_id UUID REFERENCES leads(id) ON DELETE SET NULL,
+    lead_id UUID, -- No FK constraint - leads table may not exist
     deal_id UUID REFERENCES deals(id) ON DELETE SET NULL,
     title TEXT NOT NULL,
     description TEXT,
@@ -26,6 +26,16 @@ CREATE TABLE IF NOT EXISTS appointments (
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Add foreign key to leads if the table exists
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'leads') THEN
+        ALTER TABLE appointments
+        ADD CONSTRAINT fk_appointments_lead_id
+        FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE SET NULL;
+    END IF;
+END $$;
 
 -- Create indexes for performance
 CREATE INDEX IF NOT EXISTS idx_appointments_user_id ON appointments(user_id);
