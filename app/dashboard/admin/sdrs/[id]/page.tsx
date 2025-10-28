@@ -93,7 +93,7 @@ async function getSDRDetails(adminUserId: string, sdrId: string) {
   // Calculate stats
   const totalCalls = calls?.length || 0;
   const completedCalls = calls?.filter(c => c.status === 'completed').length || 0;
-  const totalDuration = calls?.reduce((acc, c) => acc + (c.duration || 0), 0) || 0;
+  const totalDuration = calls?.reduce((acc, c) => acc + (c.duration_seconds || 0), 0) || 0;
   const avgDuration = totalCalls > 0 ? Math.floor(totalDuration / totalCalls) : 0;
   const completionRate = totalCalls > 0 ? Math.round((completedCalls / totalCalls) * 100) : 0;
 
@@ -301,9 +301,9 @@ export default async function SDRDetailPage(props: { params: { id: string } }) {
                     <Badge variant={call.status === 'completed' ? 'default' : 'secondary'}>
                       {call.status}
                     </Badge>
-                    {call.duration && (
+                    {call.duration_seconds && (
                       <span className="text-xs text-muted-foreground">
-                        {Math.floor(call.duration / 60)}m
+                        {Math.floor(call.duration_seconds / 60)}m {call.duration_seconds % 60}s
                       </span>
                     )}
                   </div>

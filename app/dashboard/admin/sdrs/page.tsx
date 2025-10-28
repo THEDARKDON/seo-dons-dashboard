@@ -60,7 +60,7 @@ async function getSDRData(userId: string) {
     const sdrLeads = leads?.filter(l => l.assigned_to === sdr.id) || [];
     const sdrCallsToday = callsToday?.filter(c => c.user_id === sdr.id) || [];
 
-    const totalDuration = sdrCalls.reduce((acc, c) => acc + (c.duration || 0), 0);
+    const totalDuration = sdrCalls.reduce((acc, c) => acc + (c.duration_seconds || 0), 0);
     const avgDuration = sdrCalls.length > 0 ? Math.floor(totalDuration / sdrCalls.length) : 0;
     const completedCalls = sdrCalls.filter(c => c.status === 'completed').length;
 

@@ -58,7 +58,7 @@ export default async function CallsPage() {
   const callsToday = calls.filter(c => new Date(c.created_at).toDateString() === today).length;
   const completedCalls = calls.filter(c => c.status === 'completed').length;
   const totalCalls = calls.length;
-  const totalDuration = Math.floor(calls.reduce((acc, c) => acc + (c.duration || 0), 0) / 60);
+  const totalDuration = Math.floor(calls.reduce((acc, c) => acc + (c.duration_seconds || 0), 0) / 60);
 
   return (
     <div className="container mx-auto py-8 space-y-8">
@@ -164,8 +164,8 @@ export default async function CallsPage() {
                           <Badge variant={call.status === 'completed' ? 'default' : 'secondary'}>
                             {call.status}
                           </Badge>
-                          {call.duration && (
-                            <p className="text-sm text-muted-foreground">{Math.floor(call.duration / 60)}m {call.duration % 60}s</p>
+                          {call.duration_seconds && (
+                            <p className="text-sm text-muted-foreground">{Math.floor(call.duration_seconds / 60)}m {call.duration_seconds % 60}s</p>
                           )}
                           {call.recording_url && (
                             <Button variant="ghost" size="sm" className="h-6 px-2">

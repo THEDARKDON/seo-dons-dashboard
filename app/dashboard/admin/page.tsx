@@ -69,7 +69,7 @@ async function getAdminStats(userId: string) {
     const sdrLeads = leads?.filter(l => l.assigned_to === sdr.id) || [];
     const sdrCallsToday = callsToday?.filter(c => c.user_id === sdr.id) || [];
 
-    const totalDuration = sdrCalls.reduce((acc, c) => acc + (c.duration || 0), 0);
+    const totalDuration = sdrCalls.reduce((acc, c) => acc + (c.duration_seconds || 0), 0);
     const avgDuration = sdrCalls.length > 0 ? Math.floor(totalDuration / sdrCalls.length) : 0;
     const completedCalls = sdrCalls.filter(c => c.status === 'completed').length;
 
@@ -87,7 +87,7 @@ async function getAdminStats(userId: string) {
   // Calculate overall stats
   const totalCalls = allCalls?.length || 0;
   const totalCallsToday = callsToday?.length || 0;
-  const totalDuration = allCalls?.reduce((acc, c) => acc + (c.duration || 0), 0) || 0;
+  const totalDuration = allCalls?.reduce((acc, c) => acc + (c.duration_seconds || 0), 0) || 0;
   const avgCallDuration = totalCalls > 0 ? Math.floor(totalDuration / totalCalls) : 0;
   const completedCalls = allCalls?.filter(c => c.status === 'completed').length || 0;
   const completionRate = totalCalls > 0 ? Math.round((completedCalls / totalCalls) * 100) : 0;
