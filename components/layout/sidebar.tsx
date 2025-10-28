@@ -34,7 +34,6 @@ const navigation = [
   { name: 'Pipeline', href: '/dashboard/pipeline', icon: Kanban },
   { name: 'Deals', href: '/dashboard/deals', icon: Briefcase },
   { name: 'Customers', href: '/dashboard/customers', icon: Users },
-  { name: 'Calls', href: '/dashboard/calls', icon: Phone },
   { name: 'Call History', href: '/dashboard/calls/history', icon: History },
   { name: 'Appointments', href: '/dashboard/appointments', icon: Calendar },
   { name: 'Commissions', href: '/dashboard/commissions', icon: DollarSign },

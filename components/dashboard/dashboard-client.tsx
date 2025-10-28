@@ -7,6 +7,7 @@ import { MRRGoalWidget } from '@/components/dashboard/mrr-goal-widget';
 import { DailyTaskCard } from '@/components/dashboard/daily-task-card';
 import { TaskStreak } from '@/components/dashboard/task-streak';
 import { CallHistoryMini } from '@/components/dashboard/call-history-mini';
+import { ActivityLeaderboard } from '@/components/dashboard/activity-leaderboard';
 import { Phone, Calendar, Briefcase, TrendingUp } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 
@@ -111,8 +112,8 @@ export function DashboardClient({ initialData }: DashboardClientProps) {
         target={initialData.mrr.target}
       />
 
-      {/* Streak Card + Daily Tasks */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      {/* Streak Card + Daily Tasks + Leaderboard */}
+      <div className="grid gap-6 lg:grid-cols-3">
         {initialData.streak && (
           <TaskStreak
             currentStreak={initialData.streak.current}
@@ -124,6 +125,7 @@ export function DashboardClient({ initialData }: DashboardClientProps) {
         {!loading && tasks.length > 0 && (
           <DailyTaskCard tasks={tasks} onTaskToggle={handleTaskToggle} />
         )}
+        <ActivityLeaderboard />
       </div>
 
       {/* Key Metrics Row */}
