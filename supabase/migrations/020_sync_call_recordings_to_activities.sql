@@ -10,27 +10,30 @@ BEGIN
     INSERT INTO activities (
       user_id,
       activity_type,
-      activity_date,
+      subject,
+      description,
+      duration_minutes,
       outcome,
-      notes,
       customer_id,
       deal_id,
-      created_at,
-      updated_at
+      completed_at,
+      created_at
     ) VALUES (
       NEW.user_id,
       'call',
-      NEW.created_at,
+      CONCAT('Call to ', NEW.to_number),
+      CONCAT('Call duration: ', COALESCE(NEW.duration_seconds, 0), 's'),
+      COALESCE(NEW.duration_seconds / 60, 0),
       CASE
         WHEN NEW.status = 'completed' THEN 'successful'
-        WHEN NEW.status IN ('failed', 'busy', 'no-answer') THEN 'unsuccessful'
-        ELSE 'pending'
+        WHEN NEW.status = 'no-answer' THEN 'no_answer'
+        WHEN NEW.status IN ('failed', 'busy') THEN 'not_interested'
+        ELSE 'successful'
       END,
-      CONCAT('Call to ', NEW.to_number, ' - Duration: ', COALESCE(NEW.duration_seconds, 0), 's'),
       NEW.customer_id,
       NEW.deal_id,
-      NEW.created_at,
-      NEW.updated_at
+      CASE WHEN NEW.status = 'completed' THEN NEW.created_at ELSE NULL END,
+      NEW.created_at
     )
     ON CONFLICT DO NOTHING;
   END IF;
@@ -39,18 +42,21 @@ BEGIN
   IF (TG_OP = 'UPDATE') THEN
     UPDATE activities
     SET
+      subject = CONCAT('Call to ', NEW.to_number),
+      description = CONCAT('Call duration: ', COALESCE(NEW.duration_seconds, 0), 's'),
+      duration_minutes = COALESCE(NEW.duration_seconds / 60, 0),
       outcome = CASE
         WHEN NEW.status = 'completed' THEN 'successful'
-        WHEN NEW.status IN ('failed', 'busy', 'no-answer') THEN 'unsuccessful'
-        ELSE 'pending'
+        WHEN NEW.status = 'no-answer' THEN 'no_answer'
+        WHEN NEW.status IN ('failed', 'busy') THEN 'not_interested'
+        ELSE 'successful'
       END,
-      notes = CONCAT('Call to ', NEW.to_number, ' - Duration: ', COALESCE(NEW.duration_seconds, 0), 's'),
       customer_id = NEW.customer_id,
       deal_id = NEW.deal_id,
-      updated_at = NEW.updated_at
+      completed_at = CASE WHEN NEW.status = 'completed' THEN NEW.created_at ELSE NULL END
     WHERE user_id = NEW.user_id
       AND activity_type = 'call'
-      AND activity_date = NEW.created_at;
+      AND created_at = NEW.created_at;
   END IF;
 
   RETURN NEW;
@@ -69,32 +75,35 @@ CREATE TRIGGER trigger_sync_call_to_activities
 INSERT INTO activities (
   user_id,
   activity_type,
-  activity_date,
+  subject,
+  description,
+  duration_minutes,
   outcome,
-  notes,
   customer_id,
   deal_id,
-  created_at,
-  updated_at
+  completed_at,
+  created_at
 )
 SELECT
   cr.user_id,
   'call' as activity_type,
-  cr.created_at as activity_date,
+  CONCAT('Call to ', cr.to_number) as subject,
+  CONCAT('Call duration: ', COALESCE(cr.duration_seconds, 0), 's') as description,
+  COALESCE(cr.duration_seconds / 60, 0) as duration_minutes,
   CASE
     WHEN cr.status = 'completed' THEN 'successful'
-    WHEN cr.status IN ('failed', 'busy', 'no-answer') THEN 'unsuccessful'
-    ELSE 'pending'
+    WHEN cr.status = 'no-answer' THEN 'no_answer'
+    WHEN cr.status IN ('failed', 'busy') THEN 'not_interested'
+    ELSE 'successful'
   END as outcome,
-  CONCAT('Call to ', cr.to_number, ' - Duration: ', COALESCE(cr.duration_seconds, 0), 's') as notes,
   cr.customer_id,
   cr.deal_id,
-  cr.created_at,
-  cr.updated_at
+  CASE WHEN cr.status = 'completed' THEN cr.created_at ELSE NULL END as completed_at,
+  cr.created_at
 FROM call_recordings cr
 WHERE NOT EXISTS (
   SELECT 1 FROM activities a
   WHERE a.user_id = cr.user_id
     AND a.activity_type = 'call'
-    AND a.activity_date = cr.created_at
+    AND a.created_at = cr.created_at
 );
