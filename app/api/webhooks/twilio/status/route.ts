@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     };
 
     if (callDuration) {
-      updateData.duration = parseInt(callDuration);
+      updateData.duration_seconds = parseInt(callDuration);
     }
 
     if (callStatus === 'completed' || callStatus === 'failed' || callStatus === 'busy' || callStatus === 'no-answer') {

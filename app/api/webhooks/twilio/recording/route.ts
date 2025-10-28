@@ -26,9 +26,8 @@ export async function POST(req: NextRequest) {
     const { error } = await supabase
       .from('call_recordings')
       .update({
-        recording_sid: recordingSid,
         recording_url: recordingUrl,
-        recording_duration: recordingDuration ? parseInt(recordingDuration) : null,
+        recording_duration_seconds: recordingDuration ? parseInt(recordingDuration) : null,
         updated_at: new Date().toISOString(),
       })
       .eq('call_sid', callSid);

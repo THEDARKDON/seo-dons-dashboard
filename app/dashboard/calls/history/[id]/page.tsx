@@ -3,9 +3,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { createClient } from '@/lib/supabase/server';
 import { formatDate } from '@/lib/utils';
-import { ArrowLeft, Download, Phone, TrendingUp, Clock, FileText } from 'lucide-react';
+import { ArrowLeft, Phone, TrendingUp, Clock, FileText } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { CallRecordingPlayer } from '@/components/calling/call-recording-player';
 
 async function getCallDetails(callId: string) {
   try {
@@ -48,29 +49,31 @@ export default async function CallDetailPage({ params }: { params: { id: string 
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/dashboard/calls/history">
-            <Button variant="outline" size="icon">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold">
-              {customer ? `${customer.first_name} ${customer.last_name}` : call.to_number}
-            </h1>
-            <p className="text-muted-foreground">{formatDate(call.created_at)}</p>
-          </div>
+      <div className="flex items-center gap-4">
+        <Link href="/dashboard/calls/history">
+          <Button variant="outline" size="icon">
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+        </Link>
+        <div>
+          <h1 className="text-3xl font-bold">
+            {customer ? `${customer.first_name} ${customer.last_name}` : call.to_number}
+          </h1>
+          <p className="text-muted-foreground">{formatDate(call.created_at)}</p>
         </div>
-        {call.recording_url && (
-          <a href={call.recording_url} target="_blank" rel="noopener noreferrer">
-            <Button variant="outline" className="gap-2">
-              <Download className="h-4 w-4" />
-              Download Recording
-            </Button>
-          </a>
-        )}
       </div>
+
+      {/* Recording Player */}
+      {call.recording_url && call.call_sid && (
+        <CallRecordingPlayer
+          callSid={call.call_sid}
+          durationSeconds={call.recording_duration_seconds || call.duration_seconds || 0}
+          callDetails={{
+            customerName: customer ? `${customer.first_name} ${customer.last_name}` : undefined,
+            date: formatDate(call.created_at)
+          }}
+        />
+      )}
 
       {/* Call Overview */}
       <div className="grid gap-6 md:grid-cols-2">
