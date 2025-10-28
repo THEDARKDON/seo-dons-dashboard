@@ -29,7 +29,7 @@ async function getSocialData(userId: string) {
         .from('linkedin_connections')
         .select('*')
         .eq('user_id', user.id)
-        .eq('active', true)
+        .eq('is_active', true)
         .single();
       linkedInConnection = data;
     } catch (e) {

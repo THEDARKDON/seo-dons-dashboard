@@ -76,7 +76,7 @@ export async function GET(req: Request) {
         linkedin_email: profile.email,
         profile_name: profile.name,
         profile_picture_url: profile.picture,
-        active: true,
+        is_active: true,
         last_synced_at: new Date().toISOString(),
       }, {
         onConflict: 'user_id',
