@@ -95,10 +95,12 @@ export function DailyTaskCard({ tasks, onTaskToggle }: DailyTaskCardProps) {
 
     const Icon = config.icon;
     const hasTarget = task.target_value !== null && task.target_value > 0;
-    const progress = hasTarget
+    const progress = hasTarget && task.target_value
       ? Math.min((task.current_value / task.target_value) * 100, 100)
       : 0;
-    const isComplete = hasTarget ? task.current_value >= task.target_value : task.completed;
+    const isComplete = hasTarget && task.target_value
+      ? task.current_value >= task.target_value
+      : task.completed;
 
     return (
       <div
