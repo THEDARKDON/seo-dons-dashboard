@@ -35,7 +35,8 @@ export async function GET(req: Request) {
     // Generate LinkedIn authorization URL
     const authUrl = getAuthorizationUrl(state);
 
-    return NextResponse.json({ authUrl });
+    // Redirect to LinkedIn OAuth page
+    return NextResponse.redirect(authUrl);
   } catch (error: any) {
     console.error('Error initiating LinkedIn auth:', error);
     return NextResponse.json(
