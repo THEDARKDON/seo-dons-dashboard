@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     // Find which user this phone number belongs to
     const { data: phoneNumber } = await supabase
       .from('user_phone_numbers')
-      .select('user_id, users(id, clerk_id, first_name, last_name)')
+      .select('user_id')
       .eq('phone_number', to)
       .eq('is_active', true)
       .single();
@@ -35,6 +35,28 @@ export async function POST(request: NextRequest) {
         `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
   <Say>This number is not configured. Please contact support.</Say>
+  <Hangup/>
+</Response>`,
+        {
+          status: 200,
+          headers: { 'Content-Type': 'text/xml' },
+        }
+      );
+    }
+
+    // Get user details
+    const { data: user } = await supabase
+      .from('users')
+      .select('id, clerk_id')
+      .eq('id', phoneNumber.user_id)
+      .single();
+
+    if (!user) {
+      console.log('[Twilio Voice] User not found:', phoneNumber.user_id);
+      return new NextResponse(
+        `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Say>User not found. Please contact support.</Say>
   <Hangup/>
 </Response>`,
         {
@@ -77,7 +99,7 @@ export async function POST(request: NextRequest) {
 
     // Create TwiML response for inbound call
     // This will dial the call to the browser using Twilio Client
-    const userIdentity = phoneNumber.users.clerk_id;
+    const userIdentity = user.clerk_id;
 
     return new NextResponse(
       `<?xml version="1.0" encoding="UTF-8"?>
