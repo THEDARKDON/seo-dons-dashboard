@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/table';
 import { Users, Phone, Mail, Calendar, Shield } from 'lucide-react';
 import Link from 'next/link';
+import { RoleChangeDialog } from '@/components/admin/role-change-dialog';
 
 // Disable caching
 export const dynamic = 'force-dynamic';
@@ -200,6 +201,11 @@ export default async function UsersPage() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
+                      <RoleChangeDialog
+                        userId={user.id}
+                        currentRole={user.role}
+                        userName={`${user.first_name} ${user.last_name}`}
+                      />
                       {user.role !== 'admin' && (
                         <>
                           <Link href={`/dashboard/admin/users/${user.id}/leads`}>
