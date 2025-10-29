@@ -201,11 +201,18 @@ export default async function UsersPage() {
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       {user.role !== 'admin' && (
-                        <Link href={`/dashboard/admin/sdrs/${user.id}`}>
-                          <Button variant="ghost" size="sm">
-                            View Stats
-                          </Button>
-                        </Link>
+                        <>
+                          <Link href={`/dashboard/admin/users/${user.id}/leads`}>
+                            <Button variant="outline" size="sm">
+                              Manage Leads
+                            </Button>
+                          </Link>
+                          <Link href={`/dashboard/admin/sdrs/${user.id}`}>
+                            <Button variant="ghost" size="sm">
+                              View Stats
+                            </Button>
+                          </Link>
+                        </>
                       )}
                     </div>
                   </TableCell>
