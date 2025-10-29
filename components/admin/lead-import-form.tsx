@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Table,
   TableBody,
@@ -38,7 +37,7 @@ interface ParsedLead {
 
 export default function LeadImportForm({ userId }: LeadImportFormProps) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState('csv');
+  const [showManualForm, setShowManualForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [parsedLeads, setParsedLeads] = useState<ParsedLead[]>([]);
@@ -221,20 +220,27 @@ export default function LeadImportForm({ userId }: LeadImportFormProps) {
           </div>
         )}
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="csv">
-              <Upload className="h-4 w-4 mr-2" />
-              CSV Upload
-            </TabsTrigger>
-            <TabsTrigger value="manual">
-              <Plus className="h-4 w-4 mr-2" />
-              Manual Entry
-            </TabsTrigger>
-          </TabsList>
+        <div className="flex gap-2 mb-6">
+          <Button
+            variant={!showManualForm ? 'default' : 'outline'}
+            onClick={() => setShowManualForm(false)}
+            className="flex-1"
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            CSV Upload
+          </Button>
+          <Button
+            variant={showManualForm ? 'default' : 'outline'}
+            onClick={() => setShowManualForm(true)}
+            className="flex-1"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Manual Entry
+          </Button>
+        </div>
 
-          {/* CSV Upload Tab */}
-          <TabsContent value="csv" className="space-y-4">
+        {!showManualForm ? (
+          <div className="space-y-4">
             <div className="space-y-4">
               <div>
                 <Label htmlFor="csv-file">Upload CSV File</Label>
@@ -319,11 +325,9 @@ export default function LeadImportForm({ userId }: LeadImportFormProps) {
                 </>
               )}
             </div>
-          </TabsContent>
-
-          {/* Manual Entry Tab */}
-          <TabsContent value="manual">
-            <form onSubmit={handleManualSubmit} className="space-y-4">
+          </div>
+        ) : (
+          <form onSubmit={handleManualSubmit} className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <Label htmlFor="company_name">Company Name *</Label>
@@ -451,8 +455,7 @@ export default function LeadImportForm({ userId }: LeadImportFormProps) {
                 )}
               </Button>
             </form>
-          </TabsContent>
-        </Tabs>
+        )}
       </CardContent>
     </Card>
   );
