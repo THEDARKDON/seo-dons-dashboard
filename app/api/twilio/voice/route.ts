@@ -21,15 +21,14 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient();
 
-    // Find which user this phone number belongs to
-    const { data: phoneNumber } = await supabase
-      .from('user_phone_numbers')
-      .select('user_id')
-      .eq('phone_number', to)
-      .eq('is_active', true)
+    // Find which user this phone number belongs to (using existing voip settings table)
+    const { data: voipSettings } = await supabase
+      .from('user_voip_settings')
+      .select('user_id, assigned_phone_number')
+      .eq('assigned_phone_number', to)
       .single();
 
-    if (!phoneNumber) {
+    if (!voipSettings) {
       console.log('[Twilio Voice] No user found for number:', to);
       return new NextResponse(
         `<?xml version="1.0" encoding="UTF-8"?>
@@ -48,11 +47,11 @@ export async function POST(request: NextRequest) {
     const { data: user } = await supabase
       .from('users')
       .select('id, clerk_id')
-      .eq('id', phoneNumber.user_id)
+      .eq('id', voipSettings.user_id)
       .single();
 
     if (!user) {
-      console.log('[Twilio Voice] User not found:', phoneNumber.user_id);
+      console.log('[Twilio Voice] User not found:', voipSettings.user_id);
       return new NextResponse(
         `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
@@ -78,7 +77,7 @@ export async function POST(request: NextRequest) {
       await supabase
         .from('call_recordings')
         .insert({
-          user_id: phoneNumber.user_id,
+          user_id: voipSettings.user_id,
           call_sid: callSid,
           from_number: from,
           to_number: to,
