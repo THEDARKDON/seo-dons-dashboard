@@ -20,8 +20,74 @@ export async function POST(req: NextRequest) {
 
     console.log('📞 Twilio voice webhook:', { callSid, from, to, direction, callStatus });
 
-    // This webhook is called when the call is answered
-    // We need to return empty TwiML because recording is handled by the API call parameters
+    // Check if this is an inbound call to a purchased number
+    if (direction === 'inbound' || !direction) {
+      const { createClient } = await import('@/lib/supabase/server');
+      const supabase = await createClient();
+
+      // Find which user this phone number belongs to
+      const { data: voipSettings } = await supabase
+        .from('user_voip_settings')
+        .select('user_id, assigned_phone_number')
+        .eq('assigned_phone_number', to)
+        .single();
+
+      if (voipSettings) {
+        // Get user's clerk_id for Twilio Client identity
+        const { data: user } = await supabase
+          .from('users')
+          .select('id, clerk_id')
+          .eq('id', voipSettings.user_id)
+          .single();
+
+        if (user) {
+          console.log('✅ Routing inbound call to user:', user.clerk_id);
+
+          // Create call record
+          await supabase
+            .from('call_recordings')
+            .insert({
+              user_id: user.id,
+              call_sid: callSid,
+              from_number: from,
+              to_number: to,
+              direction: 'inbound',
+              status: callStatus || 'in-progress',
+              created_at: new Date().toISOString(),
+            });
+
+          // Route to user's browser via Twilio Client
+          const twiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Dial>
+    <Client>${user.clerk_id}</Client>
+  </Dial>
+</Response>`;
+
+          return new NextResponse(twiml, {
+            headers: {
+              'Content-Type': 'text/xml',
+            },
+          });
+        }
+      }
+
+      // No user found for this number
+      console.log('⚠️ No user found for number:', to);
+      const notFoundTwiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Say voice="alice">This number is not configured. Please contact support.</Say>
+  <Hangup/>
+</Response>`;
+
+      return new NextResponse(notFoundTwiml, {
+        headers: {
+          'Content-Type': 'text/xml',
+        },
+      });
+    }
+
+    // Outbound call - return empty TwiML (recording handled by API parameters)
     const twiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
 </Response>`;
