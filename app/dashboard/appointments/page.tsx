@@ -58,7 +58,7 @@ export default async function AppointmentsPage() {
           <h1 className="text-3xl font-bold">Appointments</h1>
           <p className="text-muted-foreground">Manage your scheduled meetings</p>
         </div>
-        <Link href="/dashboard/calls/new">
+        <Link href="/dashboard/appointments/new">
           <Button className="gap-2">
             <Plus className="h-4 w-4" />
             Schedule Appointment
@@ -123,6 +123,10 @@ export default async function AppointmentsPage() {
                                   </span>
                                 )}
                               </>
+                            ) : appointment.contact_name ? (
+                              appointment.contact_name
+                            ) : appointment.contact_email ? (
+                              appointment.contact_email
                             ) : (
                               'Unknown Contact'
                             )}
@@ -186,6 +190,10 @@ export default async function AppointmentsPage() {
                                   </span>
                                 )}
                               </>
+                            ) : appointment.contact_name ? (
+                              appointment.contact_name
+                            ) : appointment.contact_email ? (
+                              appointment.contact_email
                             ) : (
                               'Unknown Contact'
                             )}

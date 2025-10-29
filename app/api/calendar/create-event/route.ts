@@ -66,10 +66,12 @@ export async function POST(req: Request) {
         deal_id: dealId || null,
         lead_id: leadId || null,
         activity_type: 'appointment',
-        title: title || `Meeting with ${customerName || customerEmail}`,
+        subject: title || `Meeting with ${customerName || customerEmail}`,
         description: description || `Follow-up meeting scheduled after call`,
         scheduled_at: start.toISOString(),
         status: 'scheduled',
+        contact_name: customerName || null,
+        contact_email: customerEmail || null,
       })
       .select()
       .single();
