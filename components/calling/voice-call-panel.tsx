@@ -67,6 +67,11 @@ export function VoiceCallPanel({ leadId, customerId, dealId, phoneNumber }: Voic
       twilioDevice.on('registered', () => {
         console.log('Twilio Device registered');
         toast.success('Voice system ready');
+
+        // Request notification permission for incoming calls
+        if ('Notification' in window && Notification.permission === 'default') {
+          Notification.requestPermission();
+        }
       });
 
       twilioDevice.on('error', (error) => {
@@ -79,6 +84,20 @@ export function VoiceCallPanel({ leadId, customerId, dealId, phoneNumber }: Voic
         setCall(incomingCall);
         setStatus('ringing');
         setupCallHandlers(incomingCall);
+
+        // Show browser notification
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification('Incoming Call', {
+            body: `Call from ${incomingCall.parameters.From}`,
+            icon: '/phone-icon.png',
+            requireInteraction: true,
+          });
+        }
+
+        // Show toast notification
+        toast.info(`Incoming call from ${incomingCall.parameters.From}`, {
+          duration: 30000, // 30 seconds
+        });
       });
 
       await twilioDevice.register();
@@ -190,6 +209,12 @@ export function VoiceCallPanel({ leadId, customerId, dealId, phoneNumber }: Voic
     }
   };
 
+  const answerCall = () => {
+    if (call && status === 'ringing') {
+      call.accept();
+    }
+  };
+
   const toggleMute = () => {
     if (call) {
       call.mute(!muted);
@@ -261,12 +286,42 @@ export function VoiceCallPanel({ leadId, customerId, dealId, phoneNumber }: Voic
           </div>
         )}
 
+        {/* Incoming Call - Answer/Reject */}
+        {status === 'ringing' && (
+          <div className="space-y-4">
+            <div className="text-center p-6 bg-blue-50 border-2 border-blue-200 rounded-lg animate-pulse">
+              <Phone className="h-12 w-12 mx-auto mb-3 text-blue-600" />
+              <p className="text-sm text-muted-foreground">Incoming Call</p>
+              <p className="text-2xl font-semibold">{call?.parameters?.From || 'Unknown'}</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                size="lg"
+                className="bg-green-600 hover:bg-green-700"
+                onClick={answerCall}
+              >
+                <Phone className="h-5 w-5 mr-2" />
+                Answer
+              </Button>
+              <Button
+                size="lg"
+                variant="destructive"
+                onClick={hangUp}
+              >
+                <PhoneOff className="h-5 w-5 mr-2" />
+                Reject
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Active Call Controls */}
-        {(status === 'active' || status === 'ringing' || status === 'connecting') && (
+        {(status === 'active' || status === 'connecting') && (
           <div className="space-y-4">
             <div className="text-center p-4 bg-muted rounded-lg">
-              <p className="text-sm text-muted-foreground">Calling</p>
-              <p className="text-2xl font-semibold">{dialNumber}</p>
+              <p className="text-sm text-muted-foreground">Call Active</p>
+              <p className="text-2xl font-semibold">{call?.parameters?.From || dialNumber}</p>
               {status === 'active' && (
                 <p className="text-lg text-muted-foreground mt-2">{formatDuration(callDuration)}</p>
               )}
