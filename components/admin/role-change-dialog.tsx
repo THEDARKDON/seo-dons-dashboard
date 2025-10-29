@@ -124,7 +124,7 @@ export function RoleChangeDialog({ userId, currentRole, userName }: RoleChangeDi
                 <strong>Warning:</strong> Changing from{' '}
                 <strong>{roleLabels[currentRole as keyof typeof roleLabels]}</strong> to{' '}
                 <strong>{roleLabels[selectedRole as keyof typeof roleLabels]}</strong> will
-                immediately update the user's permissions.
+                immediately update the user&apos;s permissions.
               </p>
             </div>
           )}
