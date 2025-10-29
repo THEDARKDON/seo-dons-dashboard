@@ -63,8 +63,8 @@ export async function GET() {
       twimlAppSid: twimlAppSid?.substring(0, 10) + '...',
     });
 
-    // Create identity for this user
-    const identity = `${user.first_name}_${user.last_name}_${user.id}`.replace(/\s/g, '_');
+    // Create identity for this user - MUST match clerk_id for inbound call routing
+    const identity = userId; // Use Clerk ID as identity
 
     // Create access token
     try {
