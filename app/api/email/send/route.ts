@@ -27,9 +27,35 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { to, subject, htmlBody, textBody, leadId, customerId, callId } = body;
+    const { to, subject, htmlBody, textBody, leadId, customerId, callId, emailId } = body;
 
-    if (!to || !subject || (!htmlBody && !textBody)) {
+    // If emailId is provided, load from database
+    let emailData;
+    if (emailId) {
+      const { data, error } = await supabase
+        .from('email_messages')
+        .select('*')
+        .eq('id', emailId)
+        .single();
+
+      if (error || !data) {
+        return NextResponse.json({ error: 'Email not found' }, { status: 404 });
+      }
+
+      emailData = {
+        to: data.to_email,
+        subject: data.subject,
+        htmlBody: data.body_html,
+        textBody: data.body_text,
+        leadId: data.lead_id,
+        customerId: data.customer_id,
+        callId: data.call_id,
+      };
+    } else {
+      emailData = { to, subject, htmlBody, textBody, leadId, customerId, callId };
+    }
+
+    if (!emailData.to || !emailData.subject || (!emailData.htmlBody && !emailData.textBody)) {
       return NextResponse.json(
         { error: 'To, subject, and body are required' },
         { status: 400 }
@@ -86,12 +112,12 @@ export async function POST(request: NextRequest) {
     // Create email message
     const emailLines = [
       `From: ${user.first_name} ${user.last_name} <${user.email}>`,
-      `To: ${to}`,
-      `Subject: ${subject}`,
+      `To: ${emailData.to}`,
+      `Subject: ${emailData.subject}`,
       'MIME-Version: 1.0',
       'Content-Type: text/html; charset=utf-8',
       '',
-      htmlBody || textBody,
+      emailData.htmlBody || emailData.textBody,
     ];
 
     const email = emailLines.join('\r\n');
@@ -109,24 +135,52 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Store email in database
-    const { data: emailMessage, error: dbError } = await supabase
-      .from('email_messages')
-      .insert({
-        user_id: user.id,
-        from_email: user.email,
-        to_email: to,
-        subject,
-        body: htmlBody || textBody,
-        direction: 'outbound',
-        status: 'sent',
-        gmail_message_id: response.data.id,
-        gmail_thread_id: response.data.threadId,
-        conversation_id: to,
-        call_id: callId || null,
-      })
-      .select()
-      .single();
+    // Store or update email in database
+    let emailMessage;
+    let dbError;
+
+    if (emailId) {
+      // Update existing email record
+      const result = await supabase
+        .from('email_messages')
+        .update({
+          status: 'sent',
+          gmail_message_id: response.data.id,
+          gmail_thread_id: response.data.threadId,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', emailId)
+        .select()
+        .single();
+
+      emailMessage = result.data;
+      dbError = result.error;
+    } else {
+      // Insert new email record
+      const result = await supabase
+        .from('email_messages')
+        .insert({
+          user_id: user.id,
+          from_email: user.email,
+          to_email: emailData.to,
+          subject: emailData.subject,
+          body_html: emailData.htmlBody,
+          body_text: emailData.textBody,
+          direction: 'outbound',
+          status: 'sent',
+          gmail_message_id: response.data.id,
+          gmail_thread_id: response.data.threadId,
+          conversation_id: emailData.to,
+          lead_id: emailData.leadId || null,
+          customer_id: emailData.customerId || null,
+          call_id: emailData.callId || null,
+        })
+        .select()
+        .single();
+
+      emailMessage = result.data;
+      dbError = result.error;
+    }
 
     if (dbError) {
       console.error('Failed to store email in database:', dbError);

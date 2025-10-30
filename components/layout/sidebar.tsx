@@ -26,6 +26,7 @@ import {
   PhoneCall,
   MessageSquare,
   Mail,
+  Send,
 } from 'lucide-react';
 
 const navigation = [
@@ -44,6 +45,7 @@ const navigation = [
   { name: 'Leaderboard', href: '/dashboard/leaderboard', icon: Trophy },
   { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
   { name: 'Compliance', href: '/dashboard/compliance', icon: Shield },
+  { name: 'Auto Send', href: '/dashboard/auto-send', icon: Send },
 ];
 
 const adminNavigation = [

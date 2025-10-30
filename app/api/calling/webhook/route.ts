@@ -76,6 +76,23 @@ export async function POST(req: Request) {
       .eq('status', 'calling')
       .eq('phone_number', formData.get('To') as string);
 
+    // Trigger auto-send SMS/Email if call is completed
+    if (callStatus === 'completed' || callStatus === 'no-answer' || callStatus === 'busy' || callStatus === 'failed') {
+      try {
+        await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/calling/auto-send`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            callSid,
+            callStatus,
+          }),
+        });
+      } catch (autoSendError) {
+        console.error('Error triggering auto-send:', autoSendError);
+        // Don't fail the webhook if auto-send fails
+      }
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error handling webhook:', error);
