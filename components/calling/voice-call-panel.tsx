@@ -18,6 +18,8 @@ import {
   Play,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { PostCallSMSModal } from '@/components/sms/post-call-sms-modal';
+import { PostCallEmailModal } from '@/components/email/post-call-email-modal';
 
 interface VoiceCallPanelProps {
   leadId?: string;
@@ -34,6 +36,9 @@ export function VoiceCallPanel({ leadId, customerId, dealId, phoneNumber }: Voic
   const [onHold, setOnHold] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
   const [dialNumber, setDialNumber] = useState(phoneNumber || '');
+  const [showSMSModal, setShowSMSModal] = useState(false);
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [lastCallData, setLastCallData] = useState<{ phone: string; email?: string; name?: string; callId?: string } | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Initialize Twilio Device
@@ -118,29 +123,54 @@ export function VoiceCallPanel({ leadId, customerId, dealId, phoneNumber }: Voic
     activeCall.on('disconnect', async () => {
       console.log('Call disconnected');
       const finalDuration = callDuration;
+      const phoneToCall = dialNumber || activeCall.parameters.From;
 
       setStatus('idle');
       setCall(null);
       stopCallTimer();
 
       // Save call to database
+      let savedCallId: string | undefined;
       if (activeCall.parameters.CallSid && finalDuration > 0) {
         try {
-          await fetch('/api/calling/save-call', {
+          const response = await fetch('/api/calling/save-call', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               callSid: activeCall.parameters.CallSid,
-              toNumber: dialNumber,
+              toNumber: phoneToCall,
               leadId,
               customerId,
               dealId,
               duration: finalDuration,
             }),
           });
+          const data = await response.json();
+          savedCallId = data.callId;
           toast.success('Call saved to history');
         } catch (error) {
           console.error('Failed to save call:', error);
+        }
+      }
+
+      // Get contact info for post-call follow-up
+      if (finalDuration > 5 && phoneToCall) {
+        try {
+          // Try to find lead or customer info
+          const response = await fetch(`/api/contacts/lookup?phone=${encodeURIComponent(phoneToCall)}`);
+          const data = await response.json();
+
+          setLastCallData({
+            phone: phoneToCall,
+            email: data.email,
+            name: data.name,
+            callId: savedCallId
+          });
+          setShowSMSModal(true); // Show SMS modal first
+        } catch (error) {
+          console.error('Failed to lookup contact:', error);
+          setLastCallData({ phone: phoneToCall, callId: savedCallId });
+          setShowSMSModal(true);
         }
       }
     });
@@ -365,6 +395,39 @@ export function VoiceCallPanel({ leadId, customerId, dealId, phoneNumber }: Voic
           </div>
         )}
       </CardContent>
+
+      {/* Post-Call SMS Modal */}
+      {lastCallData && (
+        <>
+          <PostCallSMSModal
+            isOpen={showSMSModal}
+            onClose={() => {
+              setShowSMSModal(false);
+              // Show email modal after SMS modal if email is available
+              if (lastCallData.email) {
+                setTimeout(() => setShowEmailModal(true), 300);
+              }
+            }}
+            phoneNumber={lastCallData.phone}
+            contactName={lastCallData.name}
+            callId={lastCallData.callId}
+            leadId={leadId}
+            customerId={customerId}
+          />
+
+          {lastCallData.email && (
+            <PostCallEmailModal
+              isOpen={showEmailModal}
+              onClose={() => setShowEmailModal(false)}
+              toEmail={lastCallData.email}
+              contactName={lastCallData.name}
+              callId={lastCallData.callId}
+              leadId={leadId}
+              customerId={customerId}
+            />
+          )}
+        </>
+      )}
     </Card>
   );
 }
