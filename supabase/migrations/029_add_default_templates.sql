@@ -6,7 +6,7 @@ SELECT
   'post_call',
   true,
   true,
-  5, -- Send 5 minutes after call
+  0, -- Send immediately (works on free plan without cron)
   (SELECT id FROM users WHERE role = 'admin' ORDER BY created_at LIMIT 1)
 WHERE NOT EXISTS (
   SELECT 1 FROM sms_templates WHERE name = 'Successful Call Follow-up'
@@ -19,7 +19,7 @@ SELECT
   'post_call',
   true,
   true,
-  2, -- Send 2 minutes after failed call
+  0, -- Send immediately (works on free plan without cron)
   (SELECT id FROM users WHERE role = 'admin' ORDER BY created_at LIMIT 1)
 WHERE NOT EXISTS (
   SELECT 1 FROM sms_templates WHERE name = 'Missed Call Follow-up'

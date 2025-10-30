@@ -40,25 +40,49 @@ A Vercel cron job runs **every minute** to process scheduled messages.
 3. Send via Twilio (SMS) or Gmail (Email)
 4. Update status to `sent` or `failed`
 
-### 4. Cron Configuration
-**File:** [vercel.json](vercel.json)
+### 4. Scheduled Message Processing Options
 
-```json
-{
-  "crons": [
-    {
-      "path": "/api/messages/process-scheduled",
-      "schedule": "* * * * *"
-    }
-  ]
-}
-```
+**⚠️ IMPORTANT:** Vercel Hobby (Free) plan does NOT support frequent cron jobs (only 1x daily max).
 
-This runs every minute on Vercel. For local development, you can manually trigger:
-```bash
-curl -X POST http://localhost:3000/api/messages/process-scheduled \
-  -H "Authorization: Bearer YOUR_CRON_SECRET"
-```
+**Current Setup:**
+- SMS with delay=0 → Sends immediately ✅
+- Email → Sends immediately ✅
+- SMS with delay (2-5 min) → Requires scheduled processing
+
+**Option A: External Cron Service (Recommended for Free Plan)**
+
+Use a free external service to trigger message processing:
+
+1. **cron-job.org** (Free, Reliable)
+   - Sign up at https://cron-job.org
+   - Create job to call: `https://your-domain.vercel.app/api/messages/process-scheduled`
+   - Schedule: Every 5 minutes
+   - Method: POST or GET
+
+2. **GitHub Actions** (Free for Public Repos)
+   ```yaml
+   # .github/workflows/cron-messages.yml
+   name: Process Scheduled Messages
+   on:
+     schedule:
+       - cron: '*/5 * * * *'
+   jobs:
+     process:
+       runs-on: ubuntu-latest
+       steps:
+         - run: curl -X POST ${{ secrets.APP_URL }}/api/messages/process-scheduled
+   ```
+
+3. **Manual Trigger** (Testing/Development)
+   ```bash
+   curl -X POST https://your-domain.vercel.app/api/messages/process-scheduled \
+     -H "Authorization: Bearer YOUR_CRON_SECRET"
+   ```
+
+**Option B: Vercel Pro Plan ($20/month)**
+- Add `vercel.json` with cron configuration
+- Unlimited cron invocations
+- Guaranteed timing
 
 ## Database Schema
 
