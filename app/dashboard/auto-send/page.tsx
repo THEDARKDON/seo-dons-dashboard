@@ -322,7 +322,7 @@ export default function AutoSendPage() {
             {'{company}'} in your templates to personalize messages.
           </p>
           <p>
-            <strong>Edit Templates:</strong> Click "Manage Templates" above to edit message
+            <strong>Edit Templates:</strong> Click &quot;Manage Templates&quot; above to edit message
             content, delays, and categories.
           </p>
         </CardContent>
