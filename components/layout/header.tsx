@@ -1,8 +1,9 @@
 'use client';
 
 import { UserButton, useUser } from '@clerk/nextjs';
-import { Bell, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { NotificationBell } from '@/components/notifications/notification-bell';
 
 export function Header() {
   const { user } = useUser();
@@ -25,10 +26,7 @@ export function Header() {
             Quick Log Call
           </Button>
 
-          <button className="relative rounded-full p-2 hover:bg-accent">
-            <Bell className="h-5 w-5" />
-            <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500" />
-          </button>
+          <NotificationBell />
 
           <UserButton afterSignOutUrl="/" />
         </div>

@@ -60,6 +60,10 @@ export function Sidebar() {
   const pathname = usePathname();
   const { user } = useUser();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [unreadCounts, setUnreadCounts] = useState<{ sms: number; email: number }>({
+    sms: 0,
+    email: 0,
+  });
 
   useEffect(() => {
     // Check if user is admin by fetching from Supabase
@@ -77,6 +81,32 @@ export function Sidebar() {
     checkAdmin();
   }, [user]);
 
+  useEffect(() => {
+    // Fetch unread counts for SMS and Email
+    async function fetchUnreadCounts() {
+      try {
+        const [smsRes, emailRes] = await Promise.all([
+          fetch('/api/sms/conversations'),
+          fetch('/api/email/conversations'),
+        ]);
+
+        const smsData = await smsRes.json();
+        const emailData = await emailRes.json();
+
+        const smsUnread = smsData.conversations?.filter((c: any) => c.unread_count > 0).length || 0;
+        const emailUnread = emailData.threads?.filter((t: any) => !t.read).length || 0;
+
+        setUnreadCounts({ sms: smsUnread, email: emailUnread });
+      } catch (error) {
+        console.error('Error fetching unread counts:', error);
+      }
+    }
+
+    fetchUnreadCounts();
+    const interval = setInterval(fetchUnreadCounts, 30000); // Update every 30 seconds
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="flex h-screen w-64 flex-col fixed left-0 top-0 bg-gray-900 text-white">
       {/* Logo */}
@@ -88,12 +118,17 @@ export function Sidebar() {
       <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
         {navigation.map((item) => {
           const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
+          const showBadge =
+            (item.name === 'SMS' && unreadCounts.sms > 0) ||
+            (item.name === 'Email' && unreadCounts.email > 0);
+          const badgeCount = item.name === 'SMS' ? unreadCounts.sms : unreadCounts.email;
+
           return (
             <Link
               key={item.name}
               href={item.href}
               className={cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors relative',
                 isActive
                   ? 'bg-gray-800 text-white'
                   : 'text-gray-400 hover:bg-gray-800 hover:text-white'
@@ -101,6 +136,11 @@ export function Sidebar() {
             >
               <item.icon className="h-5 w-5" />
               {item.name}
+              {showBadge && (
+                <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-blue-500 text-[10px] font-bold text-white">
+                  {badgeCount > 9 ? '9+' : badgeCount}
+                </span>
+              )}
             </Link>
           );
         })}
