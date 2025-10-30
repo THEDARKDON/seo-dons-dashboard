@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/messages/process-scheduled",
-      "schedule": "* * * * *"
+      "schedule": "*/5 * * * *"
     }
   ]
 }

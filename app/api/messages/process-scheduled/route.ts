@@ -3,8 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 import twilio from 'twilio';
 
 // This endpoint processes scheduled messages that are ready to be sent
-// Should be called by a cron job every minute
-export async function POST(request: NextRequest) {
+// Should be called by a cron job every 5 minutes
+async function processMessages(request: NextRequest) {
   try {
     // Optional: Add authentication check for cron jobs
     const authHeader = request.headers.get('authorization');
@@ -148,4 +148,14 @@ export async function POST(request: NextRequest) {
   }
 }
 
+// Export both GET and POST handlers for Vercel cron
+export async function GET(request: NextRequest) {
+  return processMessages(request);
+}
+
+export async function POST(request: NextRequest) {
+  return processMessages(request);
+}
+
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60; // 60 seconds max for cron job
