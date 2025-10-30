@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Mail, Send, Search, Plus, Inbox, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { ComposeEmailModal } from '@/components/email/compose-email-modal';
 
 interface EmailMessage {
   id: string;
@@ -37,6 +38,7 @@ export default function EmailPage() {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [gmailConnected, setGmailConnected] = useState(false);
+  const [showComposeModal, setShowComposeModal] = useState(false);
 
   // Check Gmail connection status
   useEffect(() => {
@@ -152,7 +154,7 @@ export default function EmailPage() {
           <h1 className="text-2xl font-bold text-gray-900">Email</h1>
           <p className="text-gray-600">Manage your email conversations</p>
         </div>
-        <Button>
+        <Button onClick={() => setShowComposeModal(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Compose
         </Button>
@@ -313,6 +315,16 @@ export default function EmailPage() {
           )}
         </Card>
       </div>
+
+      {/* Compose Email Modal */}
+      <ComposeEmailModal
+        isOpen={showComposeModal}
+        onClose={() => setShowComposeModal(false)}
+        onSent={() => {
+          loadThreads();
+          setShowComposeModal(false);
+        }}
+      />
     </div>
   );
 }

@@ -2,8 +2,11 @@ import { auth } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { SettingsForm } from '@/components/settings/settings-form';
 import { CalendarConnectButton } from '@/components/calendar/calendar-connect-button';
+import Link from 'next/link';
+import { MessageSquare, Mail } from 'lucide-react';
 
 // Disable caching
 export const dynamic = 'force-dynamic';
@@ -114,6 +117,35 @@ export default async function SettingsPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Message Templates */}
+        {user.role === 'admin' && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5" />
+                <Mail className="h-5 w-5" />
+                Message Templates
+              </CardTitle>
+              <CardDescription>
+                Manage automated SMS and Email templates sent after calls
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <p className="text-sm text-gray-600">
+                  Configure automated follow-up messages that are sent after successful or missed calls.
+                  Templates can include personalization variables and custom delays.
+                </p>
+                <Link href="/dashboard/settings/templates">
+                  <Button>
+                    Manage Templates
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Calendar Integration */}
         <Card>

@@ -89,3 +89,59 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+// PATCH - Update email template
+export async function PATCH(request: NextRequest) {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Get user from database
+    const { data: user } = await supabase
+      .from('users')
+      .select('id, role')
+      .eq('clerk_id', userId)
+      .single();
+
+    if (!user || user.role !== 'admin') {
+      return NextResponse.json(
+        { error: 'Only admins can update templates' },
+        { status: 403 }
+      );
+    }
+
+    const body = await request.json();
+    const { id, name, subject, content, category, is_active, auto_send_after_call } = body;
+
+    if (!id) {
+      return NextResponse.json({ error: 'Template ID is required' }, { status: 400 });
+    }
+
+    const updates: any = {};
+    if (name !== undefined) updates.name = name;
+    if (subject !== undefined) updates.subject = subject;
+    if (content !== undefined) updates.content = content;
+    if (category !== undefined) updates.category = category;
+    if (is_active !== undefined) updates.is_active = is_active;
+    if (auto_send_after_call !== undefined) updates.auto_send_after_call = auto_send_after_call;
+
+    const { data: template, error } = await supabase
+      .from('email_templates')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return NextResponse.json({ template });
+  } catch (error) {
+    console.error('Error updating email template:', error);
+    return NextResponse.json(
+      { error: 'Failed to update email template' },
+      { status: 500 }
+    );
+  }
+}
