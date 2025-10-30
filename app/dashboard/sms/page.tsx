@@ -5,8 +5,9 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { MessageSquare, Send, Search, Phone } from 'lucide-react';
+import { MessageSquare, Send, Search, Phone, Plus } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { NewSMSModal } from '@/components/sms/new-sms-modal';
 
 interface Message {
   id: string;
@@ -32,8 +33,10 @@ export default function SMSPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [messageText, setMessageText] = useState('');
   const [loading, setLoading] = useState(true);
+  const [loadingMessages, setLoadingMessages] = useState(false);
   const [sending, setSending] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showNewSMSModal, setShowNewSMSModal] = useState(false);
 
   // Load conversations
   useEffect(() => {
@@ -64,14 +67,21 @@ export default function SMSPage() {
   };
 
   const loadMessages = async (conversationId: string) => {
+    setLoadingMessages(true);
     try {
-      const response = await fetch(`/api/sms/messages?conversation=${conversationId}`);
+      const response = await fetch(`/api/sms/messages?conversation=${encodeURIComponent(conversationId)}`);
       const data = await response.json();
+      console.log('Messages loaded:', data); // Debug log
       if (data.messages) {
         setMessages(data.messages);
+      } else {
+        setMessages([]);
       }
     } catch (error) {
       console.error('Error loading messages:', error);
+      setMessages([]);
+    } finally {
+      setLoadingMessages(false);
     }
   };
 
@@ -116,9 +126,15 @@ export default function SMSPage() {
 
   return (
     <div className="h-[calc(100vh-8rem)]">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">SMS Messages</h1>
-        <p className="text-gray-600">Manage your text message conversations</p>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">SMS Messages</h1>
+          <p className="text-gray-600">Manage your text message conversations</p>
+        </div>
+        <Button onClick={() => setShowNewSMSModal(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          New Message
+        </Button>
       </div>
 
       <div className="grid grid-cols-12 gap-4 h-[calc(100%-5rem)]">
@@ -212,8 +228,21 @@ export default function SMSPage() {
 
               {/* Messages */}
               <ScrollArea className="flex-1 p-4">
-                <div className="space-y-4">
-                  {messages.map((msg) => (
+                {loadingMessages ? (
+                  <div className="flex items-center justify-center h-full">
+                    <p className="text-gray-500">Loading messages...</p>
+                  </div>
+                ) : messages.length === 0 ? (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-center">
+                      <MessageSquare className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                      <p className="text-gray-500">No messages yet</p>
+                      <p className="text-sm text-gray-400 mt-1">Start the conversation below</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {messages.map((msg) => (
                     <div
                       key={msg.id}
                       className={`flex ${
@@ -255,7 +284,8 @@ export default function SMSPage() {
                       </div>
                     </div>
                   ))}
-                </div>
+                  </div>
+                )}
               </ScrollArea>
 
               {/* Message Composer */}
@@ -282,6 +312,17 @@ export default function SMSPage() {
           )}
         </Card>
       </div>
+
+      {/* New SMS Modal */}
+      <NewSMSModal
+        isOpen={showNewSMSModal}
+        onClose={() => setShowNewSMSModal(false)}
+        onSent={(phoneNumber) => {
+          loadConversations();
+          setSelectedConversation(phoneNumber);
+          loadMessages(phoneNumber);
+        }}
+      />
     </div>
   );
 }
