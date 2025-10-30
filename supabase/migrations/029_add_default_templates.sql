@@ -1,9 +1,9 @@
 -- Add default SMS templates for auto-sending after calls
-INSERT INTO sms_templates (name, content, category, is_active, auto_send_after_call, auto_send_delay_minutes, created_by)
+INSERT INTO sms_templates (name, body, category, is_active, auto_send_after_call, auto_send_delay_minutes, user_id)
 SELECT
   'Successful Call Follow-up',
   'Hi {first_name}, thank you for speaking with SEO Dons today! We''re excited to help grow your business. Visit our website for more information: https://www.seodons.com',
-  'post_call_success',
+  'post_call',
   true,
   true,
   5, -- Send 5 minutes after call
@@ -12,11 +12,11 @@ WHERE NOT EXISTS (
   SELECT 1 FROM sms_templates WHERE name = 'Successful Call Follow-up'
 );
 
-INSERT INTO sms_templates (name, content, category, is_active, auto_send_after_call, auto_send_delay_minutes, created_by)
+INSERT INTO sms_templates (name, body, category, is_active, auto_send_after_call, auto_send_delay_minutes, user_id)
 SELECT
   'Missed Call Follow-up',
   'Hi {first_name}, we tried to reach you at SEO Dons but couldn''t connect. Please call us back at your convenience or reply to this message. Looking forward to speaking with you!',
-  'post_call_failed',
+  'post_call',
   true,
   true,
   2, -- Send 2 minutes after failed call
@@ -26,7 +26,7 @@ WHERE NOT EXISTS (
 );
 
 -- Add default Email templates for auto-sending after calls
-INSERT INTO email_templates (name, subject, content, category, is_active, auto_send_after_call, created_by)
+INSERT INTO email_templates (name, subject, body_html, category, is_active, auto_send_after_call, user_id)
 SELECT
   'Successful Call Follow-up Email',
   'Great speaking with you, {first_name}!',
@@ -54,7 +54,7 @@ SELECT
 
 <p>Best regards,<br>
 The SEO Dons Team</p>',
-  'post_call_success',
+  'post_call',
   true,
   true,
   (SELECT id FROM users WHERE role = 'admin' ORDER BY created_at LIMIT 1)
@@ -62,7 +62,7 @@ WHERE NOT EXISTS (
   SELECT 1 FROM email_templates WHERE name = 'Successful Call Follow-up Email'
 );
 
-INSERT INTO email_templates (name, subject, content, category, is_active, auto_send_after_call, created_by)
+INSERT INTO email_templates (name, subject, body_html, category, is_active, auto_send_after_call, user_id)
 SELECT
   'Missed Call Follow-up Email',
   'We tried to reach you - SEO Dons',
@@ -84,14 +84,10 @@ SELECT
 
 <p>Best regards,<br>
 The SEO Dons Team</p>',
-  'post_call_failed',
+  'post_call',
   true,
   true,
   (SELECT id FROM users WHERE role = 'admin' ORDER BY created_at LIMIT 1)
 WHERE NOT EXISTS (
   SELECT 1 FROM email_templates WHERE name = 'Missed Call Follow-up Email'
 );
-
--- Update template categories to support success/failed distinction
-COMMENT ON COLUMN sms_templates.category IS 'Template category: general, post_call, post_call_success, post_call_failed';
-COMMENT ON COLUMN email_templates.category IS 'Template category: general, post_call, post_call_success, post_call_failed';

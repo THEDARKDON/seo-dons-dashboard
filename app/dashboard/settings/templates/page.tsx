@@ -19,7 +19,7 @@ import { MessageSquare, Mail, Plus, Pencil, Trash2, Save } from 'lucide-react';
 interface SMSTemplate {
   id: string;
   name: string;
-  content: string;
+  body: string;
   category: string;
   is_active: boolean;
   auto_send_after_call: boolean;
@@ -30,7 +30,7 @@ interface EmailTemplate {
   id: string;
   name: string;
   subject: string;
-  content: string;
+  body_html: string;
   category: string;
   is_active: boolean;
   auto_send_after_call: boolean;
@@ -172,15 +172,15 @@ export default function TemplatesPage() {
                       <div>
                         <Label>Message Content</Label>
                         <Textarea
-                          value={editingSMS.content}
+                          value={editingSMS.body}
                           onChange={(e) =>
-                            setEditingSMS({ ...editingSMS, content: e.target.value })
+                            setEditingSMS({ ...editingSMS, body: e.target.value })
                           }
                           rows={4}
                           placeholder="Use {first_name}, {name}, {company} for personalization"
                         />
                         <p className="text-xs text-gray-500 mt-1">
-                          {editingSMS.content.length} / 160 characters
+                          {editingSMS.body.length} / 160 characters
                         </p>
                       </div>
                       <div className="flex items-center gap-4">
@@ -244,7 +244,7 @@ export default function TemplatesPage() {
                               </Badge>
                             )}
                           </div>
-                          <p className="text-sm text-gray-600 mt-1">{template.content}</p>
+                          <p className="text-sm text-gray-600 mt-1">{template.body}</p>
                         </div>
                         <Button
                           variant="ghost"
@@ -334,9 +334,9 @@ export default function TemplatesPage() {
                       <div>
                         <Label>Email Body (HTML)</Label>
                         <Textarea
-                          value={editingEmail.content}
+                          value={editingEmail.body_html}
                           onChange={(e) =>
-                            setEditingEmail({ ...editingEmail, content: e.target.value })
+                            setEditingEmail({ ...editingEmail, body_html: e.target.value })
                           }
                           rows={8}
                           placeholder="HTML content with personalization variables"
@@ -387,7 +387,7 @@ export default function TemplatesPage() {
                           </p>
                           <div
                             className="text-sm text-gray-600 mt-2 line-clamp-3"
-                            dangerouslySetInnerHTML={{ __html: template.content }}
+                            dangerouslySetInnerHTML={{ __html: template.body_html }}
                           />
                         </div>
                         <Button

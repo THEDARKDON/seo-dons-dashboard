@@ -55,11 +55,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, subject, content, category, is_active, auto_send_after_call } = body;
+    const { name, subject, body_html, category, is_active, auto_send_after_call } = body;
 
-    if (!name || !subject || !content) {
+    if (!name || !subject || !body_html) {
       return NextResponse.json(
-        { error: 'Name, subject, and content are required' },
+        { error: 'Name, subject, and body_html are required' },
         { status: 400 }
       );
     }
@@ -69,11 +69,11 @@ export async function POST(request: NextRequest) {
       .insert({
         name,
         subject,
-        content,
+        body_html,
         category: category || 'general',
         is_active: is_active !== undefined ? is_active : true,
         auto_send_after_call: auto_send_after_call || false,
-        created_by: user.id,
+        user_id: user.id,
       })
       .select()
       .single();
@@ -112,8 +112,8 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    const { id, name, subject, content, category, is_active, auto_send_after_call } = body;
+    const reqBody = await request.json();
+    const { id, name, subject, body_html, category, is_active, auto_send_after_call } = reqBody;
 
     if (!id) {
       return NextResponse.json({ error: 'Template ID is required' }, { status: 400 });
@@ -122,7 +122,7 @@ export async function PATCH(request: NextRequest) {
     const updates: any = {};
     if (name !== undefined) updates.name = name;
     if (subject !== undefined) updates.subject = subject;
-    if (content !== undefined) updates.content = content;
+    if (body_html !== undefined) updates.body_html = body_html;
     if (category !== undefined) updates.category = category;
     if (is_active !== undefined) updates.is_active = is_active;
     if (auto_send_after_call !== undefined) updates.auto_send_after_call = auto_send_after_call;

@@ -55,11 +55,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, content, category, is_active, auto_send_after_call, auto_send_delay_minutes } = body;
+    const { name, body: messageBody, category, is_active, auto_send_after_call, auto_send_delay_minutes } = body;
 
-    if (!name || !content) {
+    if (!name || !messageBody) {
       return NextResponse.json(
-        { error: 'Name and content are required' },
+        { error: 'Name and body are required' },
         { status: 400 }
       );
     }
@@ -68,12 +68,12 @@ export async function POST(request: NextRequest) {
       .from('sms_templates')
       .insert({
         name,
-        content,
+        body: messageBody,
         category: category || 'general',
         is_active: is_active !== undefined ? is_active : true,
         auto_send_after_call: auto_send_after_call || false,
         auto_send_delay_minutes: auto_send_delay_minutes || 0,
-        created_by: user.id,
+        user_id: user.id,
       })
       .select()
       .single();
@@ -112,8 +112,8 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    const { id, name, content, category, is_active, auto_send_after_call, auto_send_delay_minutes } = body;
+    const reqBody = await request.json();
+    const { id, name, body: messageBody, category, is_active, auto_send_after_call, auto_send_delay_minutes } = reqBody;
 
     if (!id) {
       return NextResponse.json({ error: 'Template ID is required' }, { status: 400 });
@@ -121,7 +121,7 @@ export async function PATCH(request: NextRequest) {
 
     const updates: any = {};
     if (name !== undefined) updates.name = name;
-    if (content !== undefined) updates.content = content;
+    if (messageBody !== undefined) updates.body = messageBody;
     if (category !== undefined) updates.category = category;
     if (is_active !== undefined) updates.is_active = is_active;
     if (auto_send_after_call !== undefined) updates.auto_send_after_call = auto_send_after_call;
