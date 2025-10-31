@@ -290,7 +290,7 @@ export class GoogleCalendarService {
       .select('id')
       .eq('user_id', userId)
       .eq('provider', 'google')
-      .single();
+      .maybeSingle();
 
     console.log('[GoogleCalendar] isConnected - query result:', { data: !!data, error });
 

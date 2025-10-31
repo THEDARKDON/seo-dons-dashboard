@@ -15,6 +15,10 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
+// Force dynamic rendering - no caching
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 async function getAdminStats(userId: string) {
   const supabase = await createClient();
 
