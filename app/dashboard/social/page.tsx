@@ -11,15 +11,15 @@ async function getSocialData(userId: string) {
   try {
     const supabase = await createClient();
 
-    // Get user's Supabase ID
+    // Get user's Supabase ID and LinkedIn profile
     const { data: user } = await supabase
       .from('users')
-      .select('id')
+      .select('id, linkedin_profile_url')
       .eq('clerk_id', userId)
       .single();
 
     if (!user) {
-      return { linkedInConnected: false, posts: [], templates: [], userId: null };
+      return { linkedInConnected: false, posts: [], templates: [], userId: null, linkedInProfileUrl: null };
     }
 
     // Try to check LinkedIn connection - may fail if table doesn't exist
@@ -69,10 +69,11 @@ async function getSocialData(userId: string) {
       posts,
       templates,
       userId: user.id,
+      linkedInProfileUrl: user.linkedin_profile_url || null,
     };
   } catch (error) {
     console.error('Error fetching social data:', error);
-    return { linkedInConnected: false, posts: [], templates: [], userId: null };
+    return { linkedInConnected: false, posts: [], templates: [], userId: null, linkedInProfileUrl: null };
   }
 }
 
@@ -92,7 +93,7 @@ export default async function SocialMediaPage({ searchParams }: { searchParams: 
     return <div>Please sign in</div>;
   }
 
-  const { linkedInConnected, linkedInConnection, posts, templates, userId: dbUserId } = await getSocialData(userId);
+  const { linkedInConnected, linkedInConnection, posts, templates, userId: dbUserId, linkedInProfileUrl } = await getSocialData(userId);
   const { success, error } = searchParams;
 
   // Calculate stats
@@ -167,6 +168,31 @@ export default async function SocialMediaPage({ searchParams }: { searchParams: 
         </Card>
       ) : (
         <>
+          {/* LinkedIn Profile Card */}
+          {linkedInProfileUrl && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Linkedin className="h-5 w-5 text-blue-600" />
+                  Your LinkedIn Profile
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <a
+                  href={linkedInProfileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline flex items-center gap-2"
+                >
+                  {linkedInProfileUrl}
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </a>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Stats */}
           <div className="grid gap-4 md:grid-cols-4">
             <Card>
