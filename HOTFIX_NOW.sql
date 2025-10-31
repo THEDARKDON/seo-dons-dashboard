@@ -109,7 +109,7 @@ BEGIN
     IF sms_count = 0 THEN
         RAISE NOTICE 'Creating default SMS templates...';
 
-        SELECT id INTO admin_id FROM users WHERE role = ''admin'' ORDER BY created_at LIMIT 1;
+        SELECT id INTO admin_id FROM users WHERE role = 'admin' ORDER BY created_at LIMIT 1;
 
         IF admin_id IS NULL THEN
             RAISE NOTICE 'WARNING: No admin user found. Using first user.';
@@ -118,30 +118,30 @@ BEGIN
 
         INSERT INTO sms_templates (name, body, category, is_active, auto_send_after_call, auto_send_delay_minutes, user_id)
         VALUES
-        (''Successful Call Follow-up'', ''Hi {first_name}, thank you for speaking with SEO Dons today! We''''re excited to help grow your business. Visit: https://www.seodons.com'', ''post_call'', true, true, 0, admin_id),
-        (''Missed Call Follow-up'', ''Hi {first_name}, we tried to reach you at SEO Dons. Please call us back at your convenience. Looking forward to speaking with you!'', ''post_call'', true, true, 0, admin_id);
+        ('Successful Call Follow-up', 'Hi {first_name}, thank you for speaking with SEO Dons today! We''re excited to help grow your business. Visit: https://www.seodons.com', 'post_call', true, true, 0, admin_id),
+        ('Missed Call Follow-up', 'Hi {first_name}, we tried to reach you at SEO Dons. Please call us back at your convenience. Looking forward to speaking with you!', 'post_call', true, true, 0, admin_id);
 
-        RAISE NOTICE ''Created 2 SMS templates'';
+        RAISE NOTICE 'Created 2 SMS templates';
     END IF;
 
     IF email_count = 0 THEN
-        RAISE NOTICE ''Creating default Email templates...'';
+        RAISE NOTICE 'Creating default Email templates...';
 
-        SELECT id INTO admin_id FROM users WHERE role = ''admin'' ORDER BY created_at LIMIT 1;
+        SELECT id INTO admin_id FROM users WHERE role = 'admin' ORDER BY created_at LIMIT 1;
         IF admin_id IS NULL THEN
             admin_id := (SELECT id FROM users ORDER BY created_at LIMIT 1);
         END IF;
 
         INSERT INTO email_templates (name, subject, body_html, category, is_active, auto_send_after_call, user_id)
         VALUES
-        (''Successful Call Follow-up Email'', ''Great speaking with you, {first_name}!'', ''<p>Hi {first_name},</p><p>Thank you for speaking with SEO Dons! Visit: <a href="https://www.seodons.com">seodons.com</a></p><p>Best,<br>SEO Dons Team</p>'', ''post_call'', true, true, admin_id),
-        (''Missed Call Follow-up Email'', ''We tried to reach you, {first_name}'', ''<p>Hi {first_name},</p><p>We tried to reach you. Please call back or reply to this email.</p><p>Best,<br>SEO Dons Team</p>'', ''post_call'', true, true, admin_id);
+        ('Successful Call Follow-up Email', 'Great speaking with you, {first_name}!', '<p>Hi {first_name},</p><p>Thank you for speaking with SEO Dons! Visit: <a href="https://www.seodons.com">seodons.com</a></p><p>Best,<br>SEO Dons Team</p>', 'post_call', true, true, admin_id),
+        ('Missed Call Follow-up Email', 'We tried to reach you, {first_name}', '<p>Hi {first_name},</p><p>We tried to reach you. Please call back or reply to this email.</p><p>Best,<br>SEO Dons Team</p>', 'post_call', true, true, admin_id);
 
-        RAISE NOTICE ''Created 2 Email templates'';
+        RAISE NOTICE 'Created 2 Email templates';
     END IF;
 
-    RAISE NOTICE ''========================================'';
-    RAISE NOTICE ''HOTFIX COMPLETE!'';
-    RAISE NOTICE ''Next: Refresh browser and test a call'';
-    RAISE NOTICE ''========================================'';
+    RAISE NOTICE '========================================';
+    RAISE NOTICE 'HOTFIX COMPLETE!';
+    RAISE NOTICE 'Next: Refresh browser and test a call';
+    RAISE NOTICE '========================================';
 END $$;
