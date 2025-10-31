@@ -23,12 +23,13 @@ SELECT
     '=== TRIGGER FUNCTIONS THAT MIGHT REFERENCE SOURCE ===' as info,
     n.nspname as schema_name,
     p.proname as function_name,
-    pg_get_functiondef(p.oid) as function_definition
+    SUBSTRING(pg_get_functiondef(p.oid), 1, 500) as function_definition_preview
 FROM pg_proc p
 LEFT JOIN pg_namespace n ON p.pronamespace = n.oid
 WHERE pg_get_functiondef(p.oid) LIKE '%source%'
-  AND pg_get_functiondef(p.oid) LIKE '%leads%'
-ORDER BY p.proname;
+  AND n.nspname NOT IN ('pg_catalog', 'information_schema')
+ORDER BY p.proname
+LIMIT 20;
 
 -- ========================================
 -- STEP 3: Show the leads table schema
