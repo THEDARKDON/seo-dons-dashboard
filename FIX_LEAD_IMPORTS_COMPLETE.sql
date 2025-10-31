@@ -11,10 +11,14 @@ ADD COLUMN IF NOT EXISTS assigned_to UUID REFERENCES users(id) ON DELETE SET NUL
 ALTER TABLE lead_imports
 ADD COLUMN IF NOT EXISTS settings JSONB DEFAULT '{}'::jsonb;
 
--- Step 3: Create indexes
+-- Step 3: Make file_name nullable (not all imports have files)
+ALTER TABLE lead_imports
+ALTER COLUMN file_name DROP NOT NULL;
+
+-- Step 4: Create indexes
 CREATE INDEX IF NOT EXISTS idx_lead_imports_assigned_to ON lead_imports(assigned_to);
 
--- Step 4: Add comments
+-- Step 5: Add comments
 COMMENT ON COLUMN lead_imports.assigned_to IS 'Which SDR these leads were assigned to';
 COMMENT ON COLUMN lead_imports.settings IS 'Import configuration: skip_duplicates, update_existing, etc.';
 

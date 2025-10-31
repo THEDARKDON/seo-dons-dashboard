@@ -1,15 +1,26 @@
 # Lead Import Error Fix - Summary
 
 ## Problem
-When importing leads from CSV via the admin user management page, the request fails with:
+When importing leads from CSV via the admin user management page, the request fails with multiple errors:
+
+**Error 1:** Missing column
 ```
-POST /api/admin/leads/import 500 (Internal Server Error)
 Error: Could not find the 'assigned_to' column of 'lead_imports' in the schema cache
 Code: PGRST204
 ```
 
+**Error 2:** NOT NULL constraint
+```
+Error: null value in column "file_name" violates not-null constraint
+Code: 23502
+```
+
 ## Root Cause
-The `lead_imports` table exists in the database but is **missing the `assigned_to` column**.
+Multiple issues with the `lead_imports` table:
+1. **Missing `assigned_to` column** - API expects it but table doesn't have it
+2. **Missing `settings` column** - API expects JSONB config but table doesn't have it
+3. **file_name is NOT NULL** - API doesn't always provide it (manual imports)
+4. **Column name mismatch** - API uses `import_type` but table has `import_source`
 
 ### Current Table Structure
 The table has these columns:
@@ -46,6 +57,10 @@ Run this SQL in the Supabase SQL Editor:
 ALTER TABLE lead_imports
 ADD COLUMN IF NOT EXISTS assigned_to UUID REFERENCES users(id) ON DELETE SET NULL,
 ADD COLUMN IF NOT EXISTS settings JSONB DEFAULT '{}'::jsonb;
+
+-- Make file_name nullable (not all imports have files)
+ALTER TABLE lead_imports
+ALTER COLUMN file_name DROP NOT NULL;
 
 -- Create indexes
 CREATE INDEX IF NOT EXISTS idx_lead_imports_assigned_to ON lead_imports(assigned_to);
