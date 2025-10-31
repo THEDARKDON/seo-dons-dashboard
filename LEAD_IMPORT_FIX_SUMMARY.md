@@ -38,20 +38,27 @@ The table was likely created with an older migration before the `assigned_to` co
 
 ## Solution
 
-### Quick Fix (Recommended)
+### Part 1: Database Changes (SQL)
 Run this SQL in the Supabase SQL Editor:
 
 ```sql
--- Add assigned_to column
+-- Add missing columns
 ALTER TABLE lead_imports
-ADD COLUMN IF NOT EXISTS assigned_to UUID REFERENCES users(id) ON DELETE SET NULL;
+ADD COLUMN IF NOT EXISTS assigned_to UUID REFERENCES users(id) ON DELETE SET NULL,
+ADD COLUMN IF NOT EXISTS settings JSONB DEFAULT '{}'::jsonb;
 
--- Create index
+-- Create indexes
 CREATE INDEX IF NOT EXISTS idx_lead_imports_assigned_to ON lead_imports(assigned_to);
 
--- Add comment
+-- Add comments
 COMMENT ON COLUMN lead_imports.assigned_to IS 'Which SDR these leads were assigned to';
+COMMENT ON COLUMN lead_imports.settings IS 'Import configuration: skip_duplicates, update_existing, etc.';
 ```
+
+### Part 2: Code Changes (Already Fixed)
+✅ Updated API to use `import_source` instead of `import_type`
+- File: `app/api/admin/leads/import/route.ts:41`
+- This fix is included in the next deployment
 
 ### Access SQL Editor
 1. Go to: https://supabase.com/dashboard/project/hfkfucslnalrltsnsvws/sql/new
@@ -59,16 +66,19 @@ COMMENT ON COLUMN lead_imports.assigned_to IS 'Which SDR these leads were assign
 3. Click "Run"
 
 ### Alternative: Use Pre-made Script
-A complete SQL script is available at:
-- `FIX_LEAD_IMPORTS_ADD_ASSIGNED_TO.sql`
+Two SQL scripts are available:
+- `FIX_LEAD_IMPORTS_COMPLETE.sql` - Complete fix with both columns (RECOMMENDED)
+- `FIX_LEAD_IMPORTS_ADD_ASSIGNED_TO.sql` - Only adds assigned_to (partial fix)
 
-This includes the ALTER TABLE statement plus verification queries.
+Both include verification queries and test statements.
 
-## Files Created for Diagnosis
-1. `APPLY_LEAD_IMPORT_MIGRATION.sql` - Full migration (if table needs to be recreated)
-2. `FIX_LEAD_IMPORTS_ADD_ASSIGNED_TO.sql` - Quick fix to add missing column
-3. `scripts/check-table-columns.ts` - Diagnostic script to check table structure
-4. `scripts/add-assigned-to-column.ts` - Shows current state and instructions
+## Files Created
+1. **`FIX_LEAD_IMPORTS_COMPLETE.sql`** ⭐ - Complete fix (RECOMMENDED)
+2. `FIX_LEAD_IMPORTS_ADD_ASSIGNED_TO.sql` - Partial fix (only assigned_to)
+3. `APPLY_LEAD_IMPORT_MIGRATION.sql` - Full migration (if table needs recreating)
+4. `scripts/check-table-columns.ts` - Diagnostic tool
+5. `scripts/map-lead-imports-columns.ts` - Column mapping analysis
+6. `scripts/add-assigned-to-column.ts` - Instructions helper
 
 ## Verification
 After running the SQL, verify the column was added:

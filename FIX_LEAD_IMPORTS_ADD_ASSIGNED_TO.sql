@@ -51,7 +51,7 @@ BEGIN
     INSERT INTO lead_imports (
         imported_by,
         assigned_to,
-        import_type,
+        import_source,
         total_rows,
         status
     ) VALUES (

@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
       .insert({
         imported_by: adminUser.id,
         assigned_to: assignedToUserId,
-        import_type: importType,
+        import_source: importType, // Note: column is 'import_source' not 'import_type'
         total_rows: leads.length,
         status: 'processing',
         settings,
