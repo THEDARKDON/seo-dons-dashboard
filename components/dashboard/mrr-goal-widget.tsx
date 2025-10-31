@@ -49,13 +49,13 @@ export function MRRGoalWidget({
           )}
         </div>
       </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Large current value display */}
-        <div className="text-center py-4">
-          <div className="text-5xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
+      <CardContent className="space-y-4">
+        {/* Compact current value display */}
+        <div className="text-center py-2">
+          <div className="text-3xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
             {formatCurrency(current)}
           </div>
-          <p className="text-sm text-muted-foreground mt-2">This Month</p>
+          <p className="text-xs text-muted-foreground mt-1">This Month</p>
         </div>
 
         {/* Progress slider */}
@@ -66,45 +66,41 @@ export function MRRGoalWidget({
           showValues={false}
         />
 
-        {/* Goal breakdown */}
-        <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-          <div className="space-y-1">
-            <p className="text-xs text-muted-foreground">Minimum Goal</p>
-            <p className="text-xl font-bold text-orange-600">{formatCurrency(minimum)}</p>
+        {/* Compact goal breakdown */}
+        <div className="grid grid-cols-2 gap-3 pt-2 border-t">
+          <div className="space-y-0.5">
+            <p className="text-xs text-muted-foreground">Minimum</p>
+            <p className="text-base font-bold text-orange-600">{formatCurrency(minimum)}</p>
             <div className="flex items-center gap-1 text-xs">
               {current >= minimum ? (
-                <span className="text-green-600 font-medium">✓ Achieved</span>
+                <span className="text-green-600 font-medium">✓ Done</span>
               ) : (
-                <span className="text-gray-600">{formatCurrency(minimum - current)} to go</span>
+                <span className="text-gray-600">{formatCurrency(minimum - current)} left</span>
               )}
             </div>
           </div>
-          <div className="space-y-1">
-            <p className="text-xs text-muted-foreground">Target Goal</p>
-            <p className="text-xl font-bold text-green-600">{formatCurrency(target)}</p>
+          <div className="space-y-0.5">
+            <p className="text-xs text-muted-foreground">Target</p>
+            <p className="text-base font-bold text-green-600">{formatCurrency(target)}</p>
             <div className="flex items-center gap-1 text-xs">
               {current >= target ? (
-                <span className="text-green-600 font-medium">✓ Achieved</span>
+                <span className="text-green-600 font-medium">✓ Done</span>
               ) : (
-                <span className="text-gray-600">{formatCurrency(target - current)} to go</span>
+                <span className="text-gray-600">{formatCurrency(target - current)} left</span>
               )}
             </div>
           </div>
         </div>
 
-        {/* Achievement badges */}
+        {/* Compact achievement badges */}
         {current >= target && (
-          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-4 text-center">
-            <div className="text-2xl mb-1">🎉</div>
-            <p className="font-semibold text-green-700">Target Smashed!</p>
-            <p className="text-sm text-green-600">You exceeded your monthly target</p>
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-2 text-center">
+            <p className="text-sm font-semibold text-green-700">🎉 Target Smashed!</p>
           </div>
         )}
         {current >= minimum && current < target && (
-          <div className="bg-gradient-to-r from-orange-50 to-yellow-50 border-2 border-orange-200 rounded-lg p-4 text-center">
-            <div className="text-2xl mb-1">💪</div>
-            <p className="font-semibold text-orange-700">Great Progress!</p>
-            <p className="text-sm text-orange-600">Keep pushing to reach your target</p>
+          <div className="bg-gradient-to-r from-orange-50 to-yellow-50 border border-orange-200 rounded-lg p-2 text-center">
+            <p className="text-sm font-semibold text-orange-700">💪 Great Progress!</p>
           </div>
         )}
       </CardContent>

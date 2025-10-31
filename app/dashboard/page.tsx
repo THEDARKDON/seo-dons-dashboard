@@ -58,11 +58,11 @@ export default async function DashboardPage() {
     .eq('user_id', user.id)
     .gte('created_at', todayStart.toISOString());
 
-  // Get appointments today
+  // Get appointments booked today (created today, regardless of when they're scheduled)
   const { count: appointmentsTodayCount } = await supabase
     .from('appointments')
     .select('*', { count: 'exact', head: true })
-    .eq('user_id', user.id)
+    .eq('created_by', user.id)
     .gte('created_at', todayStart.toISOString());
 
   // Get streak data

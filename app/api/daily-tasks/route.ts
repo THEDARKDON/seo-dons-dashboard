@@ -46,7 +46,8 @@ export async function GET(request: NextRequest) {
       const defaultTasks = [
         { user_id: user.id, task_date: taskDate, task_type: 'calls', target_value: 50 },
         { user_id: user.id, task_date: taskDate, task_type: 'appointments', target_value: 3 },
-        { user_id: user.id, task_date: taskDate, task_type: 'linkedin', target_value: null },
+        { user_id: user.id, task_date: taskDate, task_type: 'linkedin_post', target_value: 1 },
+        { user_id: user.id, task_date: taskDate, task_type: 'linkedin_share', target_value: 3 },
         { user_id: user.id, task_date: taskDate, task_type: 'prospecting', target_value: null },
         { user_id: user.id, task_date: taskDate, task_type: 'research', target_value: null },
       ];
@@ -169,11 +170,11 @@ export async function PATCH(request: NextRequest) {
       .gte('created_at', todayStart.toISOString())
       .lte('created_at', todayEnd.toISOString());
 
-    // Count appointments booked today
+    // Count appointments booked today (created by this user)
     const { count: appointmentCount } = await supabase
       .from('appointments')
       .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id)
+      .eq('created_by', user.id)
       .gte('created_at', todayStart.toISOString())
       .lte('created_at', todayEnd.toISOString());
 
