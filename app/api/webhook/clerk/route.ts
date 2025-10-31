@@ -194,3 +194,5 @@ async function handleUserDeleted(userData: any) {
   console.log('✅ User deactivated in Supabase:', data)
   return data
 }
+
+export const dynamic = 'force-dynamic';

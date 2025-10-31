@@ -57,3 +57,5 @@ export async function PATCH(request: NextRequest) {
     );
   }
 }
+
+export const dynamic = 'force-dynamic';

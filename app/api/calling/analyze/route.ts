@@ -88,3 +88,5 @@ ${transcription}
     );
   }
 }
+
+export const dynamic = 'force-dynamic';

@@ -133,3 +133,5 @@ function mapHubSpotStage(hubspotStage: string): string {
 
   return stageMap[hubspotStage] || 'prospecting'
 }
+
+export const dynamic = 'force-dynamic';

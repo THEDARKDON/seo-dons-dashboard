@@ -63,3 +63,5 @@ export async function GET(request: NextRequest) {
     usage: 'POST to this endpoint with syncType: "all" | "deals" | "contacts"'
   })
 }
+
+export const dynamic = 'force-dynamic';

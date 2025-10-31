@@ -47,3 +47,5 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ connected: false });
   }
 }
+
+export const dynamic = 'force-dynamic';
