@@ -58,9 +58,14 @@ async function getAdminStats(userId: string) {
     .gte('created_at', today.toISOString());
 
   // Get all leads
-  const { data: leads } = await supabase
+  const { data: leads, error: leadsError } = await supabase
     .from('leads')
     .select('id, status, assigned_to, created_at');
+
+  if (leadsError) {
+    console.error('[Admin Dashboard] Error fetching leads:', leadsError);
+  }
+  console.log('[Admin Dashboard] Total leads fetched:', leads?.length || 0);
 
   // Get all deals
   const { data: deals } = await supabase
@@ -72,6 +77,8 @@ async function getAdminStats(userId: string) {
     const sdrCalls = allCalls?.filter(c => c.user_id === sdr.id) || [];
     const sdrLeads = leads?.filter(l => l.assigned_to === sdr.id) || [];
     const sdrCallsToday = callsToday?.filter(c => c.user_id === sdr.id) || [];
+
+    console.log(`[SDR: ${sdr.first_name}] ID: ${sdr.id}, Leads: ${sdrLeads.length}`);
 
     const totalDuration = sdrCalls.reduce((acc, c) => acc + (c.duration_seconds || 0), 0);
     const avgDuration = sdrCalls.length > 0 ? Math.floor(totalDuration / sdrCalls.length) : 0;

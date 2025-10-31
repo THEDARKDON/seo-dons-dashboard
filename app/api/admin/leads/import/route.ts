@@ -62,16 +62,14 @@ export async function POST(req: NextRequest) {
 
       try {
         // Check for duplicate by email if provided
-        let isDuplicate = false;
         if (leadData.email && settings.skipDuplicates) {
           const { data: existing } = await supabase
             .from('leads')
             .select('id')
             .eq('email', leadData.email)
-            .single();
+            .maybeSingle();
 
           if (existing) {
-            isDuplicate = true;
             duplicateCount++;
 
             await supabase.from('lead_import_results').insert({
@@ -87,18 +85,48 @@ export async function POST(req: NextRequest) {
           }
         }
 
+        // Map CSV data to valid lead columns only
+        const leadInsert: any = {
+          // Required fields
+          first_name: leadData.first_name || leadData.firstName || 'Unknown',
+          last_name: leadData.last_name || leadData.lastName || '',
+
+          // Optional contact fields
+          email: leadData.email || null,
+          phone: leadData.phone || leadData.mobile || leadData.phone_number || null,
+          company: leadData.company || leadData.company_name || null,
+          job_title: leadData.job_title || leadData.title || leadData.position || null,
+          website: leadData.website || leadData.company_website || null,
+          linkedin_url: leadData.linkedin_url || leadData.linkedin || null,
+
+          // Location fields
+          address: leadData.address || null,
+          city: leadData.city || null,
+          state: leadData.state || leadData.region || null,
+          postal_code: leadData.postal_code || leadData.zip || leadData.postcode || null,
+          country: leadData.country || null,
+
+          // Business fields
+          industry: leadData.industry || null,
+          company_size: leadData.company_size || leadData.employees || null,
+          annual_revenue: leadData.annual_revenue || leadData.revenue || null,
+
+          // Notes
+          notes: leadData.notes || leadData.comments || null,
+
+          // System fields
+          assigned_to: assignedToUserId,
+          assigned_at: new Date().toISOString(),
+          import_id: importRecord.id,
+          lead_source: importType === 'csv' ? 'CSV Import' : 'Manual Entry',
+          lead_source_details: `Imported by admin`,
+          status: 'new',
+        };
+
         // Insert lead
-        const { data: newLead, error: leadError } = await supabase
+        const { data: newLead, error: leadError} = await supabase
           .from('leads')
-          .insert({
-            ...leadData,
-            assigned_to: assignedToUserId,
-            assigned_at: new Date().toISOString(),
-            import_id: importRecord.id,
-            imported_at: new Date().toISOString(),
-            lead_source: importType === 'csv' ? 'CSV Import' : 'Manual Entry',
-            lead_source_details: `Imported by admin`,
-          })
+          .insert(leadInsert)
           .select()
           .single();
 
