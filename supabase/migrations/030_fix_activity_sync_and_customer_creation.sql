@@ -51,7 +51,7 @@ BEGIN
                 WHEN NEW.status = 'no-answer' THEN 'no_answer'
                 WHEN NEW.status = 'busy' THEN 'no_answer'
                 WHEN NEW.status = 'failed' THEN 'not_interested'
-                ELSE 'in_progress'
+                ELSE NULL
             END,
             NEW.recording_url,
             NEW.created_at,
