@@ -42,14 +42,21 @@ export async function POST(req: NextRequest) {
       console.log('❌ Database query error (if any):', allError);
 
       // Find which user this phone number belongs to
-      const { data: voipSettings, error: lookupError } = await supabase
+      // Note: Using .limit(1) instead of .single() in case multiple users have same number
+      const { data: voipSettingsArray, error: lookupError } = await supabase
         .from('user_voip_settings')
         .select('user_id, assigned_phone_number')
         .eq('assigned_phone_number', to)
-        .single();
+        .limit(1);
+
+      const voipSettings = voipSettingsArray?.[0] || null;
 
       console.log('🔍 Lookup result:', voipSettings);
       console.log('❌ Lookup error:', lookupError);
+
+      if (voipSettingsArray && voipSettingsArray.length > 1) {
+        console.warn('⚠️ WARNING: Multiple users have the same phone number assigned!');
+      }
 
       if (voipSettings) {
         // Get user's clerk_id for Twilio Client identity
