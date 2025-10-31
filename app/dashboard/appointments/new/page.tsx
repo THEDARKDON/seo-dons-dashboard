@@ -38,7 +38,7 @@ export default function NewAppointmentPage() {
       try {
         const response = await fetch('/api/calendar/status');
         const data = await response.json();
-        setCalendarConnected(data.isConnected);
+        setCalendarConnected(data.connected);
       } catch (error) {
         console.error('Error checking calendar:', error);
       } finally {

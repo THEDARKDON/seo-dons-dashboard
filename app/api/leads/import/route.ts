@@ -58,14 +58,19 @@ export async function POST(request: NextRequest) {
       const lead = leads[i];
 
       try {
-        // Validate required fields
-        if (!lead.first_name || !lead.last_name) {
+        // Validate required fields (check all possible variations)
+        const firstName = lead.first_name || lead.firstName || lead['First Name'];
+        const lastName = lead.last_name || lead.lastName || lead['Last Name'];
+        const email = lead.email || lead.Email;
+        const phone = lead.phone || lead.Phone || lead.phone_number || lead.phoneNumber;
+
+        if (!firstName || !lastName) {
           failed++;
           errors.push(`Row ${i + 1}: Missing first_name or last_name`);
           continue;
         }
 
-        if (!lead.email && !lead.phone) {
+        if (!email && !phone) {
           failed++;
           errors.push(`Row ${i + 1}: Missing email or phone`);
           continue;
@@ -74,10 +79,10 @@ export async function POST(request: NextRequest) {
         // Check for duplicates
         let duplicateQuery = supabase.from('leads').select('id');
 
-        if (lead.email) {
-          duplicateQuery = duplicateQuery.eq('email', lead.email);
-        } else if (lead.phone) {
-          duplicateQuery = duplicateQuery.eq('phone', lead.phone);
+        if (email) {
+          duplicateQuery = duplicateQuery.eq('email', email);
+        } else if (phone) {
+          duplicateQuery = duplicateQuery.eq('phone', phone);
         }
 
         const { data: existingLead } = await duplicateQuery.single();
@@ -87,14 +92,33 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        // Insert lead
-        const { error: insertError } = await supabase.from('leads').insert({
-          ...lead,
+        // Map common field variations to database columns
+        const mappedLead: any = {
+          first_name: lead.first_name || lead.firstName || lead['First Name'],
+          last_name: lead.last_name || lead.lastName || lead['Last Name'],
+          email: lead.email || lead.Email,
+          phone: lead.phone || lead.Phone || lead.phone_number || lead.phoneNumber,
+          company: lead.company || lead.Company,
+          job_title: lead.job_title || lead.jobTitle || lead['Job Title'],
+          website: lead.website || lead.Website,
+          linkedin_url: lead.linkedin_url || lead.linkedinUrl || lead['LinkedIn'],
+          lead_source: lead.lead_source || lead.source || lead.Source || 'CSV Import',
+          lead_source_details: lead.lead_source_details || fileName || 'CSV Import',
           assigned_to: user.id,
           import_id: importRecord.id,
           import_row_number: i + 1,
           status: 'new',
+        };
+
+        // Remove undefined values
+        Object.keys(mappedLead).forEach(key => {
+          if (mappedLead[key] === undefined) {
+            delete mappedLead[key];
+          }
         });
+
+        // Insert lead
+        const { error: insertError } = await supabase.from('leads').insert(mappedLead);
 
         if (insertError) {
           failed++;
@@ -136,3 +160,5 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export const dynamic = 'force-dynamic';

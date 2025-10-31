@@ -35,13 +35,12 @@ export class GoogleCalendarService {
   private async getOAuth2Client(userId: string) {
     const supabase = await createClient();
 
-    // Get user's calendar integration
+    // Get user's Google integration from unified table
     const { data: integration } = await supabase
-      .from('user_calendar_integrations')
+      .from('user_integrations')
       .select('*')
       .eq('user_id', userId)
       .eq('provider', 'google')
-      .eq('is_active', true)
       .single();
 
     if (!integration) {
@@ -58,7 +57,7 @@ export class GoogleCalendarService {
 
       // Update database
       await supabase
-        .from('user_calendar_integrations')
+        .from('user_integrations')
         .update({
           access_token: newTokens.access_token,
           token_expiry: newTokens.expiry_date,
@@ -81,7 +80,9 @@ export class GoogleCalendarService {
       refresh_token: integration.refresh_token,
     });
 
-    return { oauth2Client, calendarId: integration.calendar_id || 'primary' };
+    // Use email from metadata as calendar ID
+    const calendarId = integration.metadata?.email || 'primary';
+    return { oauth2Client, calendarId };
   }
 
   async getAuthUrl(state: string): Promise<string> {
@@ -142,21 +143,22 @@ export class GoogleCalendarService {
       ? new Date(tokens.expiry_date)
       : new Date(Date.now() + 3600 * 1000);
 
-    // Save to database
+    // Save to unified user_integrations table
     const supabase = await createClient();
     console.log('[GoogleCalendar] Saving to database...');
     const { data, error } = await supabase
-      .from('user_calendar_integrations')
+      .from('user_integrations')
       .upsert({
         user_id: userId,
         provider: 'google',
+        provider_user_id: userInfo.id,
         access_token: tokens.access_token,
         refresh_token: tokens.refresh_token,
         token_expiry: expiryDate.toISOString(),
-        calendar_id: userInfo.email,
-        email: userInfo.email,
-        is_active: true,
-        updated_at: new Date().toISOString(),
+        scopes: tokens.scope?.split(' ') || [],
+        metadata: {
+          email: userInfo.email,
+        },
       }, {
         onConflict: 'user_id,provider'
       })
@@ -277,12 +279,12 @@ export class GoogleCalendarService {
     console.log('[GoogleCalendar] isConnected - userId:', userId);
     const supabase = await createClient();
 
+    // Check unified user_integrations table
     const { data, error } = await supabase
-      .from('user_calendar_integrations')
+      .from('user_integrations')
       .select('id')
       .eq('user_id', userId)
       .eq('provider', 'google')
-      .eq('is_active', true)
       .single();
 
     console.log('[GoogleCalendar] isConnected - query result:', { data: !!data, error });
@@ -293,9 +295,10 @@ export class GoogleCalendarService {
   async disconnect(userId: string): Promise<void> {
     const supabase = await createClient();
 
+    // Delete from unified user_integrations table
     await supabase
-      .from('user_calendar_integrations')
-      .update({ is_active: false })
+      .from('user_integrations')
+      .delete()
       .eq('user_id', userId)
       .eq('provider', 'google');
   }
@@ -304,16 +307,26 @@ export class GoogleCalendarService {
     console.log('[GoogleCalendar] getIntegration - userId:', userId);
     const supabase = await createClient();
 
+    // Get from unified user_integrations table
     const { data, error } = await supabase
-      .from('user_calendar_integrations')
-      .select('email, calendar_id, is_active, created_at')
+      .from('user_integrations')
+      .select('metadata, created_at')
       .eq('user_id', userId)
       .eq('provider', 'google')
       .single();
 
     console.log('[GoogleCalendar] getIntegration - query result:', { data, error });
 
-    return data;
+    // Return in expected format
+    if (data) {
+      return {
+        email: data.metadata?.email,
+        calendar_id: data.metadata?.email,
+        is_active: true,
+        created_at: data.created_at,
+      };
+    }
+    return null;
   }
 }
 
