@@ -110,11 +110,11 @@ export async function POST(request: NextRequest) {
         // Get user's Twilio phone number
         const { data: userSettings } = await supabase
           .from('user_voip_settings')
-          .select('phone_number')
+          .select('assigned_phone_number')
           .eq('user_id', call.user_id)
           .single();
 
-        const fromNumber = userSettings?.phone_number;
+        const fromNumber = userSettings?.assigned_phone_number;
         if (!fromNumber) {
           console.error('No Twilio phone number for user:', call.user_id);
           continue;
