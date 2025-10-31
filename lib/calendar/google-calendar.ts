@@ -1,5 +1,6 @@
 import { google } from 'googleapis';
 import { createClient } from '@/lib/supabase/server';
+import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { formatInTimeZone } from 'date-fns-tz';
 import { addMinutes } from 'date-fns';
 
@@ -144,7 +145,11 @@ export class GoogleCalendarService {
       : new Date(Date.now() + 3600 * 1000);
 
     // Save to unified user_integrations table
-    const supabase = await createClient();
+    // Use service role client to bypass RLS
+    const supabase = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
     console.log('[GoogleCalendar] Saving to database...');
     const { data, error } = await supabase
       .from('user_integrations')
