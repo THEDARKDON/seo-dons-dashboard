@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 
 interface Template {
   id: string;
-  name: string;
+  title: string;
   content: string;
   category?: string;
 }
@@ -112,7 +112,7 @@ export function NewSocialPostForm({ userId, initialTemplate, templates }: NewSoc
                         <SelectItem key={template.id} value={template.id}>
                           <div className="flex items-center gap-2">
                             <FileText className="h-4 w-4" />
-                            {template.name}
+                            {template.title}
                           </div>
                         </SelectItem>
                       ))}

@@ -34,7 +34,7 @@ export default async function NewSocialPostPage({
   if (searchParams.template) {
     try {
       const { data } = await supabase
-        .from('post_templates')
+        .from('linkedin_post_templates')
         .select('*')
         .eq('id', searchParams.template)
         .single();
@@ -48,10 +48,10 @@ export default async function NewSocialPostPage({
   let templates: any[] = [];
   try {
     const { data } = await supabase
-      .from('post_templates')
+      .from('linkedin_post_templates')
       .select('*')
-      .eq('active', true)
-      .order('name');
+      .eq('is_active', true)
+      .order('title');
     templates = data || [];
   } catch (e) {
     console.warn('Templates table not found');

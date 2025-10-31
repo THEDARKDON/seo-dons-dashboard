@@ -54,13 +54,13 @@ async function getSocialData(userId: string) {
     let templates: any[] = [];
     try {
       const { data } = await supabase
-        .from('post_templates')
+        .from('linkedin_post_templates')
         .select('*')
-        .eq('active', true)
-        .order('times_used', { ascending: false });
+        .eq('is_active', true)
+        .order('usage_count', { ascending: false });
       templates = data || [];
     } catch (e) {
-      console.warn('post_templates table not found - skipping');
+      console.warn('linkedin_post_templates table not found - skipping');
     }
 
     return {
@@ -222,20 +222,18 @@ export default async function SocialMediaPage({ searchParams }: { searchParams: 
                       className="rounded-lg border p-4 hover:bg-muted/50 transition-colors"
                     >
                       <div className="flex items-start justify-between mb-2">
-                        <h3 className="font-medium">{template.name}</h3>
+                        <h3 className="font-medium">{template.title}</h3>
                         {template.category && (
                           <Badge variant="secondary" className="text-xs">
                             {template.category}
                           </Badge>
                         )}
                       </div>
-                      {template.description && (
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {template.description}
-                        </p>
-                      )}
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {template.content.substring(0, 100)}...
+                      </p>
                       <p className="text-xs text-muted-foreground mt-2">
-                        Used {template.times_used || 0} times
+                        Used {template.usage_count || 0} times
                       </p>
                     </Link>
                   ))}
