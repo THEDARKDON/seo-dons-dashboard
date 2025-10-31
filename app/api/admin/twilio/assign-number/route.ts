@@ -42,7 +42,44 @@ export async function POST(req: Request) {
       );
     }
 
-    // First, check if settings exist for this user
+    console.log('🔄 Assigning phone number:', { targetUserId, phoneNumber });
+
+    // STEP 1: Check if this phone number is already assigned to ANYONE
+    const { data: existingAssignments } = await supabase
+      .from('user_voip_settings')
+      .select('user_id, assigned_phone_number')
+      .eq('assigned_phone_number', phoneNumber);
+
+    if (existingAssignments && existingAssignments.length > 0) {
+      console.log('⚠️ Phone number already assigned to:', existingAssignments);
+
+      // Remove this number from ALL other users
+      const otherUserIds = existingAssignments
+        .map(a => a.user_id)
+        .filter(id => id !== targetUserId);
+
+      if (otherUserIds.length > 0) {
+        console.log('🗑️ Removing phone number from other users:', otherUserIds);
+
+        const { error: removeError } = await supabase
+          .from('user_voip_settings')
+          .update({
+            assigned_phone_number: null,
+            caller_id_number: null,
+            updated_at: new Date().toISOString(),
+          })
+          .in('user_id', otherUserIds)
+          .eq('assigned_phone_number', phoneNumber);
+
+        if (removeError) {
+          console.error('Error removing duplicate assignments:', removeError);
+        } else {
+          console.log('✅ Removed phone number from', otherUserIds.length, 'other users');
+        }
+      }
+    }
+
+    // STEP 2: Check if settings exist for this user
     const { data: existingSettings } = await supabase
       .from('user_voip_settings')
       .select('*')
