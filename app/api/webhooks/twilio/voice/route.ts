@@ -25,12 +25,31 @@ export async function POST(req: NextRequest) {
       const { createClient } = await import('@/lib/supabase/server');
       const supabase = await createClient();
 
+      console.log('🔍 Looking up phone number:', to);
+      console.log('🔍 Phone number length:', to?.length);
+      console.log('🔍 Phone number chars:', Array.from(to || '').map(c => `${c}(${c.charCodeAt(0)})`).join(' '));
+
+      // First, let's see ALL phone numbers in the database
+      const { data: allSettings, error: allError } = await supabase
+        .from('user_voip_settings')
+        .select('user_id, assigned_phone_number');
+
+      console.log('📋 All phone numbers in database:', allSettings?.map(s => ({
+        phone: s.assigned_phone_number,
+        length: s.assigned_phone_number?.length,
+        matches: s.assigned_phone_number === to
+      })));
+      console.log('❌ Database query error (if any):', allError);
+
       // Find which user this phone number belongs to
-      const { data: voipSettings } = await supabase
+      const { data: voipSettings, error: lookupError } = await supabase
         .from('user_voip_settings')
         .select('user_id, assigned_phone_number')
         .eq('assigned_phone_number', to)
         .single();
+
+      console.log('🔍 Lookup result:', voipSettings);
+      console.log('❌ Lookup error:', lookupError);
 
       if (voipSettings) {
         // Get user's clerk_id for Twilio Client identity
