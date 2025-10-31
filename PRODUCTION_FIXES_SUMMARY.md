@@ -30,21 +30,46 @@ Fixed multiple critical production issues affecting Vercel deployment and core f
 
 **Root Cause:** Missing `export const dynamic = 'force-dynamic';` declarations
 
-**Affected Routes:**
+**Total Routes Fixed:** 30 API routes
+
+**Batch 1 (Initial Fix):**
 1. `/api/admin/twilio/purchased-numbers` - Admin Twilio management
 2. `/api/calendar/connect` - Google Calendar OAuth
-3. `/api/calendar/status` - Calendar connection status
-4. `/api/contacts/lookup` - Contact search
-5. `/api/dashboard/stats` - Dashboard statistics
-6. `/api/email/callback` - Gmail OAuth callback
-7. `/api/email/connect` - Gmail OAuth init
-8. `/api/email/conversations` - Email threads
-9. `/api/leads/import` - Lead CSV import
+3. `/api/contacts/lookup` - Contact search
+4. `/api/dashboard/stats` - Dashboard statistics
+5. `/api/email/callback` - Gmail OAuth callback
+6. `/api/email/connect` - Gmail OAuth init
+7. `/api/email/conversations` - Email threads
+8. `/api/leads/import` - Lead CSV import
+
+**Batch 2 (Additional Routes):**
+9. `/api/email/messages` - Email message fetching
+10. `/api/email/status` - Gmail connection status
+11. `/api/calendar/create-event` - Calendar event creation
+12. `/api/calendar/disconnect` - Calendar disconnection
+13. `/api/calling/analyze` - Call analysis
+14. `/api/calling/make-call` - Initiate calls
+15. `/api/calling/save-call` - Save call records
+16. `/api/calling/transcribe` - Call transcription
+17. `/api/daily-tasks` - Daily task management
+18. `/api/email/send` - Email sending
+19. `/api/email/templates` - Email template management
+20. `/api/leads/convert` - Lead conversion
+21. `/api/linkedin/post` - LinkedIn posting
+22. `/api/sms/schedule` - SMS scheduling
+23. `/api/sms/templates` - SMS template management
+24. `/api/sync/hubspot` - HubSpot synchronization
+25. `/api/user/update` - User profile updates
+26. `/api/webhook/clerk` - Clerk webhooks
+27. `/api/webhook/hubspot` - HubSpot webhooks
+28. `/api/webhooks/twilio/recording` - Twilio recording webhooks
+29. `/api/webhooks/twilio/status` - Twilio status webhooks
+30. `/api/calendar/status` - Calendar status check
 
 **Fix:**
-Added `export const dynamic = 'force-dynamic';` to all affected routes
+Added `export const dynamic = 'force-dynamic';` to all 30 routes using automated PowerShell script
 
-**Impact:** All API routes now work correctly on Vercel
+**Impact:** All API routes now work correctly on Vercel - no more dynamic server errors
 
 ---
 
