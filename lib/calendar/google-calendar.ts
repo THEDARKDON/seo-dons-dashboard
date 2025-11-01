@@ -97,8 +97,12 @@ export class GoogleCalendarService {
       process.env.GOOGLE_REDIRECT_URI
     );
 
+    // Request both Calendar AND Gmail scopes in one OAuth flow
+    // This prevents conflicts since both save to same user_integrations row
     const scopes = [
       'https://www.googleapis.com/auth/calendar.events',
+      'https://www.googleapis.com/auth/gmail.send',
+      'https://www.googleapis.com/auth/gmail.readonly',
       'https://www.googleapis.com/auth/userinfo.email',
     ];
 

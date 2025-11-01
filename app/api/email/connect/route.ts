@@ -33,11 +33,13 @@ export async function GET(request: NextRequest) {
       `${process.env.NEXT_PUBLIC_APP_URL}/api/email/callback`
     );
 
-    // Generate auth URL with Gmail scopes
+    // Generate auth URL with Gmail AND Calendar scopes
+    // Both save to same user_integrations row, so request all scopes together
     const authUrl = oauth2Client.generateAuthUrl({
       access_type: 'offline',
       prompt: 'consent',
       scope: [
+        'https://www.googleapis.com/auth/calendar.events',
         'https://www.googleapis.com/auth/gmail.send',
         'https://www.googleapis.com/auth/gmail.readonly',
         'https://www.googleapis.com/auth/userinfo.email',
