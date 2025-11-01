@@ -86,22 +86,49 @@ export async function POST(req: NextRequest) {
         }
 
         // Map CSV data to valid lead columns only
+        // Supports multiple CSV format variations
         const leadInsert: any = {
-          // Required fields
-          first_name: leadData.first_name || leadData.firstName || 'Unknown',
-          last_name: leadData.last_name || leadData.lastName || '',
+          // Required fields - support multiple column name variations
+          first_name: leadData.first_name || leadData.firstName || leadData['First Name'] || 'Unknown',
+          last_name: leadData.last_name || leadData.lastName || leadData['Last Name'] || '',
 
           // Optional contact fields
-          email: leadData.email || null,
-          phone: leadData.phone || leadData.mobile || leadData.phone_number || null,
-          company: leadData.company || leadData.company_name || null,
-          job_title: leadData.job_title || leadData.title || leadData.position || null,
-          website: leadData.website || leadData.company_website || null,
-          linkedin_url: leadData.linkedin_url || leadData.linkedin || null,
+          email: leadData.email || leadData.Email || null,
+          phone: leadData.phone ||
+                 leadData.mobile ||
+                 leadData.phone_number ||
+                 leadData['Mobile Phone'] ||
+                 leadData['Corporate Phone'] ||
+                 leadData['Other Phone'] ||
+                 leadData['Company Phone'] ||
+                 null,
+
+          company: leadData.company ||
+                   leadData.company_name ||
+                   leadData['Company Name'] ||
+                   leadData['Company Name for Emails'] ||
+                   null,
+
+          job_title: leadData.job_title ||
+                     leadData.title ||
+                     leadData.position ||
+                     leadData.Title ||
+                     null,
+
+          website: leadData.website ||
+                   leadData.company_website ||
+                   leadData.Website ||
+                   null,
+
+          linkedin_url: leadData.linkedin_url ||
+                        leadData.linkedin ||
+                        leadData['Person Linkedin Url'] ||
+                        leadData['Company Linkedin Url'] ||
+                        null,
 
           // Location fields
-          address: leadData.address || null,
-          city: leadData.city || null,
+          address: leadData.address || leadData['Company Address'] || null,
+          city: leadData.city || leadData['Company City'] || null,
           state: leadData.state || leadData.region || null,
           postal_code: leadData.postal_code || leadData.zip || leadData.postcode || null,
           country: leadData.country || null,
@@ -109,10 +136,16 @@ export async function POST(req: NextRequest) {
           // Business fields
           industry: leadData.industry || null,
           company_size: leadData.company_size || leadData.employees || null,
-          annual_revenue: leadData.annual_revenue || leadData.revenue || null,
+          annual_revenue: leadData.annual_revenue ||
+                         leadData.revenue ||
+                         leadData['Annual Revenue'] ||
+                         null,
 
-          // Notes
-          notes: leadData.notes || leadData.comments || null,
+          // Notes - include keywords if available
+          notes: leadData.notes ||
+                 leadData.comments ||
+                 (leadData.Keywords ? `Keywords: ${leadData.Keywords}` : null) ||
+                 null,
 
           // System fields
           assigned_to: assignedToUserId,
