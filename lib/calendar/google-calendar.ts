@@ -34,7 +34,11 @@ export interface CalendarEvent {
 
 export class GoogleCalendarService {
   private async getOAuth2Client(userId: string) {
-    const supabase = await createClient();
+    // Use service role client to bypass RLS (we're authenticated via Clerk, not Supabase Auth)
+    const supabase = createSupabaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
 
     // Get user's Google integration from unified table
     const { data: integration } = await supabase
@@ -282,7 +286,11 @@ export class GoogleCalendarService {
 
   async isConnected(userId: string): Promise<boolean> {
     console.log('[GoogleCalendar] isConnected - userId:', userId);
-    const supabase = await createClient();
+    // Use service role client to bypass RLS (we're authenticated via Clerk, not Supabase Auth)
+    const supabase = createSupabaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
 
     // Check unified user_integrations table
     const { data, error } = await supabase
@@ -298,7 +306,11 @@ export class GoogleCalendarService {
   }
 
   async disconnect(userId: string): Promise<void> {
-    const supabase = await createClient();
+    // Use service role client to bypass RLS (we're authenticated via Clerk, not Supabase Auth)
+    const supabase = createSupabaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
 
     // Delete from unified user_integrations table
     await supabase
@@ -310,7 +322,11 @@ export class GoogleCalendarService {
 
   async getIntegration(userId: string) {
     console.log('[GoogleCalendar] getIntegration - userId:', userId);
-    const supabase = await createClient();
+    // Use service role client to bypass RLS (we're authenticated via Clerk, not Supabase Auth)
+    const supabase = createSupabaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
 
     // Get from unified user_integrations table
     const { data, error } = await supabase
