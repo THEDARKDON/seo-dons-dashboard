@@ -212,7 +212,7 @@ export default function EmailPage() {
                     </p>
                     <p className="text-sm text-gray-600 truncate">
                       {thread.latest_message.direction === 'outbound' ? 'You: ' : ''}
-                      {thread.latest_message.body.replace(/<[^>]*>/g, '').substring(0, 100)}
+                      {thread.latest_message.body?.replace(/<[^>]*>/g, '').substring(0, 100) || '(No content)'}
                     </p>
                     <p className="text-xs text-gray-400 mt-1">
                       {formatDistanceToNow(new Date(thread.latest_message.created_at), {
@@ -296,7 +296,7 @@ export default function EmailPage() {
                         </div>
                         <div
                           className="text-sm prose prose-sm max-w-none"
-                          dangerouslySetInnerHTML={{ __html: msg.body }}
+                          dangerouslySetInnerHTML={{ __html: msg.body || '' }}
                         />
                       </div>
                     ))}
