@@ -61,12 +61,13 @@ export async function POST(req: NextRequest) {
       const leadData = leads[i];
 
       try {
-        // Check for duplicate by email if provided
+        // Check for duplicate by email if provided (per user)
         if (leadData.email && settings.skipDuplicates) {
           const { data: existing } = await supabase
             .from('leads')
             .select('id')
             .eq('email', leadData.email)
+            .eq('assigned_to', assignedToUserId)
             .maybeSingle();
 
           if (existing) {
@@ -77,7 +78,7 @@ export async function POST(req: NextRequest) {
               row_number: i + 1,
               raw_data: leadData,
               status: 'duplicate',
-              error_message: 'Email already exists',
+              error_message: 'Email already exists for this user',
             });
 
             results.push({ row: i + 1, status: 'duplicate', email: leadData.email });
