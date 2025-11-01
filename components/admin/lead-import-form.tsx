@@ -8,6 +8,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Table,
   TableBody,
   TableCell,
@@ -15,16 +22,39 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Upload, Plus, FileText, Loader2, CheckCircle, XCircle } from 'lucide-react';
+import { Upload, Plus, FileText, Loader2, CheckCircle, XCircle, ArrowRight, Check } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import Papa from 'papaparse';
+
+const LEAD_FIELDS = [
+  { value: 'first_name', label: 'First Name', required: true },
+  { value: 'last_name', label: 'Last Name', required: true },
+  { value: 'email', label: 'Email', required: false },
+  { value: 'phone', label: 'Phone', required: false },
+  { value: 'company', label: 'Company', required: false },
+  { value: 'job_title', label: 'Job Title', required: false },
+  { value: 'website', label: 'Website', required: false },
+  { value: 'linkedin_url', label: 'LinkedIn URL', required: false },
+  { value: 'address', label: 'Address', required: false },
+  { value: 'city', label: 'City', required: false },
+  { value: 'state', label: 'State/Region', required: false },
+  { value: 'postal_code', label: 'Postal Code', required: false },
+  { value: 'country', label: 'Country', required: false },
+  { value: 'industry', label: 'Industry', required: false },
+  { value: 'company_size', label: 'Company Size', required: false },
+  { value: 'annual_revenue', label: 'Annual Revenue', required: false },
+  { value: 'notes', label: 'Notes', required: false },
+  { value: 'skip', label: '-- Skip Column --', required: false },
+];
 
 interface LeadImportFormProps {
   userId: string;
 }
 
 interface ParsedLead {
-  company_name?: string;
-  contact_name?: string;
+  first_name?: string;
+  last_name?: string;
+  company?: string;
   email?: string;
   phone?: string;
   website?: string;
@@ -32,7 +62,17 @@ interface ParsedLead {
   job_title?: string;
   industry?: string;
   company_size?: string;
+  annual_revenue?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  postal_code?: string;
+  country?: string;
   notes?: string;
+}
+
+interface CSVRow {
+  [key: string]: string;
 }
 
 export default function LeadImportForm({ userId }: LeadImportFormProps) {
@@ -40,14 +80,19 @@ export default function LeadImportForm({ userId }: LeadImportFormProps) {
   const [showManualForm, setShowManualForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [csvData, setCsvData] = useState<CSVRow[]>([]);
   const [parsedLeads, setParsedLeads] = useState<ParsedLead[]>([]);
   const [skipDuplicates, setSkipDuplicates] = useState(true);
   const [importResult, setImportResult] = useState<any>(null);
+  const [showColumnMapping, setShowColumnMapping] = useState(false);
+  const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
+  const [columnMapping, setColumnMapping] = useState<Record<string, string>>({});
 
   // Manual entry form state
   const [manualLead, setManualLead] = useState<ParsedLead>({
-    company_name: '',
-    contact_name: '',
+    first_name: '',
+    last_name: '',
+    company: '',
     email: '',
     phone: '',
     website: '',
@@ -58,62 +103,109 @@ export default function LeadImportForm({ userId }: LeadImportFormProps) {
     notes: '',
   });
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (!file.name.endsWith('.csv')) {
+      alert('Please upload a CSV file');
+      return;
+    }
 
     setCsvFile(file);
     setImportResult(null);
 
-    // Parse CSV
-    const text = await file.text();
-    const lines = text.split('\n');
-    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        if (results.data.length === 0) {
+          alert('CSV file is empty');
+          return;
+        }
 
-    const leads: ParsedLead[] = [];
-    for (let i = 1; i < lines.length; i++) {
-      if (!lines[i].trim()) continue;
+        const headers = results.meta.fields || [];
+        const data = results.data as CSVRow[];
 
-      const values = lines[i].split(',').map(v => v.trim());
-      const lead: ParsedLead = {};
+        setCsvHeaders(headers);
+        setCsvData(data);
 
-      headers.forEach((header, index) => {
-        const value = values[index]?.replace(/^"|"$/g, ''); // Remove quotes
-        if (!value) return;
+        // Auto-map columns based on header names
+        const autoMapping: Record<string, string> = {};
+        headers.forEach(header => {
+          const lowerHeader = header.toLowerCase().replace(/[^a-z0-9]/g, '');
 
-        // Map CSV headers to lead fields
-        if (header.includes('company')) lead.company_name = value;
-        else if (header.includes('name') || header.includes('contact')) lead.contact_name = value;
-        else if (header.includes('email')) lead.email = value;
-        else if (header.includes('phone') || header.includes('tel')) lead.phone = value;
-        else if (header.includes('website') || header.includes('url')) lead.website = value;
-        else if (header.includes('linkedin')) lead.linkedin_url = value;
-        else if (header.includes('title') || header.includes('position')) lead.job_title = value;
-        else if (header.includes('industry')) lead.industry = value;
-        else if (header.includes('size')) lead.company_size = value;
-        else if (header.includes('note')) lead.notes = value;
-      });
+          // Try to match with lead fields
+          const matchedField = LEAD_FIELDS.find(field => {
+            const fieldName = field.value.toLowerCase().replace(/_/g, '');
 
-      if (Object.keys(lead).length > 0) {
-        leads.push(lead);
-      }
-    }
+            // Special handling for common variations
+            if (fieldName === 'firstname' && (lowerHeader.includes('first') || lowerHeader.includes('fname'))) return true;
+            if (fieldName === 'lastname' && (lowerHeader.includes('last') || lowerHeader.includes('lname') || lowerHeader.includes('surname'))) return true;
+            if (fieldName === 'company' && (lowerHeader.includes('company') || lowerHeader.includes('organization'))) return true;
+            if (fieldName === 'jobtitle' && (lowerHeader.includes('title') || lowerHeader.includes('position') || lowerHeader.includes('role'))) return true;
+            if (fieldName === 'phone' && (lowerHeader.includes('phone') || lowerHeader.includes('mobile') || lowerHeader.includes('tel'))) return true;
+            if (fieldName === 'linkedinurl' && lowerHeader.includes('linkedin')) return true;
+            if (fieldName === 'annualrevenue' && (lowerHeader.includes('revenue') || lowerHeader.includes('annual'))) return true;
 
-    setParsedLeads(leads);
+            return lowerHeader.includes(fieldName) || fieldName.includes(lowerHeader);
+          });
+
+          if (matchedField) {
+            autoMapping[header] = matchedField.value;
+          } else {
+            autoMapping[header] = 'skip';
+          }
+        });
+
+        setColumnMapping(autoMapping);
+        setShowColumnMapping(true);
+      },
+      error: (error) => {
+        alert(`Error parsing CSV: ${error.message}`);
+      },
+    });
   };
 
   const handleImportCSV = async () => {
-    if (parsedLeads.length === 0) return;
+    // Validate mapping
+    const hasFirstName = Object.values(columnMapping).includes('first_name');
+    const hasLastName = Object.values(columnMapping).includes('last_name');
+    const hasEmailOrPhone = Object.values(columnMapping).includes('email') ||
+                             Object.values(columnMapping).includes('phone');
+
+    if (!hasFirstName || !hasLastName) {
+      alert('First Name and Last Name are required fields');
+      return;
+    }
+
+    if (!hasEmailOrPhone) {
+      alert('At least one of Email or Phone is required');
+      return;
+    }
 
     setLoading(true);
     setImportResult(null);
 
     try {
+      // Transform CSV data to lead format using column mapping
+      const leads = csvData.map((row) => {
+        const lead: any = {};
+
+        Object.entries(columnMapping).forEach(([csvCol, leadField]) => {
+          if (leadField !== 'skip' && row[csvCol]) {
+            lead[leadField] = row[csvCol].trim();
+          }
+        });
+
+        return lead;
+      }).filter(lead => lead.first_name && lead.last_name);
+
       const response = await fetch('/api/admin/leads/import', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          leads: parsedLeads,
+          leads: leads,
           assignedToUserId: userId,
           importType: 'csv',
           settings: { skipDuplicates },
@@ -124,8 +216,9 @@ export default function LeadImportForm({ userId }: LeadImportFormProps) {
 
       if (response.ok) {
         setImportResult(data);
-        setParsedLeads([]);
+        setCsvData([]);
         setCsvFile(null);
+        setShowColumnMapping(false);
         router.refresh();
       } else {
         throw new Error(data.error || 'Import failed');
@@ -159,8 +252,9 @@ export default function LeadImportForm({ userId }: LeadImportFormProps) {
       if (response.ok) {
         setImportResult(data);
         setManualLead({
-          company_name: '',
-          contact_name: '',
+          first_name: '',
+          last_name: '',
+          company: '',
           email: '',
           phone: '',
           website: '',
@@ -252,7 +346,7 @@ export default function LeadImportForm({ userId }: LeadImportFormProps) {
                   disabled={loading}
                 />
                 <p className="text-xs text-muted-foreground mt-2">
-                  CSV should include columns: company_name, contact_name, email, phone, website, linkedin_url, job_title, industry, company_size, notes
+                  Upload a CSV file and map columns to CRM fields. Required: First Name, Last Name, and either Email or Phone.
                 </p>
               </div>
 
@@ -270,48 +364,80 @@ export default function LeadImportForm({ userId }: LeadImportFormProps) {
                 </label>
               </div>
 
-              {/* Preview Table */}
-              {parsedLeads.length > 0 && (
+              {/* Column Mapping */}
+              {showColumnMapping && csvData.length > 0 && (
                 <>
-                  <div className="border rounded-lg">
-                    <div className="p-4 border-b bg-muted">
-                      <h3 className="font-medium">Preview ({parsedLeads.length} leads)</h3>
+                  <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                    <p className="text-sm">
+                      <Check className="h-4 w-4 inline mr-2" />
+                      Found {csvData.length} rows in <strong>{csvFile?.name}</strong>
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <p className="font-medium">Map your CSV columns to CRM fields:</p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setCsvFile(null);
+                          setCsvData([]);
+                          setShowColumnMapping(false);
+                        }}
+                      >
+                        Cancel
+                      </Button>
                     </div>
-                    <div className="max-h-96 overflow-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Company</TableHead>
-                            <TableHead>Contact</TableHead>
-                            <TableHead>Email</TableHead>
-                            <TableHead>Phone</TableHead>
-                            <TableHead>Job Title</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {parsedLeads.slice(0, 10).map((lead, index) => (
-                            <TableRow key={index}>
-                              <TableCell>{lead.company_name || '-'}</TableCell>
-                              <TableCell>{lead.contact_name || '-'}</TableCell>
-                              <TableCell>{lead.email || '-'}</TableCell>
-                              <TableCell>{lead.phone || '-'}</TableCell>
-                              <TableCell>{lead.job_title || '-'}</TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                      {parsedLeads.length > 10 && (
-                        <div className="p-4 text-center text-sm text-muted-foreground border-t">
-                          Showing 10 of {parsedLeads.length} leads
+
+                    <div className="grid gap-4">
+                      {csvHeaders.map((header) => (
+                        <div key={header} className="space-y-2">
+                          <div className="grid grid-cols-3 gap-4 items-center">
+                            <Label className="font-medium">{header}</Label>
+                            <div className="col-span-2">
+                              <Select
+                                value={columnMapping[header] || 'skip'}
+                                onValueChange={(value) =>
+                                  setColumnMapping(prev => ({ ...prev, [header]: value }))
+                                }
+                              >
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {LEAD_FIELDS.map((field) => (
+                                    <SelectItem key={field.value} value={field.value}>
+                                      {field.label} {field.required && <span className="text-red-500">*</span>}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                          {csvData[0] && csvData[0][header] && (
+                            <div className="text-sm text-muted-foreground pl-4 border-l-2">
+                              Example: {csvData[0][header]?.slice(0, 50)}
+                            </div>
+                          )}
                         </div>
-                      )}
+                      ))}
                     </div>
+                  </div>
+
+                  <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                    <p className="text-sm font-medium mb-2">Required Fields:</p>
+                    <ul className="text-sm space-y-1 list-disc list-inside text-muted-foreground">
+                      <li>First Name <span className="text-red-500">*</span></li>
+                      <li>Last Name <span className="text-red-500">*</span></li>
+                      <li>Email OR Phone <span className="text-red-500">*</span></li>
+                    </ul>
                   </div>
 
                   <Button
                     onClick={handleImportCSV}
                     disabled={loading}
-                    className="w-full"
+                    className="w-full gap-2"
                   >
                     {loading ? (
                       <>
@@ -319,7 +445,10 @@ export default function LeadImportForm({ userId }: LeadImportFormProps) {
                         Importing...
                       </>
                     ) : (
-                      <>Import {parsedLeads.length} Leads</>
+                      <>
+                        Import {csvData.length} Leads
+                        <ArrowRight className="h-4 w-4" />
+                      </>
                     )}
                   </Button>
                 </>
@@ -330,21 +459,31 @@ export default function LeadImportForm({ userId }: LeadImportFormProps) {
           <form onSubmit={handleManualSubmit} className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <Label htmlFor="company_name">Company Name *</Label>
+                  <Label htmlFor="first_name">First Name *</Label>
                   <Input
-                    id="company_name"
-                    value={manualLead.company_name}
-                    onChange={(e) => setManualLead({ ...manualLead, company_name: e.target.value })}
+                    id="first_name"
+                    value={manualLead.first_name}
+                    onChange={(e) => setManualLead({ ...manualLead, first_name: e.target.value })}
                     required
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="contact_name">Contact Name</Label>
+                  <Label htmlFor="last_name">Last Name *</Label>
                   <Input
-                    id="contact_name"
-                    value={manualLead.contact_name}
-                    onChange={(e) => setManualLead({ ...manualLead, contact_name: e.target.value })}
+                    id="last_name"
+                    value={manualLead.last_name}
+                    onChange={(e) => setManualLead({ ...manualLead, last_name: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="company">Company</Label>
+                  <Input
+                    id="company"
+                    value={manualLead.company}
+                    onChange={(e) => setManualLead({ ...manualLead, company: e.target.value })}
                   />
                 </div>
 
