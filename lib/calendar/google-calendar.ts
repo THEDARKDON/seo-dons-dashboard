@@ -35,7 +35,7 @@ export interface CalendarEvent {
 export class GoogleCalendarService {
   private async getOAuth2Client(userId: string) {
     // Use service role client to bypass RLS (we're authenticated via Clerk, not Supabase Auth)
-    const supabase = createSupabaseClient(
+    const supabase = createServiceClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
@@ -287,7 +287,7 @@ export class GoogleCalendarService {
   async isConnected(userId: string): Promise<boolean> {
     console.log('[GoogleCalendar] isConnected - userId:', userId);
     // Use service role client to bypass RLS (we're authenticated via Clerk, not Supabase Auth)
-    const supabase = createSupabaseClient(
+    const supabase = createServiceClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
@@ -307,7 +307,7 @@ export class GoogleCalendarService {
 
   async disconnect(userId: string): Promise<void> {
     // Use service role client to bypass RLS (we're authenticated via Clerk, not Supabase Auth)
-    const supabase = createSupabaseClient(
+    const supabase = createServiceClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
@@ -323,7 +323,7 @@ export class GoogleCalendarService {
   async getIntegration(userId: string) {
     console.log('[GoogleCalendar] getIntegration - userId:', userId);
     // Use service role client to bypass RLS (we're authenticated via Clerk, not Supabase Auth)
-    const supabase = createSupabaseClient(
+    const supabase = createServiceClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
