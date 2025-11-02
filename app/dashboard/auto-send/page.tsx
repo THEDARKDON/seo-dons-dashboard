@@ -222,7 +222,7 @@ export default function AutoSendPage() {
                     </p>
                     <div className="flex items-center gap-1 text-xs text-gray-500">
                       <Clock className="h-3 w-3" />
-                      <span>Sent {template.auto_send_delay_minutes} minutes after call</span>
+                      <span>Sends immediately after call</span>
                     </div>
                   </div>
                   <Switch
@@ -310,21 +310,30 @@ export default function AutoSendPage() {
         </CardHeader>
         <CardContent className="text-sm text-blue-800 space-y-2">
           <p>
-            <strong>Successful Calls:</strong> When a call is completed successfully, templates
-            marked for successful calls will be automatically sent after their configured delay.
+            <strong>Automatic Triggering:</strong> When a call completes, the system automatically
+            sends enabled SMS and Email templates <strong>immediately</strong> to the contact.
           </p>
           <p>
-            <strong>Failed/Missed Calls:</strong> When a call is not answered or fails, templates
-            marked for failed calls will be sent after their configured delay.
+            <strong>Call Requirements:</strong> The call must have a lead or customer associated
+            with valid contact information (phone for SMS, email for Email).
           </p>
           <p>
-            <strong>Personalization:</strong> Use variables like {'{first_name}'}, {'{name}'}, and{' '}
-            {'{company}'} in your templates to personalize messages.
+            <strong>Personalization:</strong> Use variables like {'{first_name}'}, {'{last_name}'},
+            {'{name}'}, and {'{company}'} in your templates for personalized messages.
+          </p>
+          <p>
+            <strong>Template Categories:</strong> Templates marked as &quot;post_call&quot; will
+            trigger after any completed call. Other categories can be used for organization.
           </p>
           <p>
             <strong>Edit Templates:</strong> Click &quot;Manage Templates&quot; above to edit message
-            content, delays, and categories.
+            content and settings, or create new templates.
           </p>
+          <div className="mt-3 p-3 bg-white border border-blue-300 rounded">
+            <p className="font-semibold text-blue-900">📝 Note: Delays Removed</p>
+            <p className="mt-1">The system now sends all messages immediately after calls (no delays).
+            This ensures reliable delivery on the free tier without requiring cron jobs.</p>
+          </div>
         </CardContent>
       </Card>
     </div>
