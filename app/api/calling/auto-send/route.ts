@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@supabase/supabase-js';
 import twilio from 'twilio';
+
+// Use service role client to bypass RLS (webhook calls don't have user session)
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 // This endpoint is called after a call completes to trigger auto-send messages
 export async function POST(request: NextRequest) {
@@ -11,8 +17,6 @@ export async function POST(request: NextRequest) {
     if (!callSid) {
       return NextResponse.json({ error: 'callSid is required' }, { status: 400 });
     }
-
-    const supabase = await createClient();
 
     // Get call details
     const { data: call, error: callError } = await supabase
@@ -236,8 +240,6 @@ export async function POST(request: NextRequest) {
 // Helper function to send SMS immediately
 async function sendSMSNow(messageId: string) {
   try {
-    const supabase = await createClient();
-
     const { data: message } = await supabase
       .from('sms_messages')
       .select('*')
@@ -274,7 +276,6 @@ async function sendSMSNow(messageId: string) {
       .eq('id', messageId);
   } catch (error) {
     console.error(`[SMS] ❌ Error sending ${messageId}:`, error);
-    const supabase = await createClient();
     await supabase
       .from('sms_messages')
       .update({
