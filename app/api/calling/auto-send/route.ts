@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import twilio from 'twilio';
+import { google } from 'googleapis';
 
 // Use service role client to bypass RLS (webhook calls don't have user session)
 const supabase = createClient(
@@ -292,22 +293,110 @@ async function sendEmailNow(emailId: string) {
   try {
     console.log(`[Email] Sending email ${emailId} via Gmail API`);
 
-    const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/email/send`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ emailId }),
-    });
+    // Get email from database
+    const { data: email } = await supabase
+      .from('email_messages')
+      .select('*, users!inner(email, first_name, last_name)')
+      .eq('id', emailId)
+      .single();
 
-    if (!response.ok) {
-      const error = await response.text();
-      console.error(`[Email] ❌ Failed to send ${emailId}:`, error);
-      throw new Error(`Failed to send email: ${response.status} ${error}`);
+    if (!email) {
+      console.error(`[Email] Email ${emailId} not found`);
+      return;
     }
 
-    console.log(`[Email] ✅ Sent successfully: ${emailId}`);
+    // Get user's Google OAuth tokens
+    const { data: googleAuth } = await supabase
+      .from('user_integrations')
+      .select('access_token, refresh_token, token_expiry')
+      .eq('user_id', email.user_id)
+      .eq('provider', 'google')
+      .single();
+
+    if (!googleAuth) {
+      throw new Error('No Google account connected');
+    }
+
+    // Initialize OAuth2 client
+    const oauth2Client = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+      `${process.env.NEXT_PUBLIC_APP_URL}/api/email/callback`
+    );
+
+    oauth2Client.setCredentials({
+      access_token: googleAuth.access_token,
+      refresh_token: googleAuth.refresh_token,
+    });
+
+    // Check if token needs refresh
+    const tokenExpiry = new Date(googleAuth.token_expiry);
+    if (tokenExpiry <= new Date()) {
+      const { credentials } = await oauth2Client.refreshAccessToken();
+      oauth2Client.setCredentials(credentials);
+
+      // Update stored tokens
+      await supabase
+        .from('user_integrations')
+        .update({
+          access_token: credentials.access_token,
+          token_expiry: new Date(credentials.expiry_date!).toISOString(),
+        })
+        .eq('user_id', email.user_id)
+        .eq('provider', 'google');
+    }
+
+    // Initialize Gmail API
+    const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+
+    // Create email message
+    const emailLines = [
+      `From: ${email.users.first_name} ${email.users.last_name} <${email.users.email}>`,
+      `To: ${email.to_email}`,
+      `Subject: ${email.subject}`,
+      'MIME-Version: 1.0',
+      'Content-Type: text/html; charset=utf-8',
+      '',
+      email.body_html || email.body_text,
+    ];
+
+    const emailContent = emailLines.join('\r\n');
+    const encodedEmail = Buffer.from(emailContent)
+      .toString('base64')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+
+    // Send email via Gmail
+    const response = await gmail.users.messages.send({
+      userId: 'me',
+      requestBody: {
+        raw: encodedEmail,
+      },
+    });
+
+    console.log(`[Email] ✅ Sent successfully: ${emailId} (Gmail ID: ${response.data.id})`);
+
+    // Update email status
+    await supabase
+      .from('email_messages')
+      .update({
+        status: 'sent',
+        gmail_message_id: response.data.id,
+        gmail_thread_id: response.data.threadId,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', emailId);
   } catch (error) {
     console.error(`[Email] ❌ Error sending ${emailId}:`, error);
-    // Error is already logged in /api/email/send, no need to update DB here
+    await supabase
+      .from('email_messages')
+      .update({
+        status: 'failed',
+        error_message: error instanceof Error ? error.message : 'Unknown error',
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', emailId);
   }
 }
 
