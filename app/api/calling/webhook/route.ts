@@ -88,15 +88,23 @@ export async function POST(req: Request) {
       .eq('status', 'calling')
       .eq('phone_number', formData.get('To') as string);
 
-    // Trigger auto-send SMS/Email if call is completed
-    if (callStatus === 'completed' || callStatus === 'no-answer' || callStatus === 'busy' || callStatus === 'failed') {
+    // Trigger auto-send SMS/Email if call has ended
+    // Note: When lead hangs up first, Twilio sends 'in-progress' status but with recording
+    const shouldTriggerAutoSend =
+      callStatus === 'completed' ||
+      callStatus === 'no-answer' ||
+      callStatus === 'busy' ||
+      callStatus === 'failed' ||
+      (callStatus === 'in-progress' && recordingSid); // Lead hung up first, but call happened
+
+    if (shouldTriggerAutoSend) {
       try {
         await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/calling/auto-send`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             callSid,
-            callStatus,
+            callStatus: recordingSid ? 'completed' : callStatus, // Treat recorded calls as completed
           }),
         });
       } catch (autoSendError) {
