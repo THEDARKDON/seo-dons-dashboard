@@ -57,7 +57,13 @@ export async function GET(request: NextRequest) {
         .in('id', unreadIds);
     }
 
-    return NextResponse.json({ messages: messages || [] });
+    // Map body_html/body_text to body field for frontend compatibility
+    const formattedMessages = messages?.map((msg) => ({
+      ...msg,
+      body: msg.body_html || msg.body_text || '',
+    })) || [];
+
+    return NextResponse.json({ messages: formattedMessages });
   } catch (error: any) {
     console.error('Error fetching email messages:', error);
     return NextResponse.json(
