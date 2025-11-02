@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
 
     if (call.lead) {
       contactInfo = {
-        phone: call.lead.phone_number,
+        phone: call.lead.phone || call.lead.phone_number, // leads table uses 'phone'
         email: call.lead.email,
         firstName: call.lead.first_name,
         lastName: call.lead.last_name,
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
       };
     } else if (call.customer) {
       contactInfo = {
-        phone: call.customer.phone_number,
+        phone: call.customer.phone_number || call.customer.phone, // customers may use phone_number
         email: call.customer.email,
         firstName: call.customer.first_name,
         lastName: call.customer.last_name,
