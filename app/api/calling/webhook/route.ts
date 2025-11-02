@@ -10,6 +10,7 @@ export async function POST(req: Request) {
     const callSid = formData.get('CallSid') as string;
     const callStatus = formData.get('CallStatus') as string;
     const callDuration = formData.get('CallDuration') as string;
+    const dialCallDuration = formData.get('DialCallDuration') as string; // Twilio sends this instead of CallDuration
     const recordingSid = formData.get('RecordingSid') as string;
     const recordingUrl = formData.get('RecordingUrl') as string;
     const recordingDuration = formData.get('RecordingDuration') as string;
@@ -18,6 +19,7 @@ export async function POST(req: Request) {
       callSid,
       callStatus,
       callDuration,
+      dialCallDuration,
       recordingDuration,
       allParams: Array.from(formData.keys()),
     });
@@ -33,8 +35,10 @@ export async function POST(req: Request) {
       status: callStatus?.toLowerCase() || 'completed',
     };
 
-    if (callDuration) {
-      updateData.duration_seconds = parseInt(callDuration);
+    // Use DialCallDuration (for outbound calls) or CallDuration (for inbound calls)
+    const duration = dialCallDuration || callDuration || recordingDuration;
+    if (duration) {
+      updateData.duration_seconds = parseInt(duration);
       updateData.ended_at = new Date().toISOString();
     }
 
