@@ -104,7 +104,6 @@ export async function POST(request: NextRequest) {
       if (!contactInfo.phone) continue;
 
       const body = replaceVariables(template.body);
-      const scheduledFor = new Date(Date.now() + template.auto_send_delay_minutes * 60 * 1000);
 
       try {
         // Get user's Twilio phone number
@@ -116,11 +115,13 @@ export async function POST(request: NextRequest) {
 
         const fromNumber = userSettings?.assigned_phone_number;
         if (!fromNumber) {
-          console.error('No Twilio phone number for user:', call.user_id);
+          console.error('[Auto-Send] No Twilio phone number for user:', call.user_id);
           continue;
         }
 
-        // Create scheduled SMS message
+        console.log(`[Auto-Send] Sending SMS via template "${template.name}" to ${contactInfo.phone}`);
+
+        // Create SMS message (will be marked as 'sending' then 'sent')
         const { data: message, error: smsError } = await supabase
           .from('sms_messages')
           .insert({
@@ -129,33 +130,30 @@ export async function POST(request: NextRequest) {
             to_number: contactInfo.phone,
             direction: 'outbound',
             body,
-            status: 'queued',
+            status: 'sending', // Changed from 'queued'
             lead_id: call.lead_id,
             customer_id: call.customer_id,
             call_id: call.id,
             conversation_id: contactInfo.phone,
-            scheduled_for: scheduledFor.toISOString(),
           })
           .select()
           .single();
 
         if (smsError) {
-          console.error('Error creating SMS:', smsError);
+          console.error('[Auto-Send] Error creating SMS:', smsError);
           continue;
         }
 
+        // ALWAYS send immediately (delays disabled for free tier - no cron support)
+        await sendSMSNow(message.id);
+
         results.sms.push({
           template: template.name,
-          scheduledFor,
+          sentAt: new Date().toISOString(),
           messageId: message.id,
         });
-
-        // If delay is 0, send immediately
-        if (template.auto_send_delay_minutes === 0) {
-          await sendSMSNow(message.id);
-        }
       } catch (error) {
-        console.error('Error processing SMS template:', error);
+        console.error('[Auto-Send] Error processing SMS template:', error);
       }
     }
 
@@ -177,9 +175,11 @@ export async function POST(request: NextRequest) {
 
         const fromEmail = integration?.metadata?.email;
         if (!fromEmail) {
-          console.error('No Gmail connected for user:', call.user_id);
+          console.error('[Auto-Send] No Gmail connected for user:', call.user_id);
           continue;
         }
+
+        console.log(`[Auto-Send] Sending Email via template "${template.name}" to ${contactInfo.email}`);
 
         // Create email message
         const { data: email, error: emailError } = await supabase
@@ -192,7 +192,7 @@ export async function POST(request: NextRequest) {
             subject,
             body_html: bodyHtml,
             body_text: bodyHtml.replace(/<[^>]*>/g, ''), // Strip HTML for text version
-            status: 'queued',
+            status: 'sending', // Changed from 'queued'
             lead_id: call.lead_id,
             customer_id: call.customer_id,
             call_id: call.id,
@@ -202,19 +202,20 @@ export async function POST(request: NextRequest) {
           .single();
 
         if (emailError) {
-          console.error('Error creating email:', emailError);
+          console.error('[Auto-Send] Error creating email:', emailError);
           continue;
         }
 
+        // Send email immediately via Gmail API
+        await sendEmailNow(email.id);
+
         results.email.push({
           template: template.name,
+          sentAt: new Date().toISOString(),
           emailId: email.id,
         });
-
-        // Send email immediately (no delay for emails in current implementation)
-        await sendEmailNow(email.id);
       } catch (error) {
-        console.error('Error processing email template:', error);
+        console.error('[Auto-Send] Error processing email template:', error);
       }
     }
 
@@ -243,7 +244,12 @@ async function sendSMSNow(messageId: string) {
       .eq('id', messageId)
       .single();
 
-    if (!message) return;
+    if (!message) {
+      console.error(`[SMS] Message ${messageId} not found`);
+      return;
+    }
+
+    console.log(`[SMS] Sending to ${message.to_number}: ${message.body.substring(0, 50)}...`);
 
     const twilioClient = twilio(
       process.env.TWILIO_ACCOUNT_SID,
@@ -256,21 +262,25 @@ async function sendSMSNow(messageId: string) {
       to: message.to_number,
     });
 
+    console.log(`[SMS] ✅ Sent successfully: SID ${sent.sid}`);
+
     await supabase
       .from('sms_messages')
       .update({
         status: 'sent',
         message_sid: sent.sid,
+        updated_at: new Date().toISOString(),
       })
       .eq('id', messageId);
   } catch (error) {
-    console.error('Error sending SMS:', error);
+    console.error(`[SMS] ❌ Error sending ${messageId}:`, error);
     const supabase = await createClient();
     await supabase
       .from('sms_messages')
       .update({
         status: 'failed',
         error_message: error instanceof Error ? error.message : 'Unknown error',
+        updated_at: new Date().toISOString(),
       })
       .eq('id', messageId);
   }
@@ -279,6 +289,8 @@ async function sendSMSNow(messageId: string) {
 // Helper function to send Email immediately
 async function sendEmailNow(emailId: string) {
   try {
+    console.log(`[Email] Sending email ${emailId} via Gmail API`);
+
     const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/email/send`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -286,10 +298,15 @@ async function sendEmailNow(emailId: string) {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to send email');
+      const error = await response.text();
+      console.error(`[Email] ❌ Failed to send ${emailId}:`, error);
+      throw new Error(`Failed to send email: ${response.status} ${error}`);
     }
+
+    console.log(`[Email] ✅ Sent successfully: ${emailId}`);
   } catch (error) {
-    console.error('Error sending email:', error);
+    console.error(`[Email] ❌ Error sending ${emailId}:`, error);
+    // Error is already logged in /api/email/send, no need to update DB here
   }
 }
 
