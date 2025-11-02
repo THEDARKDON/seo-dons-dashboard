@@ -14,6 +14,14 @@ export async function POST(req: Request) {
     const recordingUrl = formData.get('RecordingUrl') as string;
     const recordingDuration = formData.get('RecordingDuration') as string;
 
+    console.log('[Webhook] Call status update:', {
+      callSid,
+      callStatus,
+      callDuration,
+      recordingDuration,
+      allParams: Array.from(formData.keys()),
+    });
+
     if (!callSid) {
       return NextResponse.json({ error: 'CallSid is required' }, { status: 400 });
     }
