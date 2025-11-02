@@ -36,7 +36,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Determine call outcome
-    const isSuccessful = callStatus === 'completed' && (call.duration_seconds || 0) > 10;
+    // Successful = call completed AND lasted more than 5 seconds (catches quick hangups/wrong numbers)
+    const isSuccessful = callStatus === 'completed' && (call.duration_seconds || 0) > 5;
     const category = isSuccessful ? 'successful_call' : 'missed_call';
 
     console.log(`[Auto-Send] Call ${callSid} - Status: ${callStatus}, Duration: ${call.duration_seconds}s, Category: ${category}`);
