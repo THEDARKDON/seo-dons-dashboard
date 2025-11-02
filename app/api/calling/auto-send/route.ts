@@ -37,7 +37,9 @@ export async function POST(request: NextRequest) {
 
     // Determine call outcome
     const isSuccessful = callStatus === 'completed' && (call.duration_seconds || 0) > 10;
-    const category = isSuccessful ? 'post_call' : 'post_call';
+    const category = isSuccessful ? 'successful_call' : 'missed_call';
+
+    console.log(`[Auto-Send] Call ${callSid} - Status: ${callStatus}, Duration: ${call.duration_seconds}s, Category: ${category}`);
 
     // Get contact info (prioritize lead, fallback to customer)
     let contactInfo: {
@@ -89,6 +91,15 @@ export async function POST(request: NextRequest) {
 
     const smsTemplates = smsTemplatesRes.data || [];
     const emailTemplates = emailTemplatesRes.data || [];
+
+    console.log(`[Auto-Send] Found ${smsTemplates.length} SMS templates and ${emailTemplates.length} Email templates for category "${category}"`);
+    if (smsTemplates.length > 0) {
+      console.log(`[Auto-Send] SMS templates: ${smsTemplates.map(t => t.name).join(', ')}`);
+    }
+    if (emailTemplates.length > 0) {
+      console.log(`[Auto-Send] Email templates: ${emailTemplates.map(t => t.name).join(', ')}`);
+    }
+    console.log(`[Auto-Send] Contact info: phone=${contactInfo.phone}, email=${contactInfo.email}`);
 
     // Helper function to replace variables
     const replaceVariables = (text: string): string => {
