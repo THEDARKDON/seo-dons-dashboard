@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
         *,
         lead:leads(id, first_name, last_name, company),
         customer:customers(id, first_name, last_name, company),
-        deal:deals(id, title, value)
+        deal:deals(id, deal_name, deal_value)
       `)
       .eq('user_id', user.id)
       .order('due_date', { ascending: true, nullsFirst: false })

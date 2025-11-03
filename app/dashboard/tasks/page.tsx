@@ -54,8 +54,8 @@ interface Task {
   };
   deal?: {
     id: string;
-    title: string;
-    value: number;
+    deal_name: string;
+    deal_value: number;
   };
 }
 
