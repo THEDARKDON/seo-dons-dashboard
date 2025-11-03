@@ -50,6 +50,15 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   const callRef = useRef<Call | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Initialize device on mount to handle incoming calls
+  useEffect(() => {
+    // Initialize device in background for incoming calls
+    initializeDevice().catch((error) => {
+      console.error('[CallContext] Failed to initialize device on mount:', error);
+      // Don't show error toast on mount - user hasn't interacted yet
+    });
+  }, []);
+
   // Start duration timer when call connects
   useEffect(() => {
     if (callState.status === 'connected') {
@@ -95,13 +104,85 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
 
       // Setup device event listeners
       device.on('registered', () => {
-        console.log('[CallContext] Twilio Device registered');
+        console.log('[CallContext] Twilio Device registered - ready for calls');
+
+        // Request notification permission for incoming calls
+        if ('Notification' in window && Notification.permission === 'default') {
+          Notification.requestPermission();
+        }
       });
 
       device.on('error', (error) => {
         console.error('[CallContext] Twilio Device error:', error);
         toast.error('Device error: ' + error.message);
         setCallState((prev) => ({ ...prev, status: 'ended' }));
+      });
+
+      // Handle incoming calls
+      device.on('incoming', (call) => {
+        console.log('[CallContext] Incoming call from:', call.parameters.From);
+
+        // Browser notification
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification('Incoming Call', {
+            body: `Call from ${call.parameters.From}`,
+            requireInteraction: true,
+          });
+        }
+
+        // Toast notification with action
+        toast.info(`Incoming call from ${call.parameters.From}`, {
+          duration: 30000,
+          action: {
+            label: 'Answer',
+            onClick: () => {
+              call.accept();
+              callRef.current = call;
+              setCallState({
+                status: 'connected',
+                duration: 0,
+                phoneNumber: call.parameters.From,
+                customerName: undefined,
+                muted: false,
+              });
+              setMinimized(false);
+            },
+          },
+        });
+
+        // Setup incoming call handlers
+        call.on('accept', () => {
+          console.log('[CallContext] Incoming call accepted');
+          callRef.current = call;
+          setCallState({
+            status: 'connected',
+            duration: 0,
+            phoneNumber: call.parameters.From,
+            customerName: undefined,
+            muted: false,
+          });
+          setMinimized(false);
+          saveCallRecord(call.parameters.CallSid);
+        });
+
+        call.on('disconnect', () => {
+          console.log('[CallContext] Incoming call disconnected');
+          setCallState((prev) => ({ ...prev, status: 'ended' }));
+          callRef.current = null;
+          toast.info('Call ended');
+        });
+
+        call.on('reject', () => {
+          console.log('[CallContext] Incoming call rejected');
+          callRef.current = null;
+          toast.info('Call rejected');
+        });
+
+        call.on('cancel', () => {
+          console.log('[CallContext] Incoming call cancelled');
+          callRef.current = null;
+          toast.info('Call cancelled by caller');
+        });
       });
 
       // Register the device

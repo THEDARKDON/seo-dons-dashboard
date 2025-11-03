@@ -1,6 +1,5 @@
 import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
-import { GlobalVoiceHandler } from '@/components/calling/global-voice-handler';
 import { MessageProcessorTrigger } from '@/components/background/message-processor-trigger';
 import { auth } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
@@ -23,10 +22,9 @@ export default async function DashboardLayout({
         <Header />
         <main className="p-6">{children}</main>
       </div>
-      {/* Global voice system - always active for incoming calls */}
-      <GlobalVoiceHandler />
       {/* Background message processor - retries stuck messages */}
       <MessageProcessorTrigger />
+      {/* Note: Global voice/call handling now done via CallContext in app/layout.tsx */}
     </div>
   );
 }
