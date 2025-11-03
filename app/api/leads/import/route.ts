@@ -64,15 +64,10 @@ export async function POST(request: NextRequest) {
         const email = lead.email || lead.Email;
         const phone = lead.phone || lead.Phone || lead.phone_number || lead.phoneNumber;
 
-        if (!firstName || !lastName) {
-          failed++;
-          errors.push(`Row ${i + 1}: Missing first_name or last_name`);
-          continue;
-        }
-
+        // Only require email or phone (first_name and last_name are optional)
         if (!email && !phone) {
           failed++;
-          errors.push(`Row ${i + 1}: Missing email or phone`);
+          errors.push(`Row ${i + 1}: Missing email or phone (at least one required)`);
           continue;
         }
 
@@ -94,8 +89,8 @@ export async function POST(request: NextRequest) {
 
         // Map common field variations to database columns
         const mappedLead: any = {
-          first_name: lead.first_name || lead.firstName || lead['First Name'],
-          last_name: lead.last_name || lead.lastName || lead['Last Name'],
+          first_name: lead.first_name || lead.firstName || lead['First Name'] || '',
+          last_name: lead.last_name || lead.lastName || lead['Last Name'] || '',
           email: lead.email || lead.Email,
           phone: lead.phone || lead.Phone || lead.phone_number || lead.phoneNumber,
           company: lead.company || lead.Company,

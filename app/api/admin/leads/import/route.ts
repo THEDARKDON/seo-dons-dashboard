@@ -89,8 +89,8 @@ export async function POST(req: NextRequest) {
         // Map CSV data to valid lead columns only
         // Supports multiple CSV format variations
         const leadInsert: any = {
-          // Required fields - support multiple column name variations
-          first_name: leadData.first_name || leadData.firstName || leadData['First Name'] || 'Unknown',
+          // Optional name fields - support multiple column name variations
+          first_name: leadData.first_name || leadData.firstName || leadData['First Name'] || '',
           last_name: leadData.last_name || leadData.lastName || leadData['Last Name'] || '',
 
           // Optional contact fields
