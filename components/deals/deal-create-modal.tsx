@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Dialog,
@@ -34,11 +34,21 @@ interface DealCreateModalProps {
   trigger?: React.ReactNode;
 }
 
+interface User {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  role: string;
+}
+
 export function DealCreateModal({ customerId, customerName, onSuccess, trigger }: DealCreateModalProps) {
   const router = useRouter();
   const { user } = useUser();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
   const [formData, setFormData] = useState({
     deal_name: '',
     deal_value: '',
@@ -47,22 +57,58 @@ export function DealCreateModal({ customerId, customerName, onSuccess, trigger }
     expected_close_date: '',
     source: '',
     notes: '',
+    assigned_to: '', // Will be set to current user by default
   });
+
+  // Load users when modal opens
+  useEffect(() => {
+    if (open) {
+      loadUsers();
+    }
+  }, [open]);
+
+  const loadUsers = async () => {
+    setLoadingUsers(true);
+    try {
+      // Get current user's Supabase ID first
+      const { data: currentDbUser } = await supabase
+        .from('users')
+        .select('id')
+        .eq('clerk_id', user?.id)
+        .single();
+
+      if (currentDbUser) {
+        // Set default assigned_to to current user
+        setFormData(prev => ({ ...prev, assigned_to: currentDbUser.id }));
+      }
+
+      // Fetch all users for assignment dropdown
+      const { data: allUsers, error } = await supabase
+        .from('users')
+        .select('id, first_name, last_name, email, role')
+        .order('first_name', { ascending: true });
+
+      if (error) throw error;
+
+      setUsers(allUsers || []);
+    } catch (error) {
+      console.error('Error loading users:', error);
+      toast.error('Failed to load users');
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // Get user's Supabase ID
-      const { data: dbUser } = await supabase
-        .from('users')
-        .select('id')
-        .eq('clerk_id', user?.id)
-        .single();
+      // Use the assigned_to from form data (already set)
+      const assignedUserId = formData.assigned_to;
 
-      if (!dbUser) {
-        toast.error('User not found. Please contact support.');
+      if (!assignedUserId) {
+        toast.error('Please select a user to assign this deal to.');
         return;
       }
 
@@ -70,7 +116,7 @@ export function DealCreateModal({ customerId, customerName, onSuccess, trigger }
       const { data, error } = await supabase
         .from('deals')
         .insert({
-          assigned_to: dbUser.id,
+          assigned_to: assignedUserId,
           deal_name: formData.deal_name,
           deal_value: parseFloat(formData.deal_value) || 0,
           stage: formData.stage,
@@ -97,6 +143,7 @@ export function DealCreateModal({ customerId, customerName, onSuccess, trigger }
         expected_close_date: '',
         source: '',
         notes: '',
+        assigned_to: '',
       });
 
       if (onSuccess) {
@@ -141,6 +188,26 @@ export function DealCreateModal({ customerId, customerName, onSuccess, trigger }
               placeholder="e.g., Acme Corp - SEO Package"
               required
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="assigned_to">Assign To *</Label>
+            <Select
+              value={formData.assigned_to}
+              onValueChange={(value) => setFormData({ ...formData, assigned_to: value })}
+              disabled={loadingUsers}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={loadingUsers ? "Loading users..." : "Select SDR"} />
+              </SelectTrigger>
+              <SelectContent>
+                {users.map((u) => (
+                  <SelectItem key={u.id} value={u.id}>
+                    {u.first_name} {u.last_name} ({u.role})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

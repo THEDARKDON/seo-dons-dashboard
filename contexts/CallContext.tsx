@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useRef, useCallback, useEffect } from 'react';
 import { Device, Call } from '@twilio/voice-sdk';
 import { toast } from 'sonner';
+import { normalizePhoneNumber } from '@/lib/utils/phone';
 
 interface CallState {
   status: 'idle' | 'connecting' | 'ringing' | 'connected' | 'ended';
@@ -282,11 +283,23 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     customerEmail?: string;
   }) => {
     try {
+      // Normalize phone number to E.164 format (especially for UK numbers like 0333)
+      let normalizedNumber: string;
+      try {
+        normalizedNumber = normalizePhoneNumber(params.phoneNumber, 'GB');
+        console.log('[CallContext] Normalized phone:', params.phoneNumber, '→', normalizedNumber);
+      } catch (error: any) {
+        console.error('[CallContext] Phone normalization failed:', error);
+        toast.error(`Invalid phone number format: ${error.message}`);
+        setCallState((prev) => ({ ...prev, status: 'ended' }));
+        return;
+      }
+
       // Set initial state
       setCallState({
         status: 'connecting',
         duration: 0,
-        phoneNumber: params.phoneNumber,
+        phoneNumber: normalizedNumber,
         customerName: params.customerName,
         customerId: params.customerId,
         dealId: params.dealId,
@@ -300,12 +313,12 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       // Initialize device if not already initialized
       if (!deviceRef.current) {
         const { device, phoneNumber: callerIdNumber } = await initializeDevice();
-        await makeCall(device, callerIdNumber, params.phoneNumber);
+        await makeCall(device, callerIdNumber, normalizedNumber);
       } else {
         // Reuse existing device
         const response = await fetch('/api/calling/token');
         const data = await response.json();
-        await makeCall(deviceRef.current, data.phoneNumber, params.phoneNumber);
+        await makeCall(deviceRef.current, data.phoneNumber, normalizedNumber);
       }
     } catch (error) {
       console.error('[CallContext] Error initiating call:', error);
