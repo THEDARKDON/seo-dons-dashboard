@@ -28,6 +28,15 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { leads, assignedToUserId, importType = 'manual', settings = {} } = body;
 
+    console.log('Admin import request:', {
+      leadsCount: leads?.length,
+      assignedToUserId,
+      importType,
+      settings,
+      hasLeads: !!leads,
+      isArray: Array.isArray(leads)
+    });
+
     if (!leads || !Array.isArray(leads) || leads.length === 0) {
       return NextResponse.json({ error: 'No leads provided' }, { status: 400 });
     }
@@ -61,6 +70,13 @@ export async function POST(req: NextRequest) {
       const leadData = leads[i];
 
       try {
+        console.log(`Admin processing lead ${i + 1}:`, JSON.stringify({
+          email: leadData.email,
+          category: leadData.category,
+          has_category: !!leadData.category,
+          assignedTo: assignedToUserId
+        }));
+
         // Check for duplicate by email if provided (per user)
         if (leadData.email && settings.skipDuplicates) {
           const { data: existing } = await supabase
@@ -184,6 +200,12 @@ export async function POST(req: NextRequest) {
         };
 
         // Insert lead
+        console.log(`Inserting lead ${i + 1} with data:`, JSON.stringify({
+          email: leadInsert.email,
+          category: leadInsert.category,
+          assigned_to: leadInsert.assigned_to
+        }));
+
         const { data: newLead, error: leadError} = await supabase
           .from('leads')
           .insert(leadInsert)
@@ -191,6 +213,7 @@ export async function POST(req: NextRequest) {
           .single();
 
         if (leadError) {
+          console.error(`Failed to insert lead ${i + 1}:`, leadError);
           failCount++;
           await supabase.from('lead_import_results').insert({
             import_id: importRecord.id,
