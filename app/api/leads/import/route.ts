@@ -84,6 +84,16 @@ export async function POST(request: NextRequest) {
 
         if (existingLead) {
           duplicates++;
+
+          // If a new category is assigned, update the existing lead's category
+          const newCategory = lead.category;
+          if (newCategory) {
+            await supabase
+              .from('leads')
+              .update({ category: newCategory })
+              .eq('id', existingLead.id);
+          }
+
           continue;
         }
 

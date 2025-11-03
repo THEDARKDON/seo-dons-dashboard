@@ -73,12 +73,23 @@ export async function POST(req: NextRequest) {
           if (existing) {
             duplicateCount++;
 
+            // If a new category is assigned, update the existing lead's category
+            const newCategory = leadData.category;
+            if (newCategory) {
+              await supabase
+                .from('leads')
+                .update({ category: newCategory })
+                .eq('id', existing.id);
+            }
+
             await supabase.from('lead_import_results').insert({
               import_id: importRecord.id,
               row_number: i + 1,
               raw_data: leadData,
               status: 'duplicate',
-              error_message: 'Email already exists for this user',
+              error_message: newCategory
+                ? 'Email already exists for this user (category updated)'
+                : 'Email already exists for this user',
             });
 
             results.push({ row: i + 1, status: 'duplicate', email: leadData.email });
