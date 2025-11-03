@@ -177,7 +177,7 @@ export default async function LeadDetailPage(props: { params: { id: string } }) 
               {lead.phone && (
                 <div className="flex items-center gap-3">
                   <Phone className="h-4 w-4 text-muted-foreground" />
-                  <div>
+                  <div className="space-y-1">
                     <p className="text-sm text-muted-foreground">Phone</p>
                     <div className="flex items-center gap-2">
                       <a href={`tel:${lead.phone}`}>{lead.phone}</a>
@@ -191,6 +191,23 @@ export default async function LeadDetailPage(props: { params: { id: string } }) 
                         showLabel={false}
                       />
                     </div>
+                    {lead.phone_secondary && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">Alt:</span>
+                        <a href={`tel:${lead.phone_secondary}`} className="text-sm">
+                          {lead.phone_secondary}
+                        </a>
+                        <ClickToCallButton
+                          phoneNumber={lead.phone_secondary}
+                          leadId={lead.id}
+                          customerName={`${lead.first_name} ${lead.last_name}`}
+                          customerEmail={lead.email}
+                          size="sm"
+                          variant="ghost"
+                          showLabel={false}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

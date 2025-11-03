@@ -31,6 +31,7 @@ interface Lead {
   last_name: string;
   email?: string;
   phone?: string;
+  phone_secondary?: string;
   company?: string;
   job_title?: string;
   status: string;
@@ -60,6 +61,7 @@ export function LeadEditModal({ lead }: LeadEditModalProps) {
     last_name: lead.last_name,
     email: lead.email || '',
     phone: lead.phone || '',
+    phone_secondary: lead.phone_secondary || '',
     company: lead.company || '',
     job_title: lead.job_title || '',
     status: lead.status,
@@ -166,6 +168,18 @@ export function LeadEditModal({ lead }: LeadEditModalProps) {
                     onChange={(e) =>
                       setFormData({ ...formData, phone: e.target.value })
                     }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phone_secondary">Secondary Phone</Label>
+                  <Input
+                    id="phone_secondary"
+                    type="tel"
+                    value={formData.phone_secondary}
+                    onChange={(e) =>
+                      setFormData({ ...formData, phone_secondary: e.target.value })
+                    }
+                    placeholder="Alternate number"
                   />
                 </div>
               </div>
