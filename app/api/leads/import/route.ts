@@ -99,6 +99,7 @@ export async function POST(request: NextRequest) {
           linkedin_url: lead.linkedin_url || lead.linkedinUrl || lead['LinkedIn'],
           lead_source: lead.lead_source || lead.source || lead.Source || 'CSV Import',
           lead_source_details: lead.lead_source_details || fileName || 'CSV Import',
+          category: lead.category, // Add category field
           assigned_to: user.id,
           import_id: importRecord.id,
           import_row_number: i + 1,

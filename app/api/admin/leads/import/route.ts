@@ -153,6 +153,9 @@ export async function POST(req: NextRequest) {
           instantly_lead_id: leadData.instantly_lead_id || leadData.lead_id || null,
           instantly_status: leadData.instantly_status || leadData.status || null,
 
+          // Category field
+          category: leadData.category || null,
+
           // System fields
           assigned_to: assignedToUserId,
           assigned_at: new Date().toISOString(),
