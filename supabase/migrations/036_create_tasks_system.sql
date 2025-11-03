@@ -47,26 +47,26 @@ ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
 -- RLS Policies
 CREATE POLICY "Users can view their own tasks"
   ON tasks FOR SELECT
-  USING (auth.uid() IN (
-    SELECT clerk_id FROM users WHERE id = tasks.user_id
+  USING (user_id IN (
+    SELECT id FROM users WHERE clerk_id = auth.uid()
   ));
 
 CREATE POLICY "Users can create their own tasks"
   ON tasks FOR INSERT
-  WITH CHECK (auth.uid() IN (
-    SELECT clerk_id FROM users WHERE id = tasks.user_id
+  WITH CHECK (user_id IN (
+    SELECT id FROM users WHERE clerk_id = auth.uid()
   ));
 
 CREATE POLICY "Users can update their own tasks"
   ON tasks FOR UPDATE
-  USING (auth.uid() IN (
-    SELECT clerk_id FROM users WHERE id = tasks.user_id
+  USING (user_id IN (
+    SELECT id FROM users WHERE clerk_id = auth.uid()
   ));
 
 CREATE POLICY "Users can delete their own tasks"
   ON tasks FOR DELETE
-  USING (auth.uid() IN (
-    SELECT clerk_id FROM users WHERE id = tasks.user_id
+  USING (user_id IN (
+    SELECT id FROM users WHERE clerk_id = auth.uid()
   ));
 
 -- Add trigger for updated_at

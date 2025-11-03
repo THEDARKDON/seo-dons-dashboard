@@ -231,13 +231,19 @@ export default function EmailEngagementPage() {
                       </div>
                     )}
                     {lead.email_clicked && (
-                      <MousePointerClick className="h-4 w-4 text-purple-500" title="Link clicked" />
+                      <div title="Link clicked">
+                        <MousePointerClick className="h-4 w-4 text-purple-500" />
+                      </div>
                     )}
                     {lead.email_replied && (
-                      <Reply className="h-4 w-4 text-green-500" title="Replied to email" />
+                      <div title="Replied to email">
+                        <Reply className="h-4 w-4 text-green-500" />
+                      </div>
                     )}
                     {lead.email_bounced && (
-                      <AlertCircle className="h-4 w-4 text-red-500" title="Email bounced" />
+                      <div title="Email bounced">
+                        <AlertCircle className="h-4 w-4 text-red-500" />
+                      </div>
                     )}
                   </div>
 
