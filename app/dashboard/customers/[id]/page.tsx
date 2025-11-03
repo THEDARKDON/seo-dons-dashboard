@@ -9,6 +9,7 @@ import { notFound } from 'next/navigation';
 import { CustomerEditButton } from '@/components/customers/customer-edit-button';
 import { CustomerDeleteButton } from '@/components/customers/customer-delete-button';
 import { ClickToCallButton } from '@/components/calling/click-to-call-button';
+import { DealCreateModal } from '@/components/deals/deal-create-modal';
 
 async function getCustomer(customerId: string) {
   const supabase = await createClient();
@@ -238,12 +239,23 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
 
       {/* Deals */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Deals ({deals.length})</CardTitle>
+          <DealCreateModal
+            customerId={customer.id}
+            customerName={`${customer.first_name} ${customer.last_name}`}
+          />
         </CardHeader>
         <CardContent>
           {deals.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">No deals found</p>
+            <div className="text-center py-8">
+              <p className="text-muted-foreground mb-4">No deals found</p>
+              <DealCreateModal
+                customerId={customer.id}
+                customerName={`${customer.first_name} ${customer.last_name}`}
+                trigger={<Button variant="outline">Create First Deal</Button>}
+              />
+            </div>
           ) : (
             <div className="space-y-3">
               {deals.map((deal) => (

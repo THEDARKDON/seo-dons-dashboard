@@ -1,14 +1,9 @@
 'use client';
 
-import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Phone, PhoneOff } from 'lucide-react';
+import { Phone } from 'lucide-react';
 import { toast } from 'sonner';
-import { CallInterface } from './call-interface';
-import {
-  Dialog,
-  DialogContent,
-} from '@/components/ui/dialog';
+import { useCall } from '@/contexts/CallContext';
 
 interface ClickToCallButtonProps {
   phoneNumber: string;
@@ -33,47 +28,40 @@ export function ClickToCallButton({
   size = 'default',
   showLabel = true,
 }: ClickToCallButtonProps) {
-  const [showCallInterface, setShowCallInterface] = useState(false);
+  const { initiateCall, callState } = useCall();
 
-  const handleCall = () => {
+  const handleCall = async () => {
     if (!phoneNumber) {
       toast.error('No phone number provided');
       return;
     }
 
-    setShowCallInterface(true);
-  };
+    // Don't allow new call if one is already active
+    if (callState.status !== 'idle' && callState.status !== 'ended') {
+      toast.error('A call is already in progress');
+      return;
+    }
 
-  const handleCallEnd = () => {
-    setShowCallInterface(false);
+    await initiateCall({
+      phoneNumber,
+      customerName,
+      customerId,
+      dealId,
+      leadId,
+      customerEmail,
+    });
   };
 
   return (
-    <>
-      <Button
-        onClick={handleCall}
-        disabled={!phoneNumber}
-        variant={variant}
-        size={size}
-        className="gap-2"
-      >
-        <Phone className="h-4 w-4" />
-        {showLabel && 'Call'}
-      </Button>
-
-      <Dialog open={showCallInterface} onOpenChange={setShowCallInterface}>
-        <DialogContent className="sm:max-w-md">
-          <CallInterface
-            phoneNumber={phoneNumber}
-            customerName={customerName}
-            customerEmail={customerEmail}
-            customerId={customerId}
-            dealId={dealId}
-            leadId={leadId}
-            onEnd={handleCallEnd}
-          />
-        </DialogContent>
-      </Dialog>
-    </>
+    <Button
+      onClick={handleCall}
+      disabled={!phoneNumber || (callState.status !== 'idle' && callState.status !== 'ended')}
+      variant={variant}
+      size={size}
+      className="gap-2"
+    >
+      <Phone className="h-4 w-4" />
+      {showLabel && 'Call'}
+    </Button>
   );
 }
