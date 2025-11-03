@@ -88,10 +88,17 @@ export async function POST(request: NextRequest) {
           // If a new category is assigned, update the existing lead's category
           const newCategory = lead.category;
           if (newCategory) {
-            await supabase
+            console.log(`Updating duplicate lead ${existingLead.id} with category: ${newCategory}`);
+            const { error: updateError } = await supabase
               .from('leads')
               .update({ category: newCategory })
               .eq('id', existingLead.id);
+
+            if (updateError) {
+              console.error('Error updating category for duplicate lead:', updateError);
+            }
+          } else {
+            console.log('No category to update for duplicate lead');
           }
 
           continue;
