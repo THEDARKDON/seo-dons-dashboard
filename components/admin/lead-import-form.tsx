@@ -47,6 +47,18 @@ const LEAD_FIELDS = [
   { value: 'skip', label: '-- Skip Column --', required: false },
 ];
 
+const PREDEFINED_CATEGORIES = [
+  { value: '', label: '-- No Category --' },
+  { value: 'cold', label: 'Cold Lead' },
+  { value: 'warm', label: 'Warm Lead' },
+  { value: 'hot', label: 'Hot Lead' },
+  { value: 'instantly_opened', label: 'Instantly Opened' },
+  { value: 'email_replied', label: 'Email Replied' },
+  { value: 'meeting_scheduled', label: 'Meeting Scheduled' },
+  { value: 'follow_up', label: 'Follow Up' },
+  { value: 'not_interested', label: 'Not Interested' },
+];
+
 interface LeadImportFormProps {
   userId: string;
 }
@@ -87,9 +99,10 @@ export default function LeadImportForm({ userId }: LeadImportFormProps) {
   const [showColumnMapping, setShowColumnMapping] = useState(false);
   const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
   const [columnMapping, setColumnMapping] = useState<Record<string, string>>({});
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
 
   // Manual entry form state
-  const [manualLead, setManualLead] = useState<ParsedLead>({
+  const [manualLead, setManualLead] = useState<ParsedLead & { category?: string }>({
     first_name: '',
     last_name: '',
     company: '',
@@ -101,6 +114,7 @@ export default function LeadImportForm({ userId }: LeadImportFormProps) {
     industry: '',
     company_size: '',
     notes: '',
+    category: '',
   });
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -192,6 +206,11 @@ export default function LeadImportForm({ userId }: LeadImportFormProps) {
       const leads = csvData.map((row) => {
         const lead: any = {};
 
+        // Add category if selected
+        if (selectedCategory) {
+          lead.category = selectedCategory;
+        }
+
         Object.entries(columnMapping).forEach(([csvCol, leadField]) => {
           if (leadField !== 'skip' && row[csvCol]) {
             lead[leadField] = row[csvCol].trim();
@@ -263,6 +282,7 @@ export default function LeadImportForm({ userId }: LeadImportFormProps) {
           industry: '',
           company_size: '',
           notes: '',
+          category: '',
         });
         router.refresh();
       } else {
@@ -388,6 +408,25 @@ export default function LeadImportForm({ userId }: LeadImportFormProps) {
                       >
                         Cancel
                       </Button>
+                    </div>
+
+                    <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                      <Label className="font-medium mb-2 block">Lead Category (Optional)</Label>
+                      <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a category for all imported leads" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PREDEFINED_CATEGORIES.map((cat) => (
+                            <SelectItem key={cat.value} value={cat.value}>
+                              {cat.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        All imported leads will be assigned this category
+                      </p>
                     </div>
 
                     <div className="grid gap-4">
@@ -553,6 +592,25 @@ export default function LeadImportForm({ userId }: LeadImportFormProps) {
                     onChange={(e) => setManualLead({ ...manualLead, company_size: e.target.value })}
                     placeholder="e.g., 10-50"
                   />
+                </div>
+
+                <div>
+                  <Label htmlFor="category">Category</Label>
+                  <Select
+                    value={manualLead.category || ''}
+                    onValueChange={(value) => setManualLead({ ...manualLead, category: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PREDEFINED_CATEGORIES.map((cat) => (
+                        <SelectItem key={cat.value} value={cat.value}>
+                          {cat.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 

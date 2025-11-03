@@ -38,6 +38,18 @@ const LEAD_FIELDS = [
   { value: 'skip', label: '-- Skip Column --', required: false },
 ];
 
+const PREDEFINED_CATEGORIES = [
+  { value: '', label: '-- No Category --' },
+  { value: 'cold', label: 'Cold Lead' },
+  { value: 'warm', label: 'Warm Lead' },
+  { value: 'hot', label: 'Hot Lead' },
+  { value: 'instantly_opened', label: 'Instantly Opened' },
+  { value: 'email_replied', label: 'Email Replied' },
+  { value: 'meeting_scheduled', label: 'Meeting Scheduled' },
+  { value: 'follow_up', label: 'Follow Up' },
+  { value: 'not_interested', label: 'Not Interested' },
+];
+
 interface CSVRow {
   [key: string]: string;
 }
@@ -57,6 +69,7 @@ export function CSVImportWizard() {
     duplicates: number;
     errors: string[];
   } | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
 
   const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedFile = event.target.files?.[0];
@@ -139,6 +152,11 @@ export function CSVImportWizard() {
           lead_source: 'CSV Import',
           lead_source_details: file?.name || 'Unknown',
         };
+
+        // Add category if selected
+        if (selectedCategory) {
+          lead.category = selectedCategory;
+        }
 
         Object.entries(columnMapping).forEach(([csvCol, leadField]) => {
           if (leadField !== 'skip' && row[csvCol]) {
@@ -278,6 +296,25 @@ export function CSVImportWizard() {
 
             <div className="space-y-4">
               <p className="font-medium">Map your CSV columns to CRM fields:</p>
+
+              <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                <Label className="font-medium mb-2 block">Lead Category (Optional)</Label>
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a category for all imported leads" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PREDEFINED_CATEGORIES.map((cat) => (
+                      <SelectItem key={cat.value} value={cat.value}>
+                        {cat.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-2">
+                  All imported leads will be assigned this category
+                </p>
+              </div>
 
               <div className="grid gap-4">
                 {csvHeaders.map((header) => (
