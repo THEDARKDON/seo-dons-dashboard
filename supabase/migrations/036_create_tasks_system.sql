@@ -48,25 +48,25 @@ ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view their own tasks"
   ON tasks FOR SELECT
   USING (user_id IN (
-    SELECT id FROM users WHERE clerk_id = auth.uid()
+    SELECT id FROM users WHERE clerk_id = auth.uid()::text
   ));
 
 CREATE POLICY "Users can create their own tasks"
   ON tasks FOR INSERT
   WITH CHECK (user_id IN (
-    SELECT id FROM users WHERE clerk_id = auth.uid()
+    SELECT id FROM users WHERE clerk_id = auth.uid()::text
   ));
 
 CREATE POLICY "Users can update their own tasks"
   ON tasks FOR UPDATE
   USING (user_id IN (
-    SELECT id FROM users WHERE clerk_id = auth.uid()
+    SELECT id FROM users WHERE clerk_id = auth.uid()::text
   ));
 
 CREATE POLICY "Users can delete their own tasks"
   ON tasks FOR DELETE
   USING (user_id IN (
-    SELECT id FROM users WHERE clerk_id = auth.uid()
+    SELECT id FROM users WHERE clerk_id = auth.uid()::text
   ));
 
 -- Add trigger for updated_at
