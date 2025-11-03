@@ -36,6 +36,7 @@ interface Lead {
   status: string;
   lead_score: number;
   lead_source?: string;
+  category?: string;
   created_at: string;
   users?: {
     id: string;
@@ -66,15 +67,29 @@ const statusLabels = {
   lost: 'Lost',
 };
 
+const categoryConfig: Record<string, { label: string; color: string }> = {
+  cold: { label: 'Cold Lead', color: 'bg-gray-100 text-gray-700 border-gray-300' },
+  warm: { label: 'Warm Lead', color: 'bg-blue-100 text-blue-700 border-blue-300' },
+  hot: { label: 'Hot Lead', color: 'bg-orange-100 text-orange-700 border-orange-300' },
+  instantly_opened: { label: 'Instantly Opened', color: 'bg-purple-100 text-purple-700 border-purple-300' },
+  email_replied: { label: 'Email Replied', color: 'bg-green-100 text-green-700 border-green-300' },
+  meeting_scheduled: { label: 'Meeting Scheduled', color: 'bg-teal-100 text-teal-700 border-teal-300' },
+  follow_up: { label: 'Follow Up', color: 'bg-yellow-100 text-yellow-700 border-yellow-300' },
+  not_interested: { label: 'Not Interested', color: 'bg-red-100 text-red-700 border-red-300' },
+};
+
 export function LeadsList({ initialLeads }: LeadsListProps) {
   const router = useRouter();
-  const [leads] = useState(initialLeads);
+  const [leads, setLeads] = useState(initialLeads);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sourceFilter, setSourceFilter] = useState<string>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [editingCategory, setEditingCategory] = useState<string | null>(null);
 
-  // Get unique sources
+  // Get unique sources and categories
   const sources = Array.from(new Set(leads.map(l => l.lead_source).filter(Boolean)));
+  const categories = Array.from(new Set(leads.map(l => l.category).filter(Boolean)));
 
   // Filter leads
   const filteredLeads = leads.filter(lead => {
@@ -87,9 +102,32 @@ export function LeadsList({ initialLeads }: LeadsListProps) {
 
     const matchesStatus = statusFilter === 'all' || lead.status === statusFilter;
     const matchesSource = sourceFilter === 'all' || lead.lead_source === sourceFilter;
+    const matchesCategory = categoryFilter === 'all' || lead.category === categoryFilter;
 
-    return matchesSearch && matchesStatus && matchesSource;
+    return matchesSearch && matchesStatus && matchesSource && matchesCategory;
   });
+
+  const updateLeadCategory = async (leadId: string, category: string) => {
+    try {
+      const response = await fetch(`/api/leads/${leadId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ category }),
+      });
+
+      if (response.ok) {
+        // Update local state
+        setLeads(prevLeads =>
+          prevLeads.map(lead =>
+            lead.id === leadId ? { ...lead, category } : lead
+          )
+        );
+        setEditingCategory(null);
+      }
+    } catch (error) {
+      console.error('Error updating category:', error);
+    }
+  };
 
   const getScoreBadge = (score: number) => {
     if (score >= 70) {
@@ -160,6 +198,21 @@ export function LeadsList({ initialLeads }: LeadsListProps) {
                 ))}
               </SelectContent>
             </Select>
+
+            {/* Category Filter */}
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="All Categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {Object.entries(categoryConfig).map(([value, config]) => (
+                  <SelectItem key={value} value={value}>
+                    {config.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </CardHeader>
@@ -167,11 +220,11 @@ export function LeadsList({ initialLeads }: LeadsListProps) {
         {filteredLeads.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-muted-foreground mb-4">
-              {searchTerm || statusFilter !== 'all' || sourceFilter !== 'all'
+              {searchTerm || statusFilter !== 'all' || sourceFilter !== 'all' || categoryFilter !== 'all'
                 ? 'No leads match your filters'
                 : 'No leads yet'}
             </p>
-            {!searchTerm && statusFilter === 'all' && sourceFilter === 'all' && (
+            {!searchTerm && statusFilter === 'all' && sourceFilter === 'all' && categoryFilter === 'all' && (
               <div className="flex gap-2 justify-center">
                 <Link href="/dashboard/leads/new">
                   <Button>Create Lead</Button>
@@ -213,6 +266,44 @@ export function LeadsList({ initialLeads }: LeadsListProps) {
                         {lead.lead_source && (
                           <Badge variant="outline" className="text-xs">
                             {lead.lead_source}
+                          </Badge>
+                        )}
+
+                        {/* Category Badge with Inline Edit */}
+                        {editingCategory === lead.id ? (
+                          <div onClick={(e) => e.preventDefault()}>
+                            <Select
+                              value={lead.category || ''}
+                              onValueChange={(value) => updateLeadCategory(lead.id, value)}
+                            >
+                              <SelectTrigger className="h-6 w-40 text-xs">
+                                <SelectValue placeholder="Select category" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {Object.entries(categoryConfig).map(([value, config]) => (
+                                  <SelectItem key={value} value={value} className="text-xs">
+                                    {config.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        ) : (
+                          <Badge
+                            variant="outline"
+                            className={`text-xs cursor-pointer border ${
+                              lead.category && categoryConfig[lead.category]
+                                ? categoryConfig[lead.category].color
+                                : 'bg-gray-50 text-gray-600 border-gray-300'
+                            }`}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setEditingCategory(lead.id);
+                            }}
+                          >
+                            {lead.category && categoryConfig[lead.category]
+                              ? categoryConfig[lead.category].label
+                              : 'Set Category'}
                           </Badge>
                         )}
                       </div>
