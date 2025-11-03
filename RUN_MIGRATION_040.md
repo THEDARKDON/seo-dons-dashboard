@@ -1,23 +1,25 @@
 # Run Migration 040 - Fix Deal Creation Trigger
 
-**CRITICAL:** This migration fixes a bug that causes ALL deal creations to fail with error: `record "new" has no field "contact_name"`
+**CRITICAL:** This migration fixes a bug that causes ALL deal creations to fail with errors:
+- `record "new" has no field "contact_name"` (error code 42703)
+- `record "new" has no field "lead_id"` (error code 42703)
 
 ## The Problem
 
-The `auto_create_customer_from_deal` trigger (from Migration 030) tries to access fields that don't exist:
+The `auto_create_customer_from_deal` trigger (from Migration 030) tries to access fields that don't exist in the `deals` table:
 - `NEW.contact_name`
 - `NEW.contact_email`
 - `NEW.contact_phone`
+- `NEW.lead_id`
 
 These fields were never added to the `deals` table, causing the trigger to fail on every INSERT.
 
 ## The Fix
 
-This migration:
-1. Drops the broken trigger and function
-2. Creates a simpler version that only uses existing fields
-3. Only auto-creates customers from leads (when `lead_id` is provided)
-4. Does NOT try to access non-existent `contact_*` fields
+This migration **completely removes** the problematic trigger and function because:
+1. Deals created from customer page already have `customer_id` (no auto-creation needed)
+2. Deals created from deals page can optionally link to existing customer
+3. Lead-to-customer conversion should happen explicitly via "Convert Lead" action (not automatically)
 
 ## How to Run
 
@@ -37,7 +39,16 @@ npx supabase db push
 
 ## Verify the Migration
 
-After running, test deal creation:
+After running, verify the trigger is gone:
+
+```sql
+-- Should return 0 rows (trigger removed)
+SELECT tgname
+FROM pg_trigger
+WHERE tgname = 'trigger_auto_create_customer_from_deal';
+```
+
+Test deal creation:
 
 ```sql
 -- This should now succeed (previously failed)
@@ -59,10 +70,10 @@ LIMIT 1;
 ## After Running Migration
 
 Once the migration is complete:
-1. You can create deals from the customer page without errors
-2. You can create deals from the deals page without errors
-3. Deals with `lead_id` will still auto-create customers
-4. Deals without `lead_id` will work fine (no customer auto-creation)
+1. ✅ You can create deals from the customer page without errors
+2. ✅ You can create deals from the deals page without errors
+3. ✅ Deals can optionally link to customers via customer_id
+4. ❌ Deals will NO LONGER auto-create customers (this was broken anyway)
 
 ## Testing
 
