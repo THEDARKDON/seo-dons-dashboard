@@ -148,6 +148,11 @@ export async function POST(req: NextRequest) {
                  (leadData.Keywords ? `Keywords: ${leadData.Keywords}` : null) ||
                  null,
 
+          // Instantly.ai tracking fields
+          instantly_campaign_id: leadData.instantly_campaign_id || leadData.campaign_id || null,
+          instantly_lead_id: leadData.instantly_lead_id || leadData.lead_id || null,
+          instantly_status: leadData.instantly_status || leadData.status || null,
+
           // System fields
           assigned_to: assignedToUserId,
           assigned_at: new Date().toISOString(),
