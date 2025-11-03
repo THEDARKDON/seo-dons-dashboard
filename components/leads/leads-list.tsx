@@ -337,7 +337,6 @@ export function LeadsList({ initialLeads }: LeadsListProps) {
               </span>
             </div>
           )}
-        </div>
       </CardHeader>
       <CardContent>
         {filteredLeads.length === 0 ? (
