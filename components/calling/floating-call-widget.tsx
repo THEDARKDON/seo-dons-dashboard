@@ -203,9 +203,13 @@ export function FloatingCallWidget() {
       {showBookingModal && callState.customerEmail && (
         <CalendarBookingModal
           open={showBookingModal}
-          onClose={() => setShowBookingModal(false)}
-          contactEmail={callState.customerEmail}
-          contactName={callState.customerName}
+          onOpenChange={setShowBookingModal}
+          customerEmail={callState.customerEmail}
+          customerName={callState.customerName}
+          customerId={callState.customerId}
+          dealId={callState.dealId}
+          leadId={callState.leadId}
+          callRecordId={callState.callRecordId}
         />
       )}
     </>
