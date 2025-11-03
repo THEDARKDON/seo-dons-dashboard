@@ -27,6 +27,7 @@ import {
   MessageSquare,
   Mail,
   Send,
+  CheckSquare,
 } from 'lucide-react';
 
 const navigation = [
@@ -34,6 +35,7 @@ const navigation = [
   { name: 'SMS', href: '/dashboard/sms', icon: MessageSquare },
   { name: 'Email', href: '/dashboard/email', icon: Mail },
   { name: 'Leads', href: '/dashboard/leads', icon: UserPlus },
+  { name: 'Tasks', href: '/dashboard/tasks', icon: CheckSquare },
   { name: 'Pipeline', href: '/dashboard/pipeline', icon: Kanban },
   { name: 'Deals', href: '/dashboard/deals', icon: Briefcase },
   { name: 'Customers', href: '/dashboard/customers', icon: Users },

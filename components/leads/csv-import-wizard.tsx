@@ -39,7 +39,6 @@ const LEAD_FIELDS = [
 ];
 
 const PREDEFINED_CATEGORIES = [
-  { value: '', label: '-- No Category --' },
   { value: 'cold', label: 'Cold Lead' },
   { value: 'warm', label: 'Warm Lead' },
   { value: 'hot', label: 'Hot Lead' },
