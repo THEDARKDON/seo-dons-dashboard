@@ -58,6 +58,13 @@ export async function POST(request: NextRequest) {
       const lead = leads[i];
 
       try {
+        // Debug: Log the lead object to see what we're receiving
+        console.log(`Processing lead ${i + 1}:`, JSON.stringify({
+          email: lead.email,
+          category: lead.category,
+          has_category: !!lead.category
+        }));
+
         // Validate required fields (check all possible variations)
         const firstName = lead.first_name || lead.firstName || lead['First Name'];
         const lastName = lead.last_name || lead.lastName || lead['Last Name'];
