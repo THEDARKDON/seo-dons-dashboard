@@ -261,7 +261,16 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const makeCall = async (device: Device, callerIdNumber: string, phoneNumber: string) => {
+  const makeCall = async (
+    device: Device,
+    callerIdNumber: string,
+    phoneNumber: string,
+    callParams: {
+      customerId?: string;
+      dealId?: string;
+      leadId?: string;
+    }
+  ) => {
     try {
       setCallState((prev) => ({ ...prev, status: 'ringing' }));
 
@@ -280,7 +289,13 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         console.log('[CallContext] Call accepted');
         setCallState((prev) => ({ ...prev, status: 'connected' }));
         toast.success('Call connected');
-        saveCallRecord(call.parameters.CallSid);
+        // Pass IDs directly to avoid race condition with async state updates
+        saveCallRecord(call.parameters.CallSid, {
+          phoneNumber,
+          customerId: callParams.customerId,
+          dealId: callParams.dealId,
+          leadId: callParams.leadId,
+        });
       });
 
       call.on('disconnect', () => {
@@ -315,18 +330,27 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const saveCallRecord = async (callSid: string) => {
+  const saveCallRecord = async (callSid: string, params?: {
+    phoneNumber?: string;
+    customerId?: string;
+    dealId?: string;
+    leadId?: string;
+  }) => {
     try {
+      const requestBody = {
+        callSid,
+        toNumber: params?.phoneNumber || callState.phoneNumber,
+        customerId: params?.customerId || callState.customerId,
+        dealId: params?.dealId || callState.dealId,
+        leadId: params?.leadId || callState.leadId,
+      };
+
+      console.log('[CallContext] Saving call record:', requestBody);
+
       const response = await fetch('/api/calling/save-call', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          callSid,
-          toNumber: callState.phoneNumber,
-          customerId: callState.customerId,
-          dealId: callState.dealId,
-          leadId: callState.leadId,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       const data = await response.json();
@@ -388,12 +412,20 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       // Initialize device if not already initialized
       if (!deviceRef.current) {
         const { device, phoneNumber: callerIdNumber } = await initializeDevice();
-        await makeCall(device, callerIdNumber, normalizedNumber);
+        await makeCall(device, callerIdNumber, normalizedNumber, {
+          customerId: params.customerId,
+          dealId: params.dealId,
+          leadId: params.leadId,
+        });
       } else {
         // Reuse existing device (token is fresh)
         const response = await fetch('/api/calling/token');
         const data = await response.json();
-        await makeCall(deviceRef.current, data.phoneNumber, normalizedNumber);
+        await makeCall(deviceRef.current, data.phoneNumber, normalizedNumber, {
+          customerId: params.customerId,
+          dealId: params.dealId,
+          leadId: params.leadId,
+        });
       }
     } catch (error: any) {
       console.error('[CallContext] Error initiating call:', error);
