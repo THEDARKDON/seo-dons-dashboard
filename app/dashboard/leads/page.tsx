@@ -36,6 +36,9 @@ async function getLeadsData(userId: string) {
       query = query.eq('assigned_to', user.id);
     }
 
+    // Add high limit to ensure all leads are fetched (Supabase default is 1000)
+    query = query.limit(100000);
+
     const { data: leads } = await query;
 
     // Calculate stats
