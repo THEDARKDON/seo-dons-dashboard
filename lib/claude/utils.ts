@@ -129,6 +129,7 @@ export function extractJSON<T = any>(content: string): T {
 
 /**
  * Call Claude API with standard configuration for research tasks
+ * Uses streaming to avoid timeout issues on serverless platforms
  * Includes extended thinking, retry logic, and cost calculation
  *
  * @param systemPrompt The system prompt
@@ -161,37 +162,53 @@ export async function callClaudeForResearch(
         content: userPrompt,
       },
     ],
+    stream: true, // Enable streaming to avoid timeouts
   };
 
-  const response = await claudeWithRetry(() => anthropic.messages.create(params));
+  // Use streaming API
+  const stream = await claudeWithRetry(() => anthropic.messages.create(params));
 
-  // Extract text content (skip thinking blocks)
-  const textContent = response.content
-    .filter((block) => block.type === 'text')
-    .map((block) => (block as any).text)
-    .join('\n\n');
+  // Collect all chunks
+  let textContent = '';
+  let inputTokens = 0;
+  let outputTokens = 0;
+  let modelName = '';
+
+  for await (const event of stream) {
+    if (event.type === 'message_start') {
+      inputTokens = event.message.usage.input_tokens;
+      modelName = event.message.model;
+    } else if (event.type === 'content_block_delta') {
+      if (event.delta.type === 'text_delta') {
+        textContent += event.delta.text;
+      }
+    } else if (event.type === 'message_delta') {
+      outputTokens = event.usage.output_tokens;
+    }
+  }
 
   // Calculate thinking tokens used
-  const thinkingTokens = response.usage.input_tokens - estimatePromptTokens(systemPrompt, userPrompt);
+  const thinkingTokens = inputTokens - estimatePromptTokens(systemPrompt, userPrompt);
 
   return {
     content: textContent,
     usage: {
-      inputTokens: response.usage.input_tokens,
-      outputTokens: response.usage.output_tokens,
+      inputTokens,
+      outputTokens,
       thinkingTokens: Math.max(0, thinkingTokens),
     },
     cost: calculateCost(
-      response.usage.input_tokens,
-      response.usage.output_tokens,
+      inputTokens,
+      outputTokens,
       Math.max(0, thinkingTokens)
     ),
-    model: response.model,
+    model: modelName,
   };
 }
 
 /**
  * Call Claude API with standard configuration for content generation
+ * Uses streaming to avoid timeout issues on serverless platforms
  * Higher temperature for more creative output
  *
  * @param systemPrompt The system prompt
@@ -219,29 +236,44 @@ export async function callClaudeForContent(
         content: userPrompt,
       },
     ],
+    stream: true, // Enable streaming to avoid timeouts
   };
 
-  const response = await claudeWithRetry(() => anthropic.messages.create(params));
+  // Use streaming API
+  const stream = await claudeWithRetry(() => anthropic.messages.create(params));
 
-  // Extract text content
-  const textContent = response.content
-    .filter((block) => block.type === 'text')
-    .map((block) => (block as any).text)
-    .join('\n\n');
+  // Collect all chunks
+  let textContent = '';
+  let inputTokens = 0;
+  let outputTokens = 0;
+  let modelName = '';
+
+  for await (const event of stream) {
+    if (event.type === 'message_start') {
+      inputTokens = event.message.usage.input_tokens;
+      modelName = event.message.model;
+    } else if (event.type === 'content_block_delta') {
+      if (event.delta.type === 'text_delta') {
+        textContent += event.delta.text;
+      }
+    } else if (event.type === 'message_delta') {
+      outputTokens = event.usage.output_tokens;
+    }
+  }
 
   return {
     content: textContent,
     usage: {
-      inputTokens: response.usage.input_tokens,
-      outputTokens: response.usage.output_tokens,
+      inputTokens,
+      outputTokens,
       thinkingTokens: 0,
     },
     cost: calculateCost(
-      response.usage.input_tokens,
-      response.usage.output_tokens,
+      inputTokens,
+      outputTokens,
       0
     ),
-    model: response.model,
+    model: modelName,
   };
 }
 
