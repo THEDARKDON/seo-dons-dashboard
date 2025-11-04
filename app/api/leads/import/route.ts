@@ -92,20 +92,60 @@ export async function POST(request: NextRequest) {
         if (existingLead) {
           duplicates++;
 
-          // If a new category is assigned, update the existing lead's category
-          const newCategory = lead.category;
-          if (newCategory) {
-            console.log(`Updating duplicate lead ${existingLead.id} with category: ${newCategory}`);
+          // Build update object with ALL new non-empty fields from import
+          const updateData: any = {};
+          const updatedFields: string[] = [];
+
+          // Map all possible fields and only include if they have a value
+          const fieldMappings: Record<string, () => any> = {
+            first_name: () => lead.first_name || lead.firstName || lead['First Name'],
+            last_name: () => lead.last_name || lead.lastName || lead['Last Name'],
+            email: () => lead.email || lead.Email,
+            phone: () => lead.phone || lead.Phone || lead.phone_number || lead.phoneNumber,
+            company: () => lead.company || lead.Company,
+            job_title: () => lead.job_title || lead.jobTitle || lead['Job Title'],
+            website: () => lead.website || lead.Website,
+            linkedin_url: () => lead.linkedin_url || lead.linkedinUrl || lead['LinkedIn'],
+            address: () => lead.address || lead.Address,
+            city: () => lead.city || lead.City,
+            state: () => lead.state || lead.State,
+            postal_code: () => lead.postal_code || lead.postalCode || lead.zip,
+            country: () => lead.country || lead.Country,
+            industry: () => lead.industry || lead.Industry,
+            company_size: () => lead.company_size || lead.companySize || lead.employees,
+            annual_revenue: () => lead.annual_revenue || lead.annualRevenue || lead.revenue,
+            notes: () => lead.notes || lead.Notes || lead.comments,
+            category: () => lead.category || lead.Category,
+            lead_source: () => lead.lead_source || lead.source || lead.Source,
+            lead_source_details: () => lead.lead_source_details || fileName,
+          };
+
+          // Check each field and add to update if it has a non-empty value
+          for (const [fieldName, getter] of Object.entries(fieldMappings)) {
+            const value = getter();
+            if (value !== null && value !== undefined && value !== '') {
+              updateData[fieldName] = value;
+              updatedFields.push(fieldName);
+            }
+          }
+
+          // Only update if we have new data
+          if (Object.keys(updateData).length > 0) {
+            console.log(`Updating duplicate lead ${existingLead.id} with fields:`, updatedFields.join(', '));
+
             const { error: updateError } = await supabase
               .from('leads')
-              .update({ category: newCategory })
+              .update(updateData)
               .eq('id', existingLead.id);
 
             if (updateError) {
-              console.error('Error updating category for duplicate lead:', updateError);
+              console.error('Error updating duplicate lead:', updateError);
+              errors.push(`Row ${i + 1}: Failed to update duplicate - ${updateError.message}`);
+            } else {
+              console.log(`Successfully updated ${updatedFields.length} fields for duplicate lead`);
             }
           } else {
-            console.log('No category to update for duplicate lead');
+            console.log('No new data to update for duplicate lead');
           }
 
           continue;

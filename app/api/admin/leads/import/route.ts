@@ -89,20 +89,59 @@ export async function POST(req: NextRequest) {
           if (existing) {
             duplicateCount++;
 
-            // If a new category is assigned, update the existing lead's category
-            const newCategory = leadData.category;
-            if (newCategory) {
-              console.log(`Updating duplicate lead ${existing.id} with category: ${newCategory}`);
+            // Build update object with ALL new non-empty fields from import
+            const updateData: any = {};
+            const updatedFields: string[] = [];
+
+            // Map all possible fields and only include if they have a value
+            const fieldMappings: Record<string, () => any> = {
+              first_name: () => leadData.first_name || leadData.firstName || leadData['First Name'],
+              last_name: () => leadData.last_name || leadData.lastName || leadData['Last Name'],
+              phone: () => leadData.phone || leadData.mobile || leadData.phone_number ||
+                           leadData['Mobile Phone'] || leadData['Corporate Phone'] ||
+                           leadData['Other Phone'] || leadData['Company Phone'],
+              company: () => leadData.company || leadData.company_name ||
+                            leadData['Company Name'] || leadData['Company Name for Emails'],
+              job_title: () => leadData.job_title || leadData.title || leadData.position || leadData.Title,
+              website: () => leadData.website || leadData.company_website || leadData.Website,
+              linkedin_url: () => leadData.linkedin_url || leadData.linkedin ||
+                                  leadData['Person Linkedin Url'] || leadData['Company Linkedin Url'],
+              address: () => leadData.address || leadData['Company Address'],
+              city: () => leadData.city || leadData['Company City'],
+              state: () => leadData.state || leadData.region,
+              postal_code: () => leadData.postal_code || leadData.zip || leadData.postcode,
+              country: () => leadData.country,
+              industry: () => leadData.industry,
+              company_size: () => leadData.company_size || leadData.employees,
+              annual_revenue: () => leadData.annual_revenue || leadData.revenue || leadData['Annual Revenue'],
+              notes: () => leadData.notes || leadData.comments ||
+                          (leadData.Keywords ? `Keywords: ${leadData.Keywords}` : null),
+              category: () => leadData.category,
+            };
+
+            // Check each field and add to update if it has a non-empty value
+            for (const [fieldName, getter] of Object.entries(fieldMappings)) {
+              const value = getter();
+              if (value !== null && value !== undefined && value !== '') {
+                updateData[fieldName] = value;
+                updatedFields.push(fieldName);
+              }
+            }
+
+            // Only update if we have new data
+            if (Object.keys(updateData).length > 0) {
+              console.log(`Updating duplicate lead ${existing.id} with fields:`, updatedFields.join(', '));
+
               const { error: updateError } = await supabase
                 .from('leads')
-                .update({ category: newCategory })
+                .update(updateData)
                 .eq('id', existing.id);
 
               if (updateError) {
-                console.error('Error updating category for duplicate lead:', updateError);
+                console.error('Error updating duplicate lead:', updateError);
               }
             } else {
-              console.log('No category to update for duplicate lead');
+              console.log('No new data to update for duplicate lead');
             }
 
             await supabase.from('lead_import_results').insert({
@@ -110,12 +149,17 @@ export async function POST(req: NextRequest) {
               row_number: i + 1,
               raw_data: leadData,
               status: 'duplicate',
-              error_message: newCategory
-                ? 'Email already exists for this user (category updated)'
-                : 'Email already exists for this user',
+              error_message: updatedFields.length > 0
+                ? `Email already exists - updated fields: ${updatedFields.join(', ')}`
+                : 'Email already exists - no new data to update',
             });
 
-            results.push({ row: i + 1, status: 'duplicate', email: leadData.email });
+            results.push({
+              row: i + 1,
+              status: 'duplicate',
+              email: leadData.email,
+              updatedFields: updatedFields.length > 0 ? updatedFields : undefined
+            });
             continue;
           }
         }
