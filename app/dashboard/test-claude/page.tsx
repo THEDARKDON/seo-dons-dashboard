@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Progress } from '@/components/ui/progress';
 import { Loader2, CheckCircle, XCircle, Brain, TrendingUp, Users, Target, MapPin } from 'lucide-react';
 
 interface ResearchResult {
@@ -29,7 +30,6 @@ interface TestResponse {
       totalTokens: number;
       thinkingTokens: number;
       estimatedCost: number;
-      progressLog: Array<{ stage: string; progress: number; timestamp: number }>;
     };
   };
   error?: string;
@@ -47,14 +47,22 @@ export default function TestClaudePage() {
   const [result, setResult] = useState<TestResponse | null>(null);
   const [currentStage, setCurrentStage] = useState('');
   const [progress, setProgress] = useState(0);
+  const [logs, setLogs] = useState<string[]>([]);
+
+  const addLog = (message: string) => {
+    setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${message}`]);
+  };
 
   const handleTest = async () => {
     setIsLoading(true);
     setResult(null);
-    setCurrentStage('Starting research...');
+    setCurrentStage('Initializing...');
     setProgress(0);
+    setLogs([]);
 
     try {
+      addLog('Starting research request...');
+
       const response = await fetch('/api/test-claude', {
         method: 'POST',
         headers: {
@@ -69,12 +77,68 @@ export default function TestClaudePage() {
         }),
       });
 
-      const data: TestResponse = await response.json();
-      setResult(data);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-      if (data.success && data.data) {
-        setCurrentStage('Research complete!');
-        setProgress(100);
+      // Check if it's a streaming response
+      const contentType = response.headers.get('content-type');
+      if (contentType?.includes('text/event-stream')) {
+        addLog('Receiving streaming response...');
+
+        // Handle SSE stream
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
+
+        if (!reader) {
+          throw new Error('No reader available');
+        }
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (line.startsWith('event:')) {
+              const eventType = line.slice(7).trim();
+              continue;
+            }
+
+            if (line.startsWith('data:')) {
+              const data = JSON.parse(line.slice(6));
+
+              if (data.stage) {
+                // Progress update
+                setCurrentStage(data.stage);
+                setProgress(data.progress);
+                addLog(`${data.progress}% - ${data.stage}`);
+              } else if (data.success !== undefined) {
+                // Complete or error
+                if (data.success) {
+                  setResult(data);
+                  setCurrentStage('Research complete!');
+                  setProgress(100);
+                  addLog(`✅ Research completed in ${data.data.performance.durationSeconds}s`);
+                  addLog(`💰 Cost: £${data.data.performance.estimatedCost.toFixed(4)}`);
+                } else {
+                  setResult(data);
+                  addLog(`❌ Error: ${data.error}`);
+                }
+              } else if (data.message) {
+                // Start message
+                addLog(data.message);
+              }
+            }
+          }
+        }
+      } else {
+        // Non-streaming response (fallback or error)
+        const data: TestResponse = await response.json();
+        setResult(data);
+        addLog(data.error || 'Request completed');
       }
     } catch (error: any) {
       setResult({
@@ -82,6 +146,7 @@ export default function TestClaudePage() {
         error: 'Failed to connect to API',
         details: error.message,
       });
+      addLog(`❌ Error: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -127,6 +192,7 @@ export default function TestClaudePage() {
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
                 placeholder="e.g., A1 Mobility"
+                disabled={isLoading}
               />
             </div>
 
@@ -137,6 +203,7 @@ export default function TestClaudePage() {
                 value={website}
                 onChange={(e) => setWebsite(e.target.value)}
                 placeholder="e.g., https://example.com"
+                disabled={isLoading}
               />
             </div>
 
@@ -147,6 +214,7 @@ export default function TestClaudePage() {
                 value={industry}
                 onChange={(e) => setIndustry(e.target.value)}
                 placeholder="e.g., Mobility Scooters"
+                disabled={isLoading}
               />
             </div>
 
@@ -157,12 +225,13 @@ export default function TestClaudePage() {
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder="e.g., Kent, UK"
+                disabled={isLoading}
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="packageTier">Package Tier</Label>
-              <Select value={packageTier} onValueChange={(value: any) => setPackageTier(value)}>
+              <Select value={packageTier} onValueChange={(value: any) => setPackageTier(value)} disabled={isLoading}>
                 <SelectTrigger id="packageTier">
                   <SelectValue />
                 </SelectTrigger>
@@ -195,12 +264,26 @@ export default function TestClaudePage() {
           </Button>
 
           {isLoading && (
-            <Alert>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <AlertDescription>
-                {currentStage || 'Initializing research...'}
-              </AlertDescription>
-            </Alert>
+            <div className="space-y-2">
+              <Progress value={progress} className="w-full" />
+              <Alert>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <AlertDescription>
+                  {currentStage || 'Initializing research...'}
+                </AlertDescription>
+              </Alert>
+            </div>
+          )}
+
+          {logs.length > 0 && (
+            <details className="mt-4">
+              <summary className="cursor-pointer font-medium">View Progress Logs ({logs.length})</summary>
+              <div className="mt-2 p-4 bg-muted rounded-lg max-h-48 overflow-auto">
+                {logs.map((log, i) => (
+                  <div key={i} className="text-xs font-mono">{log}</div>
+                ))}
+              </div>
+            </details>
           )}
         </CardContent>
       </Card>
@@ -361,7 +444,7 @@ export default function TestClaudePage() {
                 {/* Raw JSON (collapsible) */}
                 <details className="mt-4">
                   <summary className="cursor-pointer font-medium">View Full JSON Response</summary>
-                  <pre className="mt-2 p-4 bg-muted rounded-lg overflow-auto text-xs">
+                  <pre className="mt-2 p-4 bg-muted rounded-lg overflow-auto text-xs max-h-96">
                     {JSON.stringify(result.data.research, null, 2)}
                   </pre>
                 </details>
