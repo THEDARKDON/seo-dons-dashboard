@@ -10,10 +10,10 @@ import Link from 'next/link';
 async function getAppointments(userId: string) {
   const supabase = await createClient();
 
-  // Get user's Supabase ID
+  // Get user's Supabase ID and role
   const { data: user } = await supabase
     .from('users')
-    .select('id')
+    .select('id, role')
     .eq('clerk_id', userId)
     .single();
 
@@ -21,18 +21,25 @@ async function getAppointments(userId: string) {
     return [];
   }
 
-  // Get appointments
-  const { data: appointments } = await supabase
+  // Build query for appointments
+  let query = supabase
     .from('activities')
     .select(`
       *,
       customers (first_name, last_name, company),
-      deals (deal_name)
+      deals (deal_name),
+      users (first_name, last_name)
     `)
-    .eq('user_id', user.id)
     .eq('activity_type', 'appointment')
     .order('scheduled_at', { ascending: true })
-    .limit(50);
+    .limit(100);
+
+  // Admin and manager can see all appointments, others see only their own
+  if (user.role !== 'admin' && user.role !== 'manager') {
+    query = query.eq('user_id', user.id);
+  }
+
+  const { data: appointments } = await query;
 
   return appointments || [];
 }
@@ -101,6 +108,7 @@ export default async function AppointmentsPage() {
               {upcoming.map((appointment) => {
                 const customer = appointment.customers as any;
                 const deal = appointment.deals as any;
+                const assignedUser = appointment.users as any;
 
                 return (
                   <div
@@ -139,6 +147,11 @@ export default async function AppointmentsPage() {
                               Related to: {deal.deal_name}
                             </p>
                           )}
+                          {assignedUser && (
+                            <p className="text-xs text-muted-foreground">
+                              Assigned to: {assignedUser.first_name} {assignedUser.last_name}
+                            </p>
+                          )}
                         </div>
                         <Badge variant="default">Upcoming</Badge>
                       </div>
@@ -168,6 +181,7 @@ export default async function AppointmentsPage() {
               {past.slice(0, 10).map((appointment) => {
                 const customer = appointment.customers as any;
                 const deal = appointment.deals as any;
+                const assignedUser = appointment.users as any;
 
                 return (
                   <div
@@ -200,6 +214,11 @@ export default async function AppointmentsPage() {
                           </p>
                           {appointment.subject && (
                             <p className="text-sm text-muted-foreground">{appointment.subject}</p>
+                          )}
+                          {assignedUser && (
+                            <p className="text-xs text-muted-foreground">
+                              Assigned to: {assignedUser.first_name} {assignedUser.last_name}
+                            </p>
                           )}
                         </div>
                         <Badge variant="secondary">Completed</Badge>
