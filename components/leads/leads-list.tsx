@@ -152,18 +152,23 @@ export function LeadsList({ initialLeads }: LeadsListProps) {
   useEffect(() => {
     async function fetchAdminAndUsers() {
       try {
+        console.log('[Admin Check] Fetching user role...');
         const roleRes = await fetch('/api/user/role');
         const roleData = await roleRes.json();
+        console.log('[Admin Check] Role response:', roleData);
         const adminStatus = roleData.role === 'admin';
+        console.log('[Admin Check] Is admin:', adminStatus);
         setIsAdmin(adminStatus);
 
         if (adminStatus) {
+          console.log('[Admin Check] Fetching users list...');
           const usersRes = await fetch('/api/admin/users');
           const usersData = await usersRes.json();
           setUsers(usersData.users || []);
+          console.log('[Admin Check] Users loaded:', usersData.users?.length || 0);
         }
       } catch (error) {
-        console.error('Error fetching admin status:', error);
+        console.error('[Admin Check] Error fetching admin status:', error);
       }
     }
     fetchAdminAndUsers();
@@ -309,6 +314,11 @@ export function LeadsList({ initialLeads }: LeadsListProps) {
 
   return (
     <>
+      {/* Debug info - remove after testing */}
+      <div className="mb-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
+        Debug: isAdmin={String(isAdmin)}, selectedCount={selectedLeads.size}, showDelete={String(isAdmin && selectedLeads.size > 0)}
+      </div>
+
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between mb-4">

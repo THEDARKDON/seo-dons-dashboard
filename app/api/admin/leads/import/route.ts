@@ -71,10 +71,11 @@ export async function POST(req: NextRequest) {
       const leadData = leads[i];
 
       try {
-        console.log(`Admin processing lead ${i + 1}:`, JSON.stringify({
+        console.log(`[Import] Processing lead ${i + 1}:`, JSON.stringify({
           email: leadData.email,
           category: leadData.category,
           has_category: !!leadData.category,
+          category_value: leadData.category || 'NO CATEGORY',
           assignedTo: assignedToUserId
         }));
 
@@ -129,7 +130,7 @@ export async function POST(req: NextRequest) {
             for (const [fieldName, getter] of Object.entries(fieldMappings)) {
               const value = getter();
 
-              // Special logging for phone field to debug issues
+              // Special logging for phone and category fields to debug issues
               if (fieldName === 'phone') {
                 console.log(`[Import] Phone field check:`, {
                   value,
@@ -138,6 +139,16 @@ export async function POST(req: NextRequest) {
                   'leadData.phone_number': leadData.phone_number,
                   'leadData[Mobile Phone]': leadData['Mobile Phone'],
                   isEmpty: value === null || value === undefined || value === ''
+                });
+              }
+
+              if (fieldName === 'category') {
+                console.log(`[Import] Category field check:`, {
+                  value,
+                  'leadData.category': leadData.category,
+                  'existing.category': existing.category,
+                  isEmpty: value === null || value === undefined || value === '',
+                  willUpdate: value !== null && value !== undefined && value !== ''
                 });
               }
 
@@ -170,6 +181,7 @@ export async function POST(req: NextRequest) {
 
             await supabase.from('lead_import_results').insert({
               import_id: importRecord.id,
+              lead_id: existing.id, // Track which lead was the duplicate
               row_number: i + 1,
               raw_data: leadData,
               status: 'duplicate',
@@ -182,6 +194,7 @@ export async function POST(req: NextRequest) {
               row: i + 1,
               status: 'duplicate',
               email: leadData.email,
+              leadId: existing.id, // Include the lead ID so user can find it
               updatedFields: updatedFields.length > 0 ? updatedFields : undefined
             });
             continue;

@@ -31,8 +31,8 @@ async function getLeadsData(userId: string) {
       `)
       .order('created_at', { ascending: false });
 
-    // Filter for BDRs/SDRs only - managers and admins see everything
-    if (user.role === 'bdr') {
+    // Admins and managers see all leads, everyone else sees only their assigned leads
+    if (user.role !== 'admin' && user.role !== 'manager') {
       query = query.eq('assigned_to', user.id);
     }
 
