@@ -10,6 +10,8 @@ import { CustomerEditButton } from '@/components/customers/customer-edit-button'
 import { CustomerDeleteButton } from '@/components/customers/customer-delete-button';
 import { ClickToCallButton } from '@/components/calling/click-to-call-button';
 import { DealCreateModal } from '@/components/deals/deal-create-modal';
+import { GenerateProposalButton } from '@/components/proposals/generate-proposal-button';
+import { ProposalsList } from '@/components/proposals/proposals-list';
 
 async function getCustomer(customerId: string) {
   const supabase = await createClient();
@@ -29,7 +31,7 @@ async function getCustomer(customerId: string) {
     .from('deals')
     .select('*')
     .eq('customer_id', customerId)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false});
 
   // Get activities for this customer
   const { data: activities } = await supabase
@@ -38,7 +40,14 @@ async function getCustomer(customerId: string) {
     .eq('customer_id', customerId)
     .order('completed_at', { ascending: false });
 
-  return { customer, deals: deals || [], activities: activities || [] };
+  // Get proposals for this customer
+  const { data: proposals } = await supabase
+    .from('proposals')
+    .select('*')
+    .eq('customer_id', customerId)
+    .order('created_at', { ascending: false });
+
+  return { customer, deals: deals || [], activities: activities || [], proposals: proposals || [] };
 }
 
 const stageColors = {
@@ -67,7 +76,7 @@ const activityTypeIcons = {
 };
 
 export default async function CustomerDetailPage({ params }: { params: { id: string } }) {
-  const { customer, deals, activities } = await getCustomer(params.id);
+  const { customer, deals, activities, proposals } = await getCustomer(params.id);
 
   const totalDeals = deals.length;
   const activeDeals = deals.filter((d) => !['closed_won', 'closed_lost'].includes(d.stage)).length;
@@ -285,6 +294,21 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
               ))}
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Proposals */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>SEO Proposals ({proposals.length})</CardTitle>
+          <GenerateProposalButton
+            customerId={customer.id}
+            customerName={`${customer.first_name} ${customer.last_name}`}
+            companyName={customer.company}
+          />
+        </CardHeader>
+        <CardContent>
+          <ProposalsList proposals={proposals} />
         </CardContent>
       </Card>
 
