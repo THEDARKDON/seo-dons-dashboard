@@ -102,14 +102,18 @@ export async function POST(request: NextRequest) {
     // ========================================================================
     // 5. CREATE PROPOSAL RECORD (STATUS: GENERATING)
     // ========================================================================
+    const companyName = customer.company || `${customer.first_name} ${customer.last_name}`;
     const { data: proposal, error: proposalError } = await supabaseServer
       .from('proposals')
       .insert({
         customer_id: body.customerId,
         created_by: user.id,
         status: 'generating',
-        package_tier: body.packageTier,
-        company_name: customer.company || `${customer.first_name} ${customer.last_name}`,
+        title: `${companyName} SEO Investment Strategy & Growth Plan`,
+        company_name: companyName,
+        company_website: customer.website,
+        company_industry: customer.industry,
+        selected_package: body.packageTier,
       })
       .select()
       .single();
@@ -201,10 +205,10 @@ export async function POST(request: NextRequest) {
               status: 'ready',
               pdf_url: pdfUrl,
               research_data: result.research,
-              content_data: result.content,
-              total_tokens: result.metadata.totalTokensUsed,
+              content_sections: result.content,
+              total_tokens_used: result.metadata.totalTokensUsed,
               estimated_cost: result.metadata.totalCost,
-              generation_duration: result.metadata.totalDurationSeconds,
+              generation_time_seconds: result.metadata.totalDurationSeconds,
             })
             .eq('id', proposal.id);
 
@@ -215,7 +219,7 @@ export async function POST(request: NextRequest) {
           // Log completion
           await supabaseServer.from('proposal_activities').insert({
             proposal_id: proposal.id,
-            activity_type: 'generated',
+            activity_type: 'pdf_created',
             description: `Proposal generated successfully in ${result.metadata.totalDurationSeconds}s`,
             user_id: user.id,
           });
@@ -247,11 +251,11 @@ export async function POST(request: NextRequest) {
             })
             .eq('id', proposal.id);
 
-          // Log error
+          // Log error (using 'edited' as closest activity type since 'error' doesn't exist)
           await supabaseServer.from('proposal_activities').insert({
             proposal_id: proposal.id,
-            activity_type: 'error',
-            description: error instanceof Error ? error.message : 'Unknown error',
+            activity_type: 'edited',
+            description: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
             user_id: user.id,
           });
 
