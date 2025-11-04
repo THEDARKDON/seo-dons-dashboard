@@ -28,7 +28,9 @@ export const CLAUDE_CONFIG = {
   MAX_TOKENS_CONTENT: 16000,
 
   // Temperature settings
-  TEMPERATURE_RESEARCH: 0.3, // More factual for research
+  // NOTE: Extended thinking requires temperature = 1.0
+  // See: https://docs.claude.com/en/docs/build-with-claude/extended-thinking
+  TEMPERATURE_RESEARCH: 1.0, // Required for extended thinking
   TEMPERATURE_CONTENT: 0.5,  // More creative for writing
 } as const;
 
