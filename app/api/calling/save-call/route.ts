@@ -13,6 +13,17 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { callSid, toNumber, leadId, customerId, dealId } = body;
 
+    console.log('[Save Call] Received request:', {
+      callSid,
+      toNumber,
+      leadId,
+      customerId,
+      dealId,
+      hasLeadId: !!leadId,
+      hasCustomerId: !!customerId,
+      hasDealId: !!dealId
+    });
+
     // Get user from database
     const supabase = await createClient();
     const { data: user } = await supabase
