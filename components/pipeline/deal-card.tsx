@@ -28,6 +28,11 @@ interface Deal {
     first_name: string;
     last_name: string;
   };
+  nextAppointment?: {
+    deal_id: string;
+    scheduled_at: string;
+    subject?: string;
+  } | null;
 }
 
 interface DealCardProps {
@@ -122,6 +127,16 @@ export function DealCard({ deal }: DealCardProps) {
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Calendar className="h-3.5 w-3.5" />
               <span>{formatDate(deal.expected_close_date)}</span>
+            </div>
+          )}
+
+          {/* Upcoming Appointment */}
+          {deal.nextAppointment && (
+            <div className="flex items-center gap-2 pt-1 border-t">
+              <Badge variant="default" className="text-xs bg-blue-600 hover:bg-blue-700">
+                <Calendar className="h-3 w-3 mr-1" />
+                Appointment: {formatDate(deal.nextAppointment.scheduled_at)}
+              </Badge>
             </div>
           )}
         </CardContent>

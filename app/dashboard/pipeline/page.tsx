@@ -39,6 +39,29 @@ async function getPipelineData(userId: string) {
 
     const { data: deals } = await query;
 
+    // Get upcoming appointments for these deals
+    if (deals && deals.length > 0) {
+      const dealIds = deals.map(d => d.id);
+      const { data: appointments } = await supabase
+        .from('activities')
+        .select('deal_id, scheduled_at, subject')
+        .eq('activity_type', 'appointment')
+        .in('deal_id', dealIds)
+        .gte('scheduled_at', new Date().toISOString())
+        .order('scheduled_at', { ascending: true });
+
+      // Attach the next appointment to each deal
+      const dealsWithAppointments = deals.map(deal => {
+        const nextAppointment = appointments?.find(apt => apt.deal_id === deal.id);
+        return {
+          ...deal,
+          nextAppointment: nextAppointment || null,
+        };
+      });
+
+      return { deals: dealsWithAppointments };
+    }
+
     return { deals: deals || [] };
   } catch (error) {
     console.error('Error fetching pipeline data:', error);

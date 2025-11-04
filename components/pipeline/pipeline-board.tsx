@@ -49,6 +49,11 @@ interface Deal {
     first_name: string;
     last_name: string;
   };
+  nextAppointment?: {
+    deal_id: string;
+    scheduled_at: string;
+    subject?: string;
+  } | null;
 }
 
 interface PipelineBoardProps {
