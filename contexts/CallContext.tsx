@@ -50,6 +50,8 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   const deviceRef = useRef<Device | null>(null);
   const callRef = useRef<Call | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const tokenExpiryRef = useRef<number | null>(null); // Timestamp when token expires
+  const refreshTimerRef = useRef<NodeJS.Timeout | null>(null); // Timer for auto-refresh
 
   // Initialize device on mount to handle incoming calls
   useEffect(() => {
@@ -58,6 +60,13 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       console.error('[CallContext] Failed to initialize device on mount:', error);
       // Don't show error toast on mount - user hasn't interacted yet
     });
+
+    // Cleanup on unmount
+    return () => {
+      if (refreshTimerRef.current) {
+        clearTimeout(refreshTimerRef.current);
+      }
+    };
   }, []);
 
   // Start duration timer when call connects
@@ -80,6 +89,50 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     };
   }, [callState.status]);
 
+  // Refresh the access token and update the device
+  const refreshToken = async () => {
+    try {
+      console.log('[CallContext] Refreshing access token...');
+
+      const response = await fetch('/api/calling/token');
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to refresh token');
+      }
+
+      if (deviceRef.current) {
+        // Update existing device with new token
+        await deviceRef.current.updateToken(data.token);
+        console.log('[CallContext] Token refreshed successfully');
+      }
+
+      // Token TTL is 1 hour (3600 seconds)
+      // Schedule next refresh 5 minutes before expiry (55 minutes from now)
+      const refreshIn = 55 * 60 * 1000; // 55 minutes in milliseconds
+      tokenExpiryRef.current = Date.now() + (60 * 60 * 1000); // 1 hour from now
+
+      // Clear existing refresh timer
+      if (refreshTimerRef.current) {
+        clearTimeout(refreshTimerRef.current);
+      }
+
+      // Schedule next refresh
+      refreshTimerRef.current = setTimeout(() => {
+        refreshToken();
+      }, refreshIn);
+
+      console.log('[CallContext] Next token refresh scheduled in 55 minutes');
+
+      return data;
+    } catch (error: any) {
+      console.error('[CallContext] Error refreshing token:', error);
+      toast.error('Call system reconnecting...');
+      // Try to reinitialize device if refresh fails
+      await initializeDevice();
+    }
+  };
+
   const initializeDevice = async () => {
     try {
       // Request microphone permission
@@ -92,6 +145,9 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       if (!response.ok) {
         throw new Error(data.error || 'Failed to get access token');
       }
+
+      // Set token expiry (1 hour from now)
+      tokenExpiryRef.current = Date.now() + (60 * 60 * 1000);
 
       // Create Twilio Device
       const device = new Device(data.token, {
@@ -188,6 +244,14 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
 
       // Register the device
       await device.register();
+
+      // Schedule automatic token refresh (55 minutes from now)
+      const refreshIn = 55 * 60 * 1000; // 55 minutes
+      refreshTimerRef.current = setTimeout(() => {
+        refreshToken();
+      }, refreshIn);
+
+      console.log('[CallContext] Token refresh scheduled in 55 minutes');
 
       return { device, phoneNumber: data.phoneNumber };
     } catch (error: any) {
@@ -310,18 +374,41 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
 
       setMinimized(false);
 
+      // Check if token is close to expiring (within 5 minutes)
+      const now = Date.now();
+      const tokenExpiresIn = tokenExpiryRef.current ? tokenExpiryRef.current - now : 0;
+      const fiveMinutes = 5 * 60 * 1000;
+
+      // Refresh token if it's expired or about to expire
+      if (deviceRef.current && tokenExpiresIn < fiveMinutes) {
+        console.log('[CallContext] Token expired or expiring soon, refreshing...');
+        await refreshToken();
+      }
+
       // Initialize device if not already initialized
       if (!deviceRef.current) {
         const { device, phoneNumber: callerIdNumber } = await initializeDevice();
         await makeCall(device, callerIdNumber, normalizedNumber);
       } else {
-        // Reuse existing device
+        // Reuse existing device (token is fresh)
         const response = await fetch('/api/calling/token');
         const data = await response.json();
         await makeCall(deviceRef.current, data.phoneNumber, normalizedNumber);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('[CallContext] Error initiating call:', error);
+
+      // Check if it's a token error
+      if (error.message && error.message.includes('token')) {
+        toast.error('Call system reconnecting, please try again...');
+        // Try to refresh token and reinitialize
+        try {
+          await refreshToken();
+        } catch (refreshError) {
+          console.error('[CallContext] Failed to recover from token error:', refreshError);
+        }
+      }
+
       setCallState((prev) => ({ ...prev, status: 'ended' }));
     }
   }, []);
