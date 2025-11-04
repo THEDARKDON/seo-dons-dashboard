@@ -8,6 +8,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 import { createClient } from '@/lib/supabase/server';
 import { generateCompleteProposal, validateProposalRequest } from '@/lib/claude/proposal-generator';
 import { generateProposalPDF, getProposalFilename, validateProposalContent } from '@/lib/pdf/generate';
@@ -31,14 +32,22 @@ export async function POST(request: NextRequest) {
     // ========================================================================
     // 1. AUTHENTICATION & AUTHORIZATION
     // ========================================================================
-    const supabaseServer = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabaseServer.auth.getUser();
+    const { userId: clerkUserId } = await auth();
 
-    if (authError || !user) {
+    if (!clerkUserId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Get Supabase user from Clerk ID
+    const supabaseServer = await createClient();
+    const { data: user, error: userError } = await supabaseServer
+      .from('users')
+      .select('id')
+      .eq('clerk_id', clerkUserId)
+      .single();
+
+    if (userError || !user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     // ========================================================================
