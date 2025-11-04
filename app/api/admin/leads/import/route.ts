@@ -62,6 +62,7 @@ export async function POST(req: NextRequest) {
 
     // Process each lead
     const results = [];
+    const errors: string[] = [];
     let successCount = 0;
     let failCount = 0;
     let duplicateCount = 0;
@@ -78,16 +79,20 @@ export async function POST(req: NextRequest) {
         }));
 
         // Check for duplicate by email if provided (per user)
-        if (leadData.email && settings.skipDuplicates) {
+        // ALWAYS check for duplicates to enable smart updates
+        if (leadData.email) {
           const { data: existing } = await supabase
             .from('leads')
-            .select('id')
+            .select('id, phone, company, job_title, first_name, last_name')
             .eq('email', leadData.email)
             .eq('assigned_to', assignedToUserId)
             .maybeSingle();
 
           if (existing) {
             duplicateCount++;
+
+            console.log(`[Import] Found duplicate lead ${existing.id} for email: ${leadData.email}`);
+            console.log(`[Import] Existing phone: ${existing.phone}, New phone: ${leadData.phone || leadData.mobile || leadData.phone_number}`);
 
             // Build update object with ALL new non-empty fields from import
             const updateData: any = {};
@@ -122,6 +127,19 @@ export async function POST(req: NextRequest) {
             // Check each field and add to update if it has a non-empty value
             for (const [fieldName, getter] of Object.entries(fieldMappings)) {
               const value = getter();
+
+              // Special logging for phone field to debug issues
+              if (fieldName === 'phone') {
+                console.log(`[Import] Phone field check:`, {
+                  value,
+                  'leadData.phone': leadData.phone,
+                  'leadData.mobile': leadData.mobile,
+                  'leadData.phone_number': leadData.phone_number,
+                  'leadData[Mobile Phone]': leadData['Mobile Phone'],
+                  isEmpty: value === null || value === undefined || value === ''
+                });
+              }
+
               if (value !== null && value !== undefined && value !== '') {
                 updateData[fieldName] = value;
                 updatedFields.push(fieldName);
@@ -130,18 +148,23 @@ export async function POST(req: NextRequest) {
 
             // Only update if we have new data
             if (Object.keys(updateData).length > 0) {
-              console.log(`Updating duplicate lead ${existing.id} with fields:`, updatedFields.join(', '));
+              console.log(`[Import] Updating duplicate lead ${existing.id} with data:`, updateData);
+              console.log(`[Import] Fields being updated:`, updatedFields.join(', '));
 
-              const { error: updateError } = await supabase
+              const { error: updateError, data: updatedLead } = await supabase
                 .from('leads')
                 .update(updateData)
-                .eq('id', existing.id);
+                .eq('id', existing.id)
+                .select('id, phone, company, job_title');
 
               if (updateError) {
-                console.error('Error updating duplicate lead:', updateError);
+                console.error('[Import] Error updating duplicate lead:', updateError);
+                errors.push(`Row ${i + 1}: Failed to update duplicate - ${updateError.message}`);
+              } else {
+                console.log('[Import] Successfully updated lead:', updatedLead);
               }
             } else {
-              console.log('No new data to update for duplicate lead');
+              console.log('[Import] No new data to update for duplicate lead');
             }
 
             await supabase.from('lead_import_results').insert({
@@ -308,6 +331,7 @@ export async function POST(req: NextRequest) {
         duplicates: duplicateCount,
       },
       results,
+      errors: errors.length > 0 ? errors : undefined,
     });
   } catch (error: any) {
     console.error('Error importing leads:', error);
