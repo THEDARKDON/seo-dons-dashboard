@@ -11,7 +11,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { generateCompleteProposal, validateProposalRequest } from '@/lib/claude/proposal-generator';
 import { generateProposalPDF, getProposalFilename, validateProposalContent } from '@/lib/pdf/generate';
-import { supabase } from '@/lib/supabase/client';
 
 // Vercel serverless function timeout (5 minutes)
 export const maxDuration = 300;
@@ -57,7 +56,7 @@ export async function POST(request: NextRequest) {
     // ========================================================================
     // 3. FETCH CUSTOMER DATA
     // ========================================================================
-    const { data: customer, error: customerError } = await supabase
+    const { data: customer, error: customerError } = await supabaseServer
       .from('customers')
       .select('*')
       .eq('id', body.customerId)
@@ -74,12 +73,12 @@ export async function POST(request: NextRequest) {
     // 4. VALIDATE PROPOSAL REQUEST
     // ========================================================================
     const proposalRequest = {
-      companyName: customer.company_name,
+      companyName: customer.company || `${customer.first_name} ${customer.last_name}`,
       website: customer.website,
       industry: customer.industry,
-      location: customer.location,
+      location: [customer.city, customer.state, customer.country].filter(Boolean).join(', ') || undefined,
       packageTier: body.packageTier,
-      contactName: body.contactName || customer.contact_name,
+      contactName: body.contactName || `${customer.first_name} ${customer.last_name}`,
       customInstructions: body.customInstructions,
     };
 
@@ -94,14 +93,14 @@ export async function POST(request: NextRequest) {
     // ========================================================================
     // 5. CREATE PROPOSAL RECORD (STATUS: GENERATING)
     // ========================================================================
-    const { data: proposal, error: proposalError } = await supabase
+    const { data: proposal, error: proposalError } = await supabaseServer
       .from('proposals')
       .insert({
         customer_id: body.customerId,
         created_by: user.id,
         status: 'generating',
         package_tier: body.packageTier,
-        company_name: customer.company_name,
+        company_name: customer.company || `${customer.first_name} ${customer.last_name}`,
       })
       .select()
       .single();
@@ -115,7 +114,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Log activity
-    await supabase.from('proposal_activities').insert({
+    await supabaseServer.from('proposal_activities').insert({
       proposal_id: proposal.id,
       activity_type: 'created',
       description: 'Proposal generation started',
@@ -160,11 +159,11 @@ export async function POST(request: NextRequest) {
           await sendProgress('Uploading PDF', 97, 'Saving to storage...');
 
           const filename = getProposalFilename(
-            customer.company_name,
+            customer.company || `${customer.first_name} ${customer.last_name}`,
             proposal.proposal_number
           );
 
-          const { data: uploadData, error: uploadError } = await supabase.storage
+          const { data: uploadData, error: uploadError } = await supabaseServer.storage
             .from('proposals')
             .upload(`${proposal.id}/${filename}`, pdfBuffer, {
               contentType: 'application/pdf',
@@ -176,7 +175,7 @@ export async function POST(request: NextRequest) {
           }
 
           // Get public URL
-          const { data: urlData } = supabase.storage
+          const { data: urlData } = supabaseServer.storage
             .from('proposals')
             .getPublicUrl(`${proposal.id}/${filename}`);
 
@@ -187,7 +186,7 @@ export async function POST(request: NextRequest) {
           // ================================================================
           await sendProgress('Finalizing proposal', 99);
 
-          const { error: updateError } = await supabase
+          const { error: updateError } = await supabaseServer
             .from('proposals')
             .update({
               status: 'ready',
@@ -205,7 +204,7 @@ export async function POST(request: NextRequest) {
           }
 
           // Log completion
-          await supabase.from('proposal_activities').insert({
+          await supabaseServer.from('proposal_activities').insert({
             proposal_id: proposal.id,
             activity_type: 'generated',
             description: `Proposal generated successfully in ${result.metadata.totalDurationSeconds}s`,
@@ -231,7 +230,7 @@ export async function POST(request: NextRequest) {
           console.error('[Proposal API] Error during generation:', error);
 
           // Update proposal status to error
-          await supabase
+          await supabaseServer
             .from('proposals')
             .update({
               status: 'error',
@@ -240,7 +239,7 @@ export async function POST(request: NextRequest) {
             .eq('id', proposal.id);
 
           // Log error
-          await supabase.from('proposal_activities').insert({
+          await supabaseServer.from('proposal_activities').insert({
             proposal_id: proposal.id,
             activity_type: 'error',
             description: error instanceof Error ? error.message : 'Unknown error',
