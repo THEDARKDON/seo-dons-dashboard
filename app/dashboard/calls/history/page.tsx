@@ -4,10 +4,11 @@ import { Button } from '@/components/ui/button';
 import { createClient } from '@/lib/supabase/server';
 import { auth } from '@clerk/nextjs/server';
 import { formatDate } from '@/lib/utils';
-import { Phone, Download, FileText, TrendingUp } from 'lucide-react';
+import { Phone, Download, FileText, TrendingUp, Filter } from 'lucide-react';
 import Link from 'next/link';
+import { SdrFilterDropdown } from '@/components/calls/sdr-filter-dropdown';
 
-async function getCallHistory(userId: string) {
+async function getCallHistory(userId: string, filterUserId?: string) {
   try {
     const supabase = await createClient();
 
@@ -38,6 +39,9 @@ async function getCallHistory(userId: string) {
       // Apply role-based filters
       if (user.role === 'bdr') {
         query.eq('user_id', user.id);
+      } else if (filterUserId) {
+        // Admin filtering by specific SDR
+        query.eq('user_id', filterUserId);
       }
 
       const { data: calls } = await query;
@@ -65,14 +69,42 @@ const sentimentColors = {
   negative: 'destructive',
 } as const;
 
-export default async function CallHistoryPage() {
+async function getAllUsers() {
+  try {
+    const supabase = await createClient();
+    const { data: users } = await supabase
+      .from('users')
+      .select('id, first_name, last_name, role')
+      .in('role', ['admin', 'bdr'])
+      .order('first_name');
+    return users || [];
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    return [];
+  }
+}
+
+export default async function CallHistoryPage({
+  searchParams,
+}: {
+  searchParams: { sdr?: string };
+}) {
   const { userId } = await auth();
 
   if (!userId) {
     return <div>Please sign in</div>;
   }
 
-  const calls = await getCallHistory(userId);
+  const supabase = await createClient();
+  const { data: currentUser } = await supabase
+    .from('users')
+    .select('role')
+    .eq('clerk_id', userId)
+    .single();
+
+  const filterUserId = searchParams.sdr;
+  const calls = await getCallHistory(userId, filterUserId);
+  const users = currentUser?.role === 'admin' ? await getAllUsers() : [];
 
   return (
     <div className="space-y-6">
@@ -83,6 +115,9 @@ export default async function CallHistoryPage() {
             View and analyze your call recordings
           </p>
         </div>
+        {currentUser?.role === 'admin' && users.length > 0 && (
+          <SdrFilterDropdown users={users} currentFilter={filterUserId} />
+        )}
       </div>
 
       <Card>
