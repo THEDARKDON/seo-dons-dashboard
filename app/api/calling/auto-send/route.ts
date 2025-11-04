@@ -30,8 +30,18 @@ export async function POST(request: NextRequest) {
       .eq('call_sid', callSid)
       .single();
 
+    console.log('[Auto-Send] Call record query result:', {
+      found: !!call,
+      error: callError,
+      leadId: call?.lead_id,
+      customerId: call?.customer_id,
+      hasLead: !!call?.lead,
+      hasCustomer: !!call?.customer,
+      callSid
+    });
+
     if (callError || !call) {
-      console.error('Call not found:', callError);
+      console.error('[Auto-Send] Call not found:', callError);
       return NextResponse.json({ error: 'Call not found' }, { status: 404 });
     }
 
