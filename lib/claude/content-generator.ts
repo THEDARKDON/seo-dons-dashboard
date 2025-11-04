@@ -1,0 +1,451 @@
+/**
+ * Claude Content Generator
+ *
+ * Transforms research data into comprehensive 18-page SEO proposal content
+ * matching the A1 Mobility template style.
+ */
+
+import { callClaudeForContent, sanitizeForPrompt } from './utils';
+import type { ResearchResult } from './research-agent';
+
+// ============================================================================
+// Type Definitions
+// ============================================================================
+
+export interface ProposalContent {
+  // Cover & Executive Summary
+  coverPage: {
+    title: string;
+    subtitle: string;
+    companyName: string;
+    preparedFor: string;
+    date: string;
+  };
+
+  executiveSummary: {
+    overview: string;
+    keyFindings: string[];
+    recommendedStrategy: string;
+    expectedOutcomes: string[];
+  };
+
+  // Situation Analysis
+  currentSituation: {
+    digitalPresence: string;
+    strengths: string[];
+    weaknesses: string[];
+    opportunities: string[];
+    threats: string[];
+  };
+
+  // Strategy & Approach
+  recommendedStrategy: {
+    strategyOverview: string;
+    coreObjectives: string[];
+    keyPillars: string[];
+    timeline: string;
+  };
+
+  // Technical SEO
+  technicalSEO: {
+    overview: string;
+    priorities: Array<{
+      title: string;
+      description: string;
+      impact: string;
+    }>;
+  };
+
+  // Content Strategy
+  contentStrategy: {
+    overview: string;
+    contentPillars: Array<{
+      pillar: string;
+      topics: string[];
+      keywords: string[];
+    }>;
+    contentCalendar: string;
+  };
+
+  // Local SEO (for local/regional packages)
+  localSEO?: {
+    overview: string;
+    tactics: string[];
+    locationPages: Array<{
+      location: string;
+      keywords: string[];
+      contentStrategy: string;
+    }>;
+  };
+
+  // Link Building
+  linkBuilding: {
+    overview: string;
+    strategy: string;
+    tactics: string[];
+    expectedAcquisition: string;
+  };
+
+  // Package Details
+  packageOptions: Array<{
+    tier: 'local' | 'regional' | 'national';
+    name: string;
+    monthlyInvestment: number;
+    deliverables: string[];
+    keywordCount: number;
+    contentPerMonth: number;
+    backlinksPerMonth: number;
+  }>;
+
+  // Projections & ROI
+  projections: {
+    month6: {
+      traffic: number;
+      leads: number;
+      revenue: number;
+    };
+    month12: {
+      traffic: number;
+      leads: number;
+      revenue: number;
+    };
+    roi: {
+      percentage: number;
+      paybackPeriod: string;
+      lifetimeValue: number;
+    };
+  };
+
+  // Next Steps
+  nextSteps: {
+    immediate: string[];
+    onboarding: string[];
+    kickoff: string;
+  };
+}
+
+export interface ContentGenerationRequest {
+  researchData: ResearchResult;
+  companyName: string;
+  packageTier: 'local' | 'regional' | 'national';
+  customInstructions?: string;
+}
+
+// ============================================================================
+// God Prompt for Content Generation
+// ============================================================================
+
+const GOD_PROMPT = `You are an expert SEO proposal writer with 15+ years of experience crafting compelling, data-driven proposals that close high-value clients.
+
+Your task is to generate a comprehensive 18-page SEO proposal that:
+1. Demonstrates deep understanding of the client's business and market
+2. Presents a clear, actionable strategy backed by research
+3. Quantifies expected outcomes with realistic projections
+4. Positions SEO as a strategic investment, not an expense
+5. Builds trust through expertise, transparency, and professionalism
+
+WRITING STYLE:
+- Professional yet conversational tone
+- Client-focused (use "you" and "your business")
+- Data-driven with specific numbers and examples
+- Action-oriented with clear next steps
+- Confident but not salesy
+
+CRITICAL REQUIREMENTS:
+- Use REAL data from the research (no placeholders or [COMPANY NAME])
+- All numbers must be realistic and justified
+- Every claim must be supported by data or reasoning
+- No generic fluff - every sentence adds value
+- Focus on ROI and business outcomes, not just SEO metrics
+
+OUTPUT FORMAT:
+Return a valid JSON object with all proposal content structured exactly as specified in the TypeScript interface.`;
+
+// ============================================================================
+// Content Generator Implementation
+// ============================================================================
+
+/**
+ * Generate complete proposal content from research data
+ */
+export async function generateProposalContent(
+  request: ContentGenerationRequest
+): Promise<ProposalContent> {
+  const { researchData, companyName, packageTier, customInstructions } = request;
+
+  // Build comprehensive context for Claude
+  const userPrompt = sanitizeForPrompt(`
+Generate a comprehensive SEO proposal for: **${companyName}**
+
+## RESEARCH DATA
+
+### Company Analysis
+${JSON.stringify(researchData.companyAnalysis, null, 2)}
+
+### Market Intelligence
+${JSON.stringify(researchData.marketIntelligence, null, 2)}
+
+### Competitor Analysis
+${JSON.stringify(researchData.competitorAnalysis, null, 2)}
+
+### Keyword Research
+${JSON.stringify(researchData.keywordResearch, null, 2)}
+
+${researchData.locationStrategy ? `### Location Strategy\n${JSON.stringify(researchData.locationStrategy, null, 2)}` : ''}
+
+## PACKAGE TIER
+${packageTier.toUpperCase()} Package
+${getPackageDetails(packageTier)}
+
+${customInstructions ? `## CUSTOM INSTRUCTIONS\n${customInstructions}` : ''}
+
+## YOUR TASK
+
+Generate ALL proposal content following this exact structure:
+
+\`\`\`json
+{
+  "coverPage": {
+    "title": "Comprehensive SEO Strategy Proposal",
+    "subtitle": "Driving Sustainable Growth Through Strategic Search Visibility",
+    "companyName": "${companyName}",
+    "preparedFor": "[Contact Name if available, otherwise 'The Team at ${companyName}']",
+    "date": "${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}"
+  },
+
+  "executiveSummary": {
+    "overview": "[2-3 paragraphs summarizing the opportunity, current situation, and recommended approach]",
+    "keyFindings": [
+      "[3-5 bullet points of critical insights from research]"
+    ],
+    "recommendedStrategy": "[1 paragraph describing the core strategy]",
+    "expectedOutcomes": [
+      "[4-6 specific, measurable outcomes they can expect]"
+    ]
+  },
+
+  "currentSituation": {
+    "digitalPresence": "[Detailed analysis of their current digital footprint, using data from research]",
+    "strengths": ["[3-4 current strengths]"],
+    "weaknesses": ["[3-4 areas for improvement]"],
+    "opportunities": ["[4-6 specific opportunities from research]"],
+    "threats": ["[2-3 competitive or market threats]"]
+  },
+
+  "recommendedStrategy": {
+    "strategyOverview": "[Comprehensive overview of the recommended approach, 3-4 paragraphs]",
+    "coreObjectives": [
+      "[4-5 specific, measurable objectives]"
+    ],
+    "keyPillars": [
+      "[3-4 strategic pillars that support the objectives]"
+    ],
+    "timeline": "[Month-by-month breakdown of the 12-month strategy]"
+  },
+
+  "technicalSEO": {
+    "overview": "[2 paragraphs on importance of technical foundation]",
+    "priorities": [
+      {
+        "title": "[Priority area]",
+        "description": "[What needs to be done]",
+        "impact": "[Expected impact on performance]"
+      }
+    ]
+  },
+
+  "contentStrategy": {
+    "overview": "[2-3 paragraphs on content approach]",
+    "contentPillars": [
+      {
+        "pillar": "[Main topic/theme]",
+        "topics": ["[3-5 specific topics]"],
+        "keywords": ["[Related keywords from research]"]
+      }
+    ],
+    "contentCalendar": "[Overview of monthly content production]"
+  },
+
+  ${packageTier !== 'national' ? `"localSEO": {
+    "overview": "[2-3 paragraphs on local SEO importance for this business]",
+    "tactics": ["[5-7 specific local SEO tactics]"],
+    "locationPages": [
+      {
+        "location": "[City/area from research]",
+        "keywords": ["[Location-specific keywords]"],
+        "contentStrategy": "[Approach for this location]"
+      }
+    ]
+  },` : ''}
+
+  "linkBuilding": {
+    "overview": "[2 paragraphs on link building approach]",
+    "strategy": "[Detailed strategy based on industry and competitors]",
+    "tactics": ["[4-6 specific link building tactics]"],
+    "expectedAcquisition": "[Monthly link acquisition targets]"
+  },
+
+  "packageOptions": [
+    ${generatePackageOptionsJSON(packageTier)}
+  ],
+
+  "projections": {
+    "month6": {
+      "traffic": [realistic number based on research],
+      "leads": [realistic number],
+      "revenue": [realistic number]
+    },
+    "month12": {
+      "traffic": [realistic number, should be 2-3x month 6],
+      "leads": [realistic number],
+      "revenue": [realistic number]
+    },
+    "roi": {
+      "percentage": [calculate ROI percentage],
+      "paybackPeriod": "[e.g., '4-5 months']",
+      "lifetimeValue": [calculate 12-month total value]
+    }
+  },
+
+  "nextSteps": {
+    "immediate": [
+      "[3-4 immediate action items for both parties]"
+    ],
+    "onboarding": [
+      "[4-5 onboarding steps if they proceed]"
+    ],
+    "kickoff": "[Description of the kickoff process and timeline]"
+  }
+}
+\`\`\`
+
+IMPORTANT:
+- Use ONLY data from the research provided
+- All projections must be realistic and justified
+- Tailor everything specifically to ${companyName}
+- Focus on their unique market position and opportunities
+- Write in a professional, confident tone
+- No placeholders - every field must have real content
+  `);
+
+  const response = await callClaudeForContent(GOD_PROMPT, userPrompt);
+
+  // Extract and parse JSON from response
+  const content = extractAndParseJSON<ProposalContent>(response.content);
+
+  return content;
+}
+
+// ============================================================================
+// Helper Functions
+// ============================================================================
+
+function getPackageDetails(tier: 'local' | 'regional' | 'national'): string {
+  const packages = {
+    local: {
+      investment: '£2,000/month',
+      keywords: '15-20',
+      content: '8-12 pieces',
+      backlinks: '10-15',
+      locations: '3-5 local areas',
+    },
+    regional: {
+      investment: '£3,000/month',
+      keywords: '25-35',
+      content: '12-16 pieces',
+      backlinks: '15-25',
+      locations: '5-10 regional locations',
+    },
+    national: {
+      investment: '£5,000/month',
+      keywords: '40-60',
+      content: '20-30 pieces',
+      backlinks: '25-40',
+      locations: 'National coverage',
+    },
+  };
+
+  const details = packages[tier];
+  return `
+Monthly Investment: ${details.investment}
+Target Keywords: ${details.keywords}
+Monthly Content: ${details.content}
+Monthly Backlinks: ${details.backlinks}
+Geographic Coverage: ${details.locations}
+  `;
+}
+
+function generatePackageOptionsJSON(recommendedTier: string): string {
+  const allPackages = [
+    {
+      tier: 'local',
+      name: 'Local Dominance',
+      monthlyInvestment: 2000,
+      deliverables: [
+        '15-20 target keywords',
+        '8-12 optimized content pieces per month',
+        '10-15 high-quality backlinks per month',
+        '3-5 local area pages',
+        'Google Business Profile optimization',
+        'Monthly reporting & strategy calls',
+      ],
+      keywordCount: 20,
+      contentPerMonth: 12,
+      backlinksPerMonth: 15,
+    },
+    {
+      tier: 'regional',
+      name: 'Regional Authority',
+      monthlyInvestment: 3000,
+      deliverables: [
+        '25-35 target keywords',
+        '12-16 optimized content pieces per month',
+        '15-25 high-quality backlinks per month',
+        '5-10 regional location pages',
+        'Advanced technical SEO',
+        'Competitor monitoring',
+        'Bi-weekly reporting & strategy calls',
+      ],
+      keywordCount: 35,
+      contentPerMonth: 16,
+      backlinksPerMonth: 25,
+    },
+    {
+      tier: 'national',
+      name: 'National Leader',
+      monthlyInvestment: 5000,
+      deliverables: [
+        '40-60 target keywords',
+        '20-30 optimized content pieces per month',
+        '25-40 high-quality backlinks per month',
+        'National coverage strategy',
+        'Enterprise technical SEO',
+        'PR & digital outreach',
+        'Weekly reporting & dedicated account manager',
+      ],
+      keywordCount: 60,
+      contentPerMonth: 30,
+      backlinksPerMonth: 40,
+    },
+  ];
+
+  return allPackages.map(pkg => JSON.stringify(pkg)).join(',\n    ');
+}
+
+function extractAndParseJSON<T>(content: string): T {
+  // Try to find JSON in markdown code blocks
+  const codeBlockMatch = content.match(/```(?:json)?\s*\n([\s\S]*?)\n```/);
+  if (codeBlockMatch) {
+    content = codeBlockMatch[1];
+  }
+
+  // Remove any leading/trailing whitespace
+  content = content.trim();
+
+  try {
+    return JSON.parse(content) as T;
+  } catch (error) {
+    console.error('Failed to parse proposal content:', content.substring(0, 500));
+    throw new Error(`Invalid JSON in proposal content: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
