@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
         if (leadData.email) {
           const { data: existing } = await supabase
             .from('leads')
-            .select('id, phone, company, job_title, first_name, last_name')
+            .select('id, phone, company, job_title, first_name, last_name, category, email')
             .eq('email', leadData.email)
             .eq('assigned_to', assignedToUserId)
             .maybeSingle();
@@ -92,6 +92,7 @@ export async function POST(req: NextRequest) {
             duplicateCount++;
 
             console.log(`[Import] Found duplicate lead ${existing.id} for email: ${leadData.email}`);
+            console.log(`[Import] Existing category: ${existing.category || '(none)'}, New category: ${leadData.category || '(none)'}`);
             console.log(`[Import] Existing phone: ${existing.phone}, New phone: ${leadData.phone || leadData.mobile || leadData.phone_number}`);
 
             // Build update object with ALL new non-empty fields from import

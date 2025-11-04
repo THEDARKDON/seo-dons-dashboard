@@ -30,6 +30,7 @@ import {
   Search,
   ArrowRight,
   Flame,
+  Trash2,
 } from 'lucide-react';
 import Link from 'next/link';
 import { ClickToCallButton } from '@/components/calling/click-to-call-button';
@@ -101,6 +102,9 @@ export function LeadsList({ initialLeads }: LeadsListProps) {
   const [users, setUsers] = useState<Array<{ id: string; first_name: string; last_name: string }>>([]);
   const [assignToUserId, setAssignToUserId] = useState<string>('');
   const [bulkAssigning, setBulkAssigning] = useState(false);
+  const [showBulkDelete, setShowBulkDelete] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(null);
 
   // Get unique sources and categories
   const sources = Array.from(new Set(leads.map(l => l.lead_source).filter(Boolean)));
@@ -165,16 +169,43 @@ export function LeadsList({ initialLeads }: LeadsListProps) {
     fetchAdminAndUsers();
   }, []);
 
-  const toggleLeadSelection = (leadId: string) => {
-    setSelectedLeads(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(leadId)) {
-        newSet.delete(leadId);
-      } else {
-        newSet.add(leadId);
+  const toggleLeadSelection = (leadId: string, index: number, event?: React.MouseEvent) => {
+    if (event && event.shiftKey && lastSelectedIndex !== null) {
+      // Shift+Click: Select range
+      const start = Math.min(lastSelectedIndex, index);
+      const end = Math.max(lastSelectedIndex, index);
+      const newSet = new Set(selectedLeads);
+
+      for (let i = start; i <= end; i++) {
+        newSet.add(filteredLeads[i].id);
       }
-      return newSet;
-    });
+
+      setSelectedLeads(newSet);
+    } else if (event && (event.ctrlKey || event.metaKey)) {
+      // Ctrl/Cmd+Click: Toggle individual
+      setSelectedLeads(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(leadId)) {
+          newSet.delete(leadId);
+        } else {
+          newSet.add(leadId);
+        }
+        return newSet;
+      });
+      setLastSelectedIndex(index);
+    } else {
+      // Normal click: Toggle individual
+      setSelectedLeads(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(leadId)) {
+          newSet.delete(leadId);
+        } else {
+          newSet.add(leadId);
+        }
+        return newSet;
+      });
+      setLastSelectedIndex(index);
+    }
   };
 
   const toggleSelectAll = () => {
@@ -217,6 +248,42 @@ export function LeadsList({ initialLeads }: LeadsListProps) {
     }
   };
 
+  const handleBulkDelete = async () => {
+    if (selectedLeads.size === 0) return;
+
+    setBulkDeleting(true);
+    try {
+      const response = await fetch('/api/leads/bulk-delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          leadIds: Array.from(selectedLeads),
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log(`Deleted ${data.deletedCount} leads`);
+
+        // Remove deleted leads from local state
+        setLeads(prevLeads => prevLeads.filter(lead => !selectedLeads.has(lead.id)));
+        setSelectedLeads(new Set());
+        setShowBulkDelete(false);
+
+        // Optionally refresh to sync with server
+        router.refresh();
+      } else {
+        const data = await response.json();
+        alert(`Error: ${data.error || 'Failed to delete leads'}`);
+      }
+    } catch (error) {
+      console.error('Error bulk deleting leads:', error);
+      alert('Failed to delete leads');
+    } finally {
+      setBulkDeleting(false);
+    }
+  };
+
   const getScoreBadge = (score: number) => {
     if (score >= 70) {
       return (
@@ -255,6 +322,15 @@ export function LeadsList({ initialLeads }: LeadsListProps) {
                     onClick={() => setShowBulkAssign(true)}
                   >
                     Assign to SDR
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => setShowBulkDelete(true)}
+                    className="gap-1"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Delete
                   </Button>
                   <Button
                     size="sm"
@@ -359,7 +435,7 @@ export function LeadsList({ initialLeads }: LeadsListProps) {
           </div>
         ) : (
           <div className="space-y-3">
-            {filteredLeads.map((lead) => {
+            {filteredLeads.map((lead, index) => {
               const assignedUser = lead.users;
 
               return (
@@ -367,12 +443,29 @@ export function LeadsList({ initialLeads }: LeadsListProps) {
                   key={lead.id}
                   className="flex items-center justify-between rounded-lg border p-4 hover:bg-accent/50 transition-colors"
                 >
-                  {/* Checkbox for admin */}
+                  {/* Checkbox for admin with Shift+Ctrl click support */}
                   {isAdmin && (
-                    <div className="flex-shrink-0 mr-3" onClick={(e) => e.stopPropagation()}>
+                    <div
+                      className="flex-shrink-0 mr-3"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleLeadSelection(lead.id, index, e);
+                      }}
+                    >
                       <Checkbox
                         checked={selectedLeads.has(lead.id)}
-                        onCheckedChange={() => toggleLeadSelection(lead.id)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedLeads(prev => new Set([...prev, lead.id]));
+                          } else {
+                            setSelectedLeads(prev => {
+                              const newSet = new Set(prev);
+                              newSet.delete(lead.id);
+                              return newSet;
+                            });
+                          }
+                          setLastSelectedIndex(index);
+                        }}
                       />
                     </div>
                   )}
@@ -538,6 +631,36 @@ export function LeadsList({ initialLeads }: LeadsListProps) {
             disabled={!assignToUserId || bulkAssigning}
           >
             {bulkAssigning ? 'Assigning...' : 'Assign Leads'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    {/* Bulk Delete Dialog */}
+    <Dialog open={showBulkDelete} onOpenChange={setShowBulkDelete}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Delete Leads</DialogTitle>
+          <DialogDescription>
+            Are you sure you want to delete {selectedLeads.size} selected lead{selectedLeads.size !== 1 ? 's' : ''}?
+            This action cannot be undone.
+          </DialogDescription>
+        </DialogHeader>
+
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => setShowBulkDelete(false)}
+            disabled={bulkDeleting}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={handleBulkDelete}
+            disabled={bulkDeleting}
+          >
+            {bulkDeleting ? 'Deleting...' : 'Delete Leads'}
           </Button>
         </DialogFooter>
       </DialogContent>
