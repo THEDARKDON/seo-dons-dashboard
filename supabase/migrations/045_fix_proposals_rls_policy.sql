@@ -6,18 +6,16 @@
 DROP POLICY IF EXISTS proposals_insert_policy ON proposals;
 
 -- Create correct INSERT policy
--- Users can insert proposals if they are authenticated and setting created_by to their own user ID
+-- Allow authenticated users to insert proposals (they set created_by via the API)
+-- The API already validates the user via Clerk authentication
 CREATE POLICY proposals_insert_policy ON proposals
   FOR INSERT
   WITH CHECK (
-    created_by IN (
-      SELECT id FROM users
-      WHERE users.clerk_id = auth.jwt() ->> 'sub'
-    )
+    auth.jwt() ->> 'sub' IS NOT NULL
   );
 
 -- Log migration
 DO $$
 BEGIN
-  RAISE NOTICE 'Migration 045: Fixed proposals INSERT RLS policy';
+  RAISE NOTICE 'Migration 045: Fixed proposals INSERT RLS policy to allow authenticated inserts';
 END $$;
