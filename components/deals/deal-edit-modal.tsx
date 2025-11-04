@@ -20,18 +20,28 @@ export function DealEditModal({ open, onOpenChange, deal }: DealEditModalProps) 
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [customers, setCustomers] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
 
   useEffect(() => {
-    const fetchCustomers = async () => {
-      const { data } = await supabase
+    const fetchData = async () => {
+      // Fetch customers
+      const { data: customersData } = await supabase
         .from('customers')
         .select('id, first_name, last_name, company')
         .eq('status', 'active')
         .order('first_name');
 
-      if (data) setCustomers(data);
+      if (customersData) setCustomers(customersData);
+
+      // Fetch users for assignment
+      const { data: usersData } = await supabase
+        .from('users')
+        .select('id, first_name, last_name, email, role')
+        .order('first_name');
+
+      if (usersData) setUsers(usersData);
     };
-    fetchCustomers();
+    fetchData();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -47,6 +57,7 @@ export function DealEditModal({ open, onOpenChange, deal }: DealEditModalProps) 
           deal_name: formData.get('deal_name') as string,
           deal_value: parseFloat(formData.get('deal_value') as string),
           stage: formData.get('stage') as string,
+          assigned_to: formData.get('assigned_to') as string || null,
           customer_id: formData.get('customer_id') as string || null,
           probability: parseInt(formData.get('probability') as string) || null,
           expected_close_date: formData.get('expected_close_date') as string || null,
@@ -85,6 +96,24 @@ export function DealEditModal({ open, onOpenChange, deal }: DealEditModalProps) 
               defaultValue={deal.deal_name}
               required
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="assigned_to">Assign To *</Label>
+            <select
+              id="assigned_to"
+              name="assigned_to"
+              defaultValue={deal.assigned_to || ''}
+              required
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <option value="">-- Select SDR --</option>
+              {users.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.first_name} {user.last_name} ({user.role})
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="space-y-2">
