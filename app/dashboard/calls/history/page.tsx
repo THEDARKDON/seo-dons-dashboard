@@ -29,7 +29,9 @@ async function getCallHistory(userId: string) {
         .select(`
           *,
           customers (first_name, last_name, company),
-          deals (deal_name)
+          deals (deal_name),
+          leads (first_name, last_name, company),
+          users!call_recordings_user_id_fkey (first_name, last_name)
         `)
         .order('created_at', { ascending: false });
 
@@ -100,7 +102,9 @@ export default async function CallHistoryPage() {
             <div className="space-y-3">
               {calls.map((call) => {
                 const customer = call.customers as any;
+                const lead = call.leads as any;
                 const deal = call.deals as any;
+                const sdr = call.users as any;
                 const durationMin = call.duration_seconds
                   ? Math.floor(call.duration_seconds / 60)
                   : 0;
@@ -120,15 +124,31 @@ export default async function CallHistoryPage() {
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <p className="font-medium">
-                            {customer
-                              ? `${customer.first_name} ${customer.last_name}`
-                              : call.to_number}
-                          </p>
-                          {customer?.company && (
-                            <span className="text-sm text-muted-foreground">
-                              · {customer.company}
-                            </span>
+                          {customer ? (
+                            <>
+                              <p className="font-medium">
+                                {customer.first_name} {customer.last_name}
+                              </p>
+                              {customer.company && (
+                                <span className="text-sm text-muted-foreground">
+                                  · {customer.company}
+                                </span>
+                              )}
+                            </>
+                          ) : lead ? (
+                            <>
+                              <p className="font-medium">
+                                {lead.first_name} {lead.last_name}
+                              </p>
+                              <Badge variant="outline" className="text-xs">Lead</Badge>
+                              {lead.company && (
+                                <span className="text-sm text-muted-foreground">
+                                  · {lead.company}
+                                </span>
+                              )}
+                            </>
+                          ) : (
+                            <p className="font-mono text-sm">{call.to_number}</p>
                           )}
                         </div>
                         {deal && (
@@ -137,6 +157,11 @@ export default async function CallHistoryPage() {
                           </p>
                         )}
                         <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                          {sdr && (
+                            <span>
+                              by {sdr.first_name} {sdr.last_name}
+                            </span>
+                          )}
                           <span>
                             {call.direction === 'outbound' ? '→' : '←'}{' '}
                             {call.direction}

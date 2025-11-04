@@ -54,17 +54,32 @@ async function getLeadData(leadId: string, userId: string) {
       return null;
     }
 
-    // Get activities
-    const { data: activities } = await supabase
-      .from('lead_activities')
-      .select(`
-        *,
-        users (first_name, last_name)
-      `)
-      .eq('lead_id', leadId)
-      .order('created_at', { ascending: false });
+    // Get activities from BOTH tables (lead_activities and main activities)
+    // This ensures we capture ALL activity including calls that sync to main activities table
+    const [leadActivitiesResult, mainActivitiesResult] = await Promise.all([
+      supabase
+        .from('lead_activities')
+        .select(`
+          *,
+          users (first_name, last_name)
+        `)
+        .eq('lead_id', leadId),
+      supabase
+        .from('activities')
+        .select(`
+          *,
+          users (first_name, last_name)
+        `)
+        .eq('lead_id', leadId)
+    ]);
 
-    return { lead, activities: activities || [] };
+    // Combine and sort by created_at descending
+    const activities = [
+      ...(leadActivitiesResult.data || []),
+      ...(mainActivitiesResult.data || [])
+    ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+    return { lead, activities };
   } catch (error) {
     console.error('Error fetching lead:', error);
     return null;

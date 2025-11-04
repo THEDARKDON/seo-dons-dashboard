@@ -78,9 +78,22 @@ export function LeadActivityTimeline({
             <div className="flex-1 pb-6">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
-                  <p className="font-medium">
-                    {activity.subject || activity.activity_type.replace('_', ' ').toUpperCase()}
-                  </p>
+                  {/* Enhanced title for call activities */}
+                  {activity.activity_type === 'call' ? (
+                    <p className="font-medium">
+                      {activity.outcome === 'successful' && '✅ Call Connected'}
+                      {activity.outcome === 'no_answer' && '📵 No Answer'}
+                      {activity.outcome === 'voicemail' && '📨 Left Voicemail'}
+                      {activity.outcome === 'callback_scheduled' && '📅 Callback Scheduled'}
+                      {activity.outcome === 'not_interested' && '❌ Not Interested'}
+                      {activity.outcome === 'qualified' && '⭐ Lead Qualified'}
+                      {!activity.outcome && '📞 Call Attempted'}
+                    </p>
+                  ) : (
+                    <p className="font-medium">
+                      {activity.subject || activity.activity_type.replace('_', ' ').toUpperCase()}
+                    </p>
+                  )}
                   {activity.description && (
                     <p className="text-sm text-muted-foreground mt-1">
                       {activity.description}
@@ -95,12 +108,12 @@ export function LeadActivityTimeline({
                     <span className="text-xs text-muted-foreground">
                       {formatDate(activity.created_at)}
                     </span>
-                    {activity.duration_minutes && (
+                    {activity.duration_minutes && activity.duration_minutes > 0 && (
                       <Badge variant="outline" className="text-xs">
-                        {activity.duration_minutes} min
+                        {Math.round(activity.duration_minutes)} min
                       </Badge>
                     )}
-                    {activity.outcome && (
+                    {activity.outcome && activity.activity_type !== 'call' && (
                       <Badge variant="secondary" className="text-xs">
                         {activity.outcome.replace('_', ' ')}
                       </Badge>
