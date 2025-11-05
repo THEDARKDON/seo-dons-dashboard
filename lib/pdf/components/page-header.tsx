@@ -12,8 +12,11 @@ interface PageHeaderProps {
 export function PageHeader({ companyName }: PageHeaderProps) {
   return (
     <View style={styles.header} fixed>
-      <Text style={styles.textSmall}>SEO Strategy Proposal</Text>
-      <Text style={styles.textSmall}>{companyName}</Text>
+      <View>
+        <Text style={styles.headerBrand}>SEODONS</Text>
+        <Text style={styles.headerTagline}>SEO Investment Strategy</Text>
+      </View>
+      <Text style={styles.headerCompany}>{companyName}</Text>
     </View>
   );
 }
@@ -25,13 +28,11 @@ interface PageFooterProps {
 export function PageFooter({ companyName }: PageFooterProps) {
   return (
     <View style={styles.footer} fixed>
-      <Text style={styles.textSmall}>
-        © {new Date().getFullYear()} - Prepared for {companyName}
-      </Text>
       <Text
-        style={styles.pageNumber}
-        render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`}
+        style={styles.footerPageNumber}
+        render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`}
       />
+      <Text style={styles.footerWebsite}>www.seodons.com</Text>
     </View>
   );
 }

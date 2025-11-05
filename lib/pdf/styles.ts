@@ -34,7 +34,95 @@ export const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
 
-  // Cover Page
+  // Cover Page (A1 Mobility Design with Cyan Gradient)
+  coverPageContainer: {
+    padding: 0,
+    position: 'relative',
+    backgroundColor: '#006B6E', // Dark cyan base
+  },
+  coverGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#006B6E', // Gradient from dark to light cyan
+  },
+  coverContent: {
+    flex: 1,
+    padding: 50,
+    justifyContent: 'space-between',
+    position: 'relative',
+    zIndex: 1,
+  },
+  coverBrand: {
+    fontSize: 48,
+    fontFamily: 'Helvetica-Bold',
+    color: '#ffffff',
+    letterSpacing: 4,
+    marginBottom: 4,
+  },
+  coverBrandTagline: {
+    fontSize: 11,
+    color: '#ffffff',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    marginBottom: 60,
+  },
+  coverTitleSection: {
+    marginBottom: 40,
+  },
+  coverMainTitle: {
+    fontSize: 36,
+    fontFamily: 'Helvetica-Bold',
+    color: '#ffffff',
+    marginBottom: 12,
+    lineHeight: 1.2,
+  },
+  coverSubtitleNew: {
+    fontSize: 16,
+    color: '#ffffff',
+    lineHeight: 1.4,
+  },
+  coverCompanyBox: {
+    backgroundColor: '#ffffff',
+    padding: 24,
+    borderRadius: 4,
+    marginBottom: 40,
+  },
+  coverCompanyLabel: {
+    fontSize: 10,
+    fontFamily: 'Helvetica-Bold',
+    color: colors.textLight,
+    letterSpacing: 1,
+    marginBottom: 8,
+  },
+  coverCompanyNameNew: {
+    fontSize: 28,
+    fontFamily: 'Helvetica-Bold',
+    color: colors.primary,
+    marginBottom: 4,
+  },
+  coverPreparedForNew: {
+    fontSize: 14,
+    color: colors.text,
+  },
+  coverFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  coverDateNew: {
+    fontSize: 11,
+    color: '#ffffff',
+  },
+  coverWebsite: {
+    fontSize: 11,
+    color: '#ffffff',
+    fontFamily: 'Helvetica-Bold',
+  },
+
+  // Legacy cover page styles (kept for backward compatibility)
   coverPage: {
     flex: 1,
     justifyContent: 'center',
@@ -149,137 +237,162 @@ export const styles = StyleSheet.create({
     borderLeft: `3pt solid ${colors.primary}`,
   },
 
-  // Table
+  // Table (Enhanced Professional Design)
   table: {
     marginBottom: 16,
+    border: `2pt solid ${colors.primary}`,
+    borderRadius: 4,
   },
   tableHeader: {
     flexDirection: 'row',
     backgroundColor: colors.primary,
-    padding: 8,
+    padding: 10,
     fontFamily: 'Helvetica-Bold',
     color: '#ffffff',
   },
   tableRow: {
     flexDirection: 'row',
     borderBottom: `1pt solid ${colors.border}`,
-    padding: 8,
+    padding: 10,
+    backgroundColor: '#ffffff',
   },
   tableRowAlt: {
     flexDirection: 'row',
     backgroundColor: '#f8fafc',
     borderBottom: `1pt solid ${colors.border}`,
-    padding: 8,
+    padding: 10,
   },
   tableCell: {
     flex: 1,
     fontSize: 10,
+    color: colors.text,
   },
   tableCellHeader: {
     flex: 1,
+    fontSize: 11,
+    fontFamily: 'Helvetica-Bold',
+    color: '#ffffff',
+  },
+  tableCellHighlight: {
+    flex: 1,
     fontSize: 10,
     fontFamily: 'Helvetica-Bold',
+    color: colors.primary,
   },
 
-  // Package Cards
+  // Package Cards (Enhanced Visual Hierarchy)
   packageCard: {
-    border: `2pt solid ${colors.primary}`,
+    border: `2pt solid ${colors.border}`,
     borderRadius: 4,
-    padding: 16,
+    padding: 18,
     marginBottom: 16,
+    backgroundColor: '#ffffff',
   },
   packageCardRecommended: {
-    backgroundColor: '#eff6ff',
-    border: `3pt solid ${colors.primary}`,
+    backgroundColor: '#e0f2fe', // Light cyan background
+    border: `4pt solid ${colors.primary}`, // Thicker border
+    position: 'relative',
   },
   packageHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 12,
-    paddingBottom: 8,
-    borderBottom: `1pt solid ${colors.border}`,
+    paddingBottom: 10,
+    borderBottom: `2pt solid ${colors.primary}`,
   },
   packageName: {
-    fontSize: 16,
+    fontSize: 18,
     fontFamily: 'Helvetica-Bold',
     color: colors.primary,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   packagePrice: {
-    fontSize: 18,
+    fontSize: 22,
     fontFamily: 'Helvetica-Bold',
     color: colors.text,
   },
   packageBadge: {
     backgroundColor: colors.primary,
     color: '#ffffff',
-    fontSize: 9,
+    fontSize: 10,
     fontFamily: 'Helvetica-Bold',
-    padding: 4,
-    paddingLeft: 8,
-    paddingRight: 8,
+    padding: 6,
+    paddingLeft: 12,
+    paddingRight: 12,
     borderRadius: 2,
-    marginBottom: 8,
+    marginBottom: 10,
+    textAlign: 'center',
+    letterSpacing: 1,
   },
 
-  // SWOT Grid
+  // SWOT Grid (Enhanced with Colored Quadrants)
   swotGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     marginBottom: 16,
+    gap: 8,
   },
   swotQuadrant: {
     width: '48%',
-    padding: 12,
+    padding: 14,
     marginBottom: 8,
-    marginRight: '2%',
     borderRadius: 4,
+    border: `2pt solid`,
   },
   swotStrengths: {
-    backgroundColor: '#ecfdf5',
-    borderLeft: `3pt solid ${colors.success}`,
+    backgroundColor: '#d1fae5', // Light green background
+    borderColor: '#10b981', // Green border
   },
   swotWeaknesses: {
-    backgroundColor: '#fef2f2',
-    borderLeft: `3pt solid ${colors.warning}`,
+    backgroundColor: '#fee2e2', // Light red background
+    borderColor: '#ef4444', // Red border
   },
   swotOpportunities: {
-    backgroundColor: '#eff6ff',
-    borderLeft: `3pt solid ${colors.primary}`,
+    backgroundColor: '#dbeafe', // Light blue background
+    borderColor: '#3b82f6', // Blue border
   },
   swotThreats: {
-    backgroundColor: '#fef2f2',
-    borderLeft: `3pt solid #ef4444`,
+    backgroundColor: '#fed7aa', // Light orange background
+    borderColor: '#f97316', // Orange border
   },
   swotTitle: {
-    fontSize: 12,
+    fontSize: 13,
     fontFamily: 'Helvetica-Bold',
     marginBottom: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
 
-  // Stats & Numbers
+  // Stats & Numbers (Large Impact Boxes)
   statRow: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 16,
+    justifyContent: 'space-between',
+    marginBottom: 20,
+    gap: 12,
   },
   statCard: {
+    flex: 1,
     alignItems: 'center',
-    padding: 12,
+    padding: 16,
     backgroundColor: '#f8fafc',
     borderRadius: 4,
-    minWidth: 100,
+    border: `2pt solid ${colors.primary}`,
   },
   statNumber: {
-    fontSize: 24,
+    fontSize: 32,
     fontFamily: 'Helvetica-Bold',
     color: colors.primary,
-    marginBottom: 4,
+    marginBottom: 6,
   },
   statLabel: {
-    fontSize: 9,
-    color: colors.textLight,
+    fontSize: 10,
+    fontFamily: 'Helvetica-Bold',
+    color: colors.text,
     textTransform: 'uppercase',
+    textAlign: 'center',
+    letterSpacing: 0.5,
   },
 
   // Header & Footer
@@ -291,8 +404,26 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingBottom: 8,
-    borderBottom: `1pt solid ${colors.border}`,
+    paddingBottom: 10,
+    borderBottom: `2pt solid ${colors.primary}`,
+  },
+  headerBrand: {
+    fontSize: 14,
+    fontFamily: 'Helvetica-Bold',
+    color: colors.primary,
+    letterSpacing: 2,
+    marginBottom: 2,
+  },
+  headerTagline: {
+    fontSize: 7,
+    color: colors.textLight,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  headerCompany: {
+    fontSize: 10,
+    fontFamily: 'Helvetica-Bold',
+    color: colors.text,
   },
   footer: {
     position: 'absolute',
@@ -302,8 +433,17 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 8,
-    borderTop: `1pt solid ${colors.border}`,
+    paddingTop: 10,
+    borderTop: `2pt solid ${colors.primary}`,
+  },
+  footerPageNumber: {
+    fontSize: 9,
+    color: colors.textLight,
+  },
+  footerWebsite: {
+    fontSize: 9,
+    fontFamily: 'Helvetica-Bold',
+    color: colors.primary,
   },
   pageNumber: {
     fontSize: 9,
@@ -385,24 +525,26 @@ export const styles = StyleSheet.create({
   // A1 MOBILITY DESIGN ELEMENTS
   // ============================================================================
 
-  // Brutal Truth / Warning Box (orange/yellow background)
+  // Brutal Truth / Warning Box (dark background with cyan text - A1 Mobility style)
   warningBox: {
-    backgroundColor: colors.warningLight,
-    borderLeft: `4pt solid ${colors.warning}`,
+    backgroundColor: '#1e293b', // Dark slate background
     padding: 16,
     marginBottom: 16,
+    borderRadius: 4,
+    border: `3pt solid ${colors.primary}`,
   },
   warningTitle: {
     fontSize: 14,
     fontFamily: 'Helvetica-Bold',
-    color: colors.warning,
+    color: colors.primary, // Cyan text for titles
     marginBottom: 8,
     textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   warningContent: {
     fontSize: 12,
     lineHeight: 1.6,
-    color: colors.text,
+    color: '#ffffff', // White text for content
   },
 
   // Info/Highlight Box (cyan background - A1 Mobility style)

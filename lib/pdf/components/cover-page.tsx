@@ -12,20 +12,34 @@ interface CoverPageProps {
 
 export function CoverPage({ coverPage }: CoverPageProps) {
   return (
-    <Page size="A4" style={styles.page}>
-      <View style={styles.coverPage}>
-        <Text style={styles.coverTitle}>{coverPage.title}</Text>
-        <Text style={styles.coverSubtitle}>{coverPage.subtitle}</Text>
+    <Page size="A4" style={styles.coverPageContainer}>
+      {/* Cyan Gradient Background */}
+      <View style={styles.coverGradient} />
 
-        <View style={{ marginTop: 40, marginBottom: 40 }}>
-          <Text style={styles.coverCompanyName}>{coverPage.companyName}</Text>
+      {/* Content */}
+      <View style={styles.coverContent}>
+        {/* SEODONS Branding */}
+        <Text style={styles.coverBrand}>SEODONS</Text>
+        <Text style={styles.coverBrandTagline}>SEO Investment Strategy & Growth Plans</Text>
+
+        {/* Main Title Section */}
+        <View style={styles.coverTitleSection}>
+          <Text style={styles.coverMainTitle}>{coverPage.title}</Text>
+          <Text style={styles.coverSubtitleNew}>{coverPage.subtitle}</Text>
         </View>
 
-        <Text style={styles.coverPreparedFor}>
-          Prepared for: {coverPage.preparedFor}
-        </Text>
+        {/* Company Name Highlight Box */}
+        <View style={styles.coverCompanyBox}>
+          <Text style={styles.coverCompanyLabel}>PREPARED FOR</Text>
+          <Text style={styles.coverCompanyNameNew}>{coverPage.companyName}</Text>
+          <Text style={styles.coverPreparedForNew}>{coverPage.preparedFor}</Text>
+        </View>
 
-        <Text style={styles.coverDate}>{coverPage.date}</Text>
+        {/* Footer */}
+        <View style={styles.coverFooter}>
+          <Text style={styles.coverDateNew}>{coverPage.date}</Text>
+          <Text style={styles.coverWebsite}>www.seodons.com</Text>
+        </View>
       </View>
     </Page>
   );
