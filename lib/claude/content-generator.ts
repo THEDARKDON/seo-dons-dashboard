@@ -410,7 +410,8 @@ IMPORTANT:
   const referencePdfBase64 = hasReferencePDF() ? getReferencePDF() : '';
 
   if (referencePdfBase64) {
-    console.log('[Content Generator] Using A1 Mobility reference PDF for quality matching');
+    const pdfSizeKB = Math.round(referencePdfBase64.length * 0.75 / 1024); // base64 is ~33% larger than binary
+    console.log(`[Content Generator] Using A1 Mobility reference PDF (${pdfSizeKB}KB) for quality matching`);
   } else {
     console.warn('[Content Generator] Reference PDF not available - proceeding without template');
   }

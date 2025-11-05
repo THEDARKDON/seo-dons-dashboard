@@ -42,15 +42,23 @@ export async function claudeWithRetry<T>(
         throw error;
       }
 
-      // Retry on rate limits (429) and server errors (5xx)
+      // Retry on network errors (connection terminated, timeouts, etc.)
+      const isNetworkError =
+        error.code === 'UND_ERR_SOCKET' ||
+        error.message?.includes('terminated') ||
+        error.message?.includes('timeout') ||
+        error.message?.includes('ECONNRESET') ||
+        error.message?.includes('socket hang up');
+
+      // Retry on rate limits (429), server errors (5xx), or network errors
       if (
-        (error.status === 429 || error.status >= 500) &&
+        ((error.status === 429 || error.status >= 500) || isNetworkError) &&
         attempt < maxRetries
       ) {
         // Exponential backoff: 1s, 2s, 4s, 8s...
         const delay = baseDelay * Math.pow(2, attempt);
         console.log(
-          `Claude API error (${error.status}), retrying in ${delay}ms... (attempt ${attempt + 1}/${maxRetries})`
+          `Claude API error (${error.status || 'network'}), retrying in ${delay}ms... (attempt ${attempt + 1}/${maxRetries})`
         );
         await sleep(delay);
         continue;

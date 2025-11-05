@@ -10,6 +10,8 @@ import Anthropic from '@anthropic-ai/sdk';
 // Initialize Claude client with API key from environment
 export const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY!,
+  timeout: 600000, // 10 minutes (600 seconds) - matches Vercel Pro limit
+  maxRetries: 2, // Retry failed requests up to 2 times
 });
 
 // Model configuration constants
