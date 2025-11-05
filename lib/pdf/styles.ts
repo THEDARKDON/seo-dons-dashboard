@@ -228,19 +228,25 @@ export const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
     borderRadius: 4,
-    border: `1pt solid ${colors.border}`,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderStyle: 'solid',
   },
   highlight: {
     backgroundColor: '#eff6ff',
     padding: 12,
     marginBottom: 12,
-    borderLeft: `3pt solid ${colors.primary}`,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.primary,
+    borderLeftStyle: 'solid',
   },
 
   // Table (Enhanced Professional Design)
   table: {
     marginBottom: 16,
-    border: `2pt solid ${colors.primary}`,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    borderStyle: 'solid',
     borderRadius: 4,
   },
   tableHeader: {
@@ -252,14 +258,18 @@ export const styles = StyleSheet.create({
   },
   tableRow: {
     flexDirection: 'row',
-    borderBottom: `1pt solid ${colors.border}`,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    borderBottomStyle: 'solid',
     padding: 10,
     backgroundColor: '#ffffff',
   },
   tableRowAlt: {
     flexDirection: 'row',
     backgroundColor: '#f8fafc',
-    borderBottom: `1pt solid ${colors.border}`,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    borderBottomStyle: 'solid',
     padding: 10,
   },
   tableCell: {
@@ -282,7 +292,9 @@ export const styles = StyleSheet.create({
 
   // Package Cards (Enhanced Visual Hierarchy)
   packageCard: {
-    border: `2pt solid ${colors.border}`,
+    borderWidth: 2,
+    borderColor: colors.border,
+    borderStyle: 'solid',
     borderRadius: 4,
     padding: 18,
     marginBottom: 16,
@@ -290,7 +302,9 @@ export const styles = StyleSheet.create({
   },
   packageCardRecommended: {
     backgroundColor: '#e0f2fe', // Light cyan background
-    border: `4pt solid ${colors.primary}`, // Thicker border
+    borderWidth: 4,
+    borderColor: colors.primary,
+    borderStyle: 'solid',
     position: 'relative',
   },
   packageHeader: {
@@ -299,7 +313,9 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
     paddingBottom: 10,
-    borderBottom: `2pt solid ${colors.primary}`,
+    borderBottomWidth: 2,
+    borderBottomColor: colors.primary,
+    borderBottomStyle: 'solid',
   },
   packageName: {
     fontSize: 18,
@@ -339,7 +355,8 @@ export const styles = StyleSheet.create({
     padding: 14,
     marginBottom: 8,
     borderRadius: 4,
-    border: `2pt solid`,
+    borderWidth: 2,
+    borderStyle: 'solid',
   },
   swotStrengths: {
     backgroundColor: '#d1fae5', // Light green background
@@ -378,7 +395,9 @@ export const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: '#f8fafc',
     borderRadius: 4,
-    border: `2pt solid ${colors.primary}`,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    borderStyle: 'solid',
   },
   statNumber: {
     fontSize: 32,
@@ -405,7 +424,9 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingBottom: 10,
-    borderBottom: `2pt solid ${colors.primary}`,
+    borderBottomWidth: 2,
+    borderBottomColor: colors.primary,
+    borderBottomStyle: 'solid',
   },
   headerBrand: {
     fontSize: 14,
@@ -434,7 +455,9 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingTop: 10,
-    borderTop: `2pt solid ${colors.primary}`,
+    borderTopWidth: 2,
+    borderTopColor: colors.primary,
+    borderTopStyle: 'solid',
   },
   footerPageNumber: {
     fontSize: 9,
@@ -457,7 +480,9 @@ export const styles = StyleSheet.create({
   sectionDivider: {
     marginTop: 20,
     marginBottom: 20,
-    borderBottom: `2pt solid ${colors.border}`,
+    borderBottomWidth: 2,
+    borderBottomColor: colors.border,
+    borderBottomStyle: 'solid',
   },
 
   // Timeline
@@ -494,7 +519,9 @@ export const styles = StyleSheet.create({
     backgroundColor: '#ecfdf5',
     padding: 20,
     borderRadius: 4,
-    border: `2pt solid ${colors.success}`,
+    borderWidth: 2,
+    borderColor: colors.success,
+    borderStyle: 'solid',
     marginBottom: 16,
   },
   roiTitle: {
@@ -531,7 +558,9 @@ export const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
     borderRadius: 4,
-    border: `3pt solid ${colors.primary}`,
+    borderWidth: 3,
+    borderColor: colors.primary,
+    borderStyle: 'solid',
   },
   warningTitle: {
     fontSize: 14,
@@ -550,7 +579,9 @@ export const styles = StyleSheet.create({
   // Info/Highlight Box (cyan background - A1 Mobility style)
   cyanBox: {
     backgroundColor: colors.cyanLight,
-    borderLeft: `4pt solid ${colors.cyan}`,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.cyan,
+    borderLeftStyle: 'solid',
     padding: 16,
     marginBottom: 16,
   },
@@ -577,7 +608,9 @@ export const styles = StyleSheet.create({
   statComparisonCard: {
     flex: 1,
     backgroundColor: '#f8f8f8',
-    border: `1pt solid ${colors.border}`,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderStyle: 'solid',
     padding: 16,
     alignItems: 'center',
     borderRadius: 4,
@@ -599,7 +632,9 @@ export const styles = StyleSheet.create({
     backgroundColor: '#f8fafc',
     padding: 20,
     borderRadius: 4,
-    border: `2pt solid ${colors.cyan}`,
+    borderWidth: 2,
+    borderColor: colors.cyan,
+    borderStyle: 'solid',
     marginBottom: 20,
   },
   simpleMathTitle: {
@@ -614,7 +649,9 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 12,
     paddingBottom: 12,
-    borderBottom: `1pt solid ${colors.border}`,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    borderBottomStyle: 'solid',
   },
   simpleMathLabel: {
     fontSize: 11,
@@ -630,7 +667,9 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 8,
     paddingTop: 12,
-    borderTop: `2pt solid ${colors.cyan}`,
+    borderTopWidth: 2,
+    borderTopColor: colors.cyan,
+    borderTopStyle: 'solid',
   },
   simpleMathTotalLabel: {
     fontSize: 13,
@@ -646,7 +685,9 @@ export const styles = StyleSheet.create({
   // Competitor Comparison Table (A1 Mobility style)
   competitorTable: {
     marginBottom: 20,
-    border: `1pt solid ${colors.border}`,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderStyle: 'solid',
   },
   competitorTableHeader: {
     flexDirection: 'row',
@@ -661,13 +702,17 @@ export const styles = StyleSheet.create({
   },
   competitorTableRow: {
     flexDirection: 'row',
-    borderBottom: `1pt solid ${colors.border}`,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    borderBottomStyle: 'solid',
     padding: 10,
   },
   competitorTableRowAlt: {
     flexDirection: 'row',
     backgroundColor: '#f8fafc',
-    borderBottom: `1pt solid ${colors.border}`,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    borderBottomStyle: 'solid',
     padding: 10,
   },
   competitorTableCell: {
@@ -681,7 +726,9 @@ export const styles = StyleSheet.create({
     backgroundColor: colors.cyanLight,
     padding: 20,
     borderRadius: 4,
-    border: `3pt solid ${colors.cyan}`,
+    borderWidth: 3,
+    borderColor: colors.cyan,
+    borderStyle: 'solid',
     marginBottom: 20,
   },
   opportunityTitle: {
