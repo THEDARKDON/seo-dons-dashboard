@@ -8,6 +8,13 @@ import { Document, Page, Text, View } from '@react-pdf/renderer';
 import { styles } from './styles';
 import { CoverPage } from './components/cover-page';
 import { PageHeader, PageFooter } from './components/page-header';
+import {
+  BrutalTruthBox,
+  StatisticsComparison,
+  SimpleMathBreakdown,
+  CompetitorComparisonTable,
+  MarketOpportunityCard,
+} from './components/a1-mobility-elements';
 import type { ProposalContent } from '@/lib/claude/content-generator';
 
 interface ProposalTemplateProps {
@@ -59,6 +66,46 @@ export function ProposalTemplate({ content }: ProposalTemplateProps) {
               </View>
             ))}
           </View>
+        </View>
+        <PageFooter companyName={content.coverPage.companyName} />
+      </Page>
+
+      {/* Market Analysis & Opportunity (A1 Mobility Design Elements) */}
+      <Page size="A4" style={styles.page}>
+        <PageHeader companyName={content.coverPage.companyName} />
+        <View style={styles.section}>
+          <Text style={styles.h1}>Market Analysis & Opportunity</Text>
+
+          {/* Brutal Truth Callouts */}
+          {content.brutalTruthCallouts.map((callout, i) => (
+            <BrutalTruthBox
+              key={i}
+              title={callout.title}
+              content={callout.content}
+              type={callout.type}
+            />
+          ))}
+
+          {/* Statistics Comparison Cards */}
+          {content.statisticsCards.length > 0 && (
+            <StatisticsComparison cards={content.statisticsCards} />
+          )}
+
+          {/* Market Opportunity Card */}
+          <MarketOpportunityCard
+            title={content.marketOpportunity.title}
+            currentState={content.marketOpportunity.currentState}
+            opportunitySize={content.marketOpportunity.opportunitySize}
+            timeframe={content.marketOpportunity.timeframe}
+          />
+
+          {/* Competitor Comparison Table */}
+          {content.competitorComparison.metrics.length > 0 && (
+            <>
+              <Text style={styles.h2}>Competitive Landscape</Text>
+              <CompetitorComparisonTable metrics={content.competitorComparison.metrics} />
+            </>
+          )}
         </View>
         <PageFooter companyName={content.coverPage.companyName} />
       </Page>
@@ -347,6 +394,14 @@ export function ProposalTemplate({ content }: ProposalTemplateProps) {
         <PageHeader companyName={content.coverPage.companyName} />
         <View style={styles.section}>
           <Text style={styles.h1}>Projections & ROI</Text>
+
+          {/* The Simple Math Breakdown */}
+          <SimpleMathBreakdown
+            steps={content.simpleMathBreakdown.steps}
+            totalInvestment={content.simpleMathBreakdown.totalInvestment}
+            totalReturn={content.simpleMathBreakdown.totalReturn}
+            roi={content.simpleMathBreakdown.roi}
+          />
 
           <Text style={styles.h2}>6-Month Projections</Text>
           <View style={styles.statRow}>

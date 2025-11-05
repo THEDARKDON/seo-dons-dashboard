@@ -10,7 +10,7 @@ import { StyleSheet, Font } from '@react-pdf/renderer';
 // TODO: Add custom fonts if needed
 
 export const colors = {
-  primary: '#2563eb', // Blue
+  primary: '#00CED1', // Cyan/Turquoise (A1 Mobility accent color)
   secondary: '#64748b', // Slate
   accent: '#0ea5e9', // Sky blue
   text: '#1e293b', // Dark slate
@@ -18,7 +18,10 @@ export const colors = {
   background: '#ffffff',
   border: '#e2e8f0',
   success: '#10b981',
-  warning: '#f59e0b',
+  warning: '#ff9800', // Orange (A1 Mobility warning color)
+  warningLight: '#fff3cd', // Light yellow background
+  cyan: '#00CED1', // A1 Mobility primary
+  cyanLight: '#e8f9f9', // Light cyan background
 };
 
 export const styles = StyleSheet.create({
@@ -376,5 +379,201 @@ export const styles = StyleSheet.create({
   roiLabel: {
     fontSize: 10,
     color: colors.textLight,
+  },
+
+  // ============================================================================
+  // A1 MOBILITY DESIGN ELEMENTS
+  // ============================================================================
+
+  // Brutal Truth / Warning Box (orange/yellow background)
+  warningBox: {
+    backgroundColor: colors.warningLight,
+    borderLeft: `4pt solid ${colors.warning}`,
+    padding: 16,
+    marginBottom: 16,
+  },
+  warningTitle: {
+    fontSize: 14,
+    fontFamily: 'Helvetica-Bold',
+    color: colors.warning,
+    marginBottom: 8,
+    textTransform: 'uppercase',
+  },
+  warningContent: {
+    fontSize: 12,
+    lineHeight: 1.6,
+    color: colors.text,
+  },
+
+  // Info/Highlight Box (cyan background - A1 Mobility style)
+  cyanBox: {
+    backgroundColor: colors.cyanLight,
+    borderLeft: `4pt solid ${colors.cyan}`,
+    padding: 16,
+    marginBottom: 16,
+  },
+  cyanTitle: {
+    fontSize: 14,
+    fontFamily: 'Helvetica-Bold',
+    color: colors.cyan,
+    marginBottom: 8,
+    textTransform: 'uppercase',
+  },
+  cyanContent: {
+    fontSize: 12,
+    lineHeight: 1.6,
+    color: colors.text,
+  },
+
+  // Statistics Comparison Grid (3-column layout)
+  statGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 20,
+    gap: 12,
+  },
+  statComparisonCard: {
+    flex: 1,
+    backgroundColor: '#f8f8f8',
+    border: `1pt solid ${colors.border}`,
+    padding: 16,
+    alignItems: 'center',
+    borderRadius: 4,
+  },
+  statComparisonNumber: {
+    fontSize: 32,
+    fontFamily: 'Helvetica-Bold',
+    color: colors.cyan,
+    marginBottom: 8,
+  },
+  statComparisonLabel: {
+    fontSize: 10,
+    color: colors.textLight,
+    textAlign: 'center',
+  },
+
+  // "The Simple Math" Breakdown
+  simpleMathContainer: {
+    backgroundColor: '#f8fafc',
+    padding: 20,
+    borderRadius: 4,
+    border: `2pt solid ${colors.cyan}`,
+    marginBottom: 20,
+  },
+  simpleMathTitle: {
+    fontSize: 16,
+    fontFamily: 'Helvetica-Bold',
+    color: colors.cyan,
+    marginBottom: 16,
+    textTransform: 'uppercase',
+  },
+  simpleMathStep: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+    paddingBottom: 12,
+    borderBottom: `1pt solid ${colors.border}`,
+  },
+  simpleMathLabel: {
+    fontSize: 11,
+    fontFamily: 'Helvetica-Bold',
+    color: colors.text,
+  },
+  simpleMathValue: {
+    fontSize: 11,
+    color: colors.text,
+  },
+  simpleMathTotal: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+    paddingTop: 12,
+    borderTop: `2pt solid ${colors.cyan}`,
+  },
+  simpleMathTotalLabel: {
+    fontSize: 13,
+    fontFamily: 'Helvetica-Bold',
+    color: colors.cyan,
+  },
+  simpleMathTotalValue: {
+    fontSize: 13,
+    fontFamily: 'Helvetica-Bold',
+    color: colors.cyan,
+  },
+
+  // Competitor Comparison Table (A1 Mobility style)
+  competitorTable: {
+    marginBottom: 20,
+    border: `1pt solid ${colors.border}`,
+  },
+  competitorTableHeader: {
+    flexDirection: 'row',
+    backgroundColor: colors.cyan,
+    padding: 10,
+  },
+  competitorTableHeaderCell: {
+    flex: 1,
+    fontSize: 10,
+    fontFamily: 'Helvetica-Bold',
+    color: '#ffffff',
+  },
+  competitorTableRow: {
+    flexDirection: 'row',
+    borderBottom: `1pt solid ${colors.border}`,
+    padding: 10,
+  },
+  competitorTableRowAlt: {
+    flexDirection: 'row',
+    backgroundColor: '#f8fafc',
+    borderBottom: `1pt solid ${colors.border}`,
+    padding: 10,
+  },
+  competitorTableCell: {
+    flex: 1,
+    fontSize: 9,
+    color: colors.text,
+  },
+
+  // Market Opportunity Card
+  opportunityCard: {
+    backgroundColor: colors.cyanLight,
+    padding: 20,
+    borderRadius: 4,
+    border: `3pt solid ${colors.cyan}`,
+    marginBottom: 20,
+  },
+  opportunityTitle: {
+    fontSize: 16,
+    fontFamily: 'Helvetica-Bold',
+    color: colors.cyan,
+    marginBottom: 12,
+    textTransform: 'uppercase',
+  },
+  opportunityRow: {
+    marginBottom: 10,
+  },
+  opportunityLabel: {
+    fontSize: 10,
+    fontFamily: 'Helvetica-Bold',
+    color: colors.text,
+    marginBottom: 4,
+  },
+  opportunityValue: {
+    fontSize: 12,
+    color: colors.text,
+  },
+
+  // 2-Column Layout (for side-by-side content)
+  twoColumnRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+    gap: 16,
+  },
+  twoColumnLeft: {
+    flex: 1,
+  },
+  twoColumnRight: {
+    flex: 1,
   },
 });

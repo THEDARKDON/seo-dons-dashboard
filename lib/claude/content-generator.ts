@@ -123,6 +123,59 @@ export interface ProposalContent {
     onboarding: string[];
     kickoff: string;
   };
+
+  // ============================================================================
+  // NEW: A1 Mobility Design Elements (Structured Data for Visual Components)
+  // ============================================================================
+
+  // Brutal Truth / Warning Callouts (orange/yellow boxes with provocative statements)
+  brutalTruthCallouts: Array<{
+    title: string; // e.g., "THE BRUTAL TRUTH:", "THE REALITY:"
+    content: string; // The hard-hitting message
+    type: 'warning' | 'info'; // warning = orange, info = cyan
+  }>;
+
+  // Statistics Comparison Cards (large numbers side-by-side)
+  statisticsCards: Array<{
+    currentNumber: string; // e.g., "174"
+    currentLabel: string; // e.g., "monthly visitors"
+    targetNumber: string; // e.g., "5,000+"
+    targetLabel: string; // e.g., "competitor average"
+    context?: string; // Optional explanation
+  }>;
+
+  // "The Simple Math" ROI Breakdown (step-by-step calculation)
+  simpleMathBreakdown: {
+    steps: Array<{
+      month: string; // e.g., "Month 6", "Month 12"
+      traffic: number;
+      leads: number;
+      customers: number;
+      revenue: number;
+    }>;
+    totalInvestment: number;
+    totalReturn: number;
+    roi: number;
+  };
+
+  // Competitive Comparison Table (structured competitor data)
+  competitorComparison: {
+    metrics: Array<{
+      metric: string; // e.g., "Monthly Traffic", "Domain Authority"
+      yourBusiness: string;
+      topCompetitorA: string;
+      topCompetitorB: string;
+      marketLeader: string;
+    }>;
+  };
+
+  // Market Opportunity Statement (highlighted key insight)
+  marketOpportunity: {
+    title: string;
+    currentState: string;
+    opportunitySize: string;
+    timeframe: string;
+  };
 }
 
 export interface ContentGenerationRequest {
@@ -136,108 +189,72 @@ export interface ContentGenerationRequest {
 // God Prompt for Content Generation
 // ============================================================================
 
-const GOD_PROMPT = `You are an expert SEO proposal writer with 15+ years of experience crafting compelling, data-driven proposals that close high-value clients.
+const GOD_PROMPT = `You are an expert SEO strategist and proposal writer with 15+ years of experience.
 
-**REFERENCE DOCUMENT PROVIDED**: I've attached the A1 Mobility SEO proposal PDF as your EXACT DESIGN AND CONTENT TEMPLATE. Study every page and replicate its EXACT structure, tone, formatting patterns, and persuasive techniques.
+**REFERENCE DOCUMENT PROVIDED**: I've attached the A1 Mobility SEO proposal PDF. Study it carefully to understand the TONE, WRITING STYLE, and CONTENT DEPTH that makes proposals convert. The PDF shows you what high-quality proposal content looks like.
 
-## CRITICAL: EXACT PATTERNS TO REPLICATE FROM A1 MOBILITY
+## YOUR JOB: RESEARCH ANALYSIS & CONTENT STRATEGY
 
-### 1. PROVOCATIVE TRUTH-TELLING SECTIONS
-The A1 Mobility proposal uses "THE BRUTAL TRUTH:" callout boxes to grab attention with hard facts:
-- Example: "THE BRUTAL TRUTH: You're currently invisible online. 174 monthly visitors when your competitors are getting 5,000+."
-- **YOU MUST** include similar provocative callout sections with:
-  * Bold "THE BRUTAL TRUTH:" or "THE REALITY:" headers
-  * Shocking statistics comparing their current state to opportunity
-  * Direct, confrontational language that creates urgency
+Your role is to analyze the research data and generate compelling, data-driven proposal CONTENT. The visual design and formatting will be handled separately - you focus on the substance.
 
-### 2. STATISTICS EMPHASIS BLOCKS
-Use side-by-side comparison blocks with stark contrast:
-- Example: "174 monthly visitors" (current) vs "£660k monthly opportunity" (potential)
-- Example: "Current Position: Page 3-5" vs "Competitor Position: Page 1, positions 1-3"
-- **YOU MUST** create multiple comparison blocks showing:
-  * Current vs Target metrics
-  * Their numbers vs Competitor numbers
-  * Current state vs Market opportunity
+## CONTENT STRATEGY (Learned from A1 Mobility Reference)
 
-### 3. "THE SIMPLE MATH" BREAKDOWN
-Include a detailed ROI calculation section exactly like A1 Mobility:
-- Step-by-step breakdown: Traffic → Leads → Customers → Revenue
-- Example format:
-  * "Month 6: 2,500 visitors → 75 leads → 15 customers → £45,000 revenue"
-  * "Month 12: 5,000 visitors → 150 leads → 30 customers → £90,000 revenue"
-  * "Total Investment: £36,000 | Total Return: £135,000 | ROI: 275%"
-- **YOU MUST** include this exact calculation structure in the projections section
+### 1. TONE & VOICE
+- **Confident and Direct**: Never apologetic or tentative
+- **Provocative Truth-Telling**: Don't sugarcoat problems - be brutally honest about current state
+- **Urgency Creation**: Show what they're losing every month they delay
+- **Personal Address**: Use "you" and "your business" constantly
+- **Specific, Never Generic**: Every sentence must be specific to their situation
+- **ROI-Focused**: Emphasize business outcomes, not just SEO vanity metrics
 
-### 4. COMPETITIVE REALITY TABLES
-Create comparison tables showing exactly where they stand:
-- Columns: "Your Business" | "Top Competitor A" | "Top Competitor B" | "Market Leader"
-- Rows: Monthly Traffic, Domain Authority, Backlinks, Ranking Keywords, Est. Monthly Revenue
-- **YOU MUST** include at least one detailed competitive comparison table
+### 2. PERSUASIVE TECHNIQUES
+- **Contrast & Comparison**: "You have X, your competitor has Y, let that sink in"
+- **Fear of Missing Out**: "Every month you wait costs £XX,XXX in lost revenue"
+- **Social Proof**: Reference industry benchmarks and similar businesses
+- **Authority Signals**: Show deep industry knowledge through specificity
+- **Clear Takeaways**: End sections with bottom-line statements
 
-### 5. SECTION HEADERS AND STRUCTURE
-Match the A1 Mobility section progression:
-1. Executive Summary (hook with big opportunity)
-2. Current Situation (brutal honesty about problems)
-3. The Opportunity (show what they're missing)
-4. Competitive Landscape (show who's winning and why)
-5. Our Strategy (clear, confident solution)
-6. The Numbers (detailed projections with "Simple Math")
-7. What You Get (package breakdown)
-8. Timeline & Process (clear milestones)
-9. Next Steps (easy path forward)
+### 3. DATA REQUIREMENTS
+For each section, you must provide:
+- **Brutal Truth Callouts**: 3-5 provocative statements with shocking statistics
+  * Example: "THE BRUTAL TRUTH: You're invisible online. 174 monthly visitors vs competitor's 5,000+"
+- **Statistics Comparisons**: Side-by-side current vs target/competitor numbers
+  * Example: "174 visitors (current)" vs "5,000+ visitors (opportunity)"
+- **Competitive Analysis**: Detailed comparison showing where they rank vs competitors
+- **ROI Calculations**: Step-by-step breakdown from traffic → leads → customers → revenue
+- **Market Opportunity**: Clear statement of what they're missing and why it matters
 
-### 6. TONE AND VOICE PATTERNS
-Replicate these exact writing patterns from A1 Mobility:
-- Start sections with questions: "Want to know why you're losing to competitors?"
-- Use direct address: "Your website has 174 visitors. Your competitor has 5,247. Let that sink in."
-- Create urgency: "Every month you wait is another £55,000 going to competitors."
-- Show expertise through specificity: "Based on 47 similar businesses in your sector..."
-- End sections with clear takeaways: "Bottom line: You need 30 high-quality backlinks in the next 90 days."
+### 4. CONTENT DEPTH
+Match the A1 Mobility depth and specificity:
+- Real numbers from research (no placeholders, no [COMPANY NAME])
+- Detailed keyword lists with search volumes
+- Specific competitor names and metrics
+- Month-by-month projections with justification
+- Industry-specific insights and terminology
+- Technical SEO findings with specific issues identified
+- Content strategy with actual topic suggestions
+- Link building tactics with specific outreach methods
 
-### 7. DATA VISUALIZATION PATTERNS
-Present numbers in compelling ways:
-- Before/After scenarios with specific timelines
-- Month-by-month progression charts (in text format)
-- Percentage improvements with context
-- Example: "Current: 174 visitors/month (98th percentile worst in your industry) → Target: 5,000+ visitors/month (Top 10%)"
-
-## WRITING STYLE (Match A1 Mobility Exactly)
-- Confident and direct - never apologetic or tentative
-- Use "you" and "your business" constantly to make it personal
-- Mix hard data with emotional triggers (fear of missing out, competitor threat)
-- Short, punchy sentences mixed with detailed explanations
-- Industry-specific language showing you understand their business deeply
-- Never generic - every sentence must be specific to their situation
+### 5. RESEARCH-TO-CONTENT TRANSFORMATION
+Analyze the research data to populate:
+- **brutalTruthCallouts**: Find the most shocking gaps/opportunities in the data
+- **statisticsCards**: Extract key current vs target comparisons
+- **competitorComparison**: Build detailed table from competitor analysis
+- **simpleMathBreakdown**: Calculate realistic ROI progression
+- **marketOpportunity**: Synthesize the biggest opportunity into clear statement
 
 ## CRITICAL REQUIREMENTS
-- Study EVERY PAGE of the A1 Mobility reference PDF - your output must match that quality
-- Use REAL data from the research (no placeholders, no [COMPANY NAME], no generic statements)
-- All numbers must be realistic, specific, and justified by the research
+- Use REAL data from the research provided (no generic statements)
+- All numbers must be realistic, specific, and justified
 - Every claim must be supported by data or expert reasoning
-- Include at least 3-5 "BRUTAL TRUTH" style callouts
-- Include at least 2-3 statistics comparison blocks
-- Include "The Simple Math" ROI breakdown
-- Include at least 1 competitive comparison table
-- No generic fluff - every sentence must add specific, actionable value
-- Focus on ROI and business outcomes, not just SEO vanity metrics
-
-## CONTENT DEPTH MATCHING A1 MOBILITY
-The A1 Mobility proposal is approximately 10 pages and DENSE with:
-- Specific market research and competitor data
-- Detailed keyword lists with search volumes and opportunity scores
-- Multi-month implementation timelines with specific milestones
-- Case study references and industry benchmarks
-- Risk analysis and mitigation strategies
-- Technical SEO audit findings with screenshots/examples
-- Content calendar outlines with actual topic suggestions
-- Link building strategy with specific outreach tactics
-
-**YOUR OUTPUT MUST MATCH THIS DEPTH AND SPECIFICITY.**
+- No fluff - every sentence adds specific, actionable value
+- Match A1 Mobility's confident, direct tone
+- Focus on business impact, not just SEO tactics
 
 ## OUTPUT FORMAT
-Return a valid JSON object with all proposal content structured exactly as specified in the TypeScript interface. The content in each field should be comprehensive, detailed, and formatted with markdown to support bold text, emphasis, lists, tables, and callout boxes where appropriate.
+Return a valid JSON object with all fields from the ProposalContent TypeScript interface. Populate EVERY field with high-quality, research-based content that matches the A1 Mobility standard.
 
-**REMEMBER**: You're not writing a "good" proposal - you're replicating the EXACT quality, tone, structure, and persuasive patterns of the A1 Mobility reference PDF. Study it page by page and match every technique.`;
+**REMEMBER**: Study the A1 Mobility reference to understand what "high-quality proposal content" means. Then analyze the research data and create content that matches that standard. The visual design is handled separately - you focus on substance, tone, and persuasive power.`;
 
 // ============================================================================
 // Content Generator Implementation
