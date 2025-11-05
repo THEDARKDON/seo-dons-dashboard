@@ -71,44 +71,48 @@ export function ProposalTemplate({ content }: ProposalTemplateProps) {
       </Page>
 
       {/* Market Analysis & Opportunity (A1 Mobility Design Elements) */}
-      <Page size="A4" style={styles.page}>
-        <PageHeader companyName={content.coverPage.companyName} />
-        <View style={styles.section}>
-          <Text style={styles.h1}>Market Analysis & Opportunity</Text>
+      {content.brutalTruthCallouts && content.brutalTruthCallouts.length > 0 && (
+        <Page size="A4" style={styles.page}>
+          <PageHeader companyName={content.coverPage.companyName} />
+          <View style={styles.section}>
+            <Text style={styles.h1}>Market Analysis & Opportunity</Text>
 
-          {/* Brutal Truth Callouts */}
-          {content.brutalTruthCallouts.map((callout, i) => (
-            <BrutalTruthBox
-              key={i}
-              title={callout.title}
-              content={callout.content}
-              type={callout.type}
-            />
-          ))}
+            {/* Brutal Truth Callouts */}
+            {content.brutalTruthCallouts?.map((callout, i) => (
+              <BrutalTruthBox
+                key={i}
+                title={callout.title}
+                content={callout.content}
+                type={callout.type}
+              />
+            ))}
 
-          {/* Statistics Comparison Cards */}
-          {content.statisticsCards.length > 0 && (
-            <StatisticsComparison cards={content.statisticsCards} />
-          )}
+            {/* Statistics Comparison Cards */}
+            {content.statisticsCards && content.statisticsCards.length > 0 && (
+              <StatisticsComparison cards={content.statisticsCards} />
+            )}
 
-          {/* Market Opportunity Card */}
-          <MarketOpportunityCard
-            title={content.marketOpportunity.title}
-            currentState={content.marketOpportunity.currentState}
-            opportunitySize={content.marketOpportunity.opportunitySize}
-            timeframe={content.marketOpportunity.timeframe}
-          />
+            {/* Market Opportunity Card */}
+            {content.marketOpportunity && (
+              <MarketOpportunityCard
+                title={content.marketOpportunity.title}
+                currentState={content.marketOpportunity.currentState}
+                opportunitySize={content.marketOpportunity.opportunitySize}
+                timeframe={content.marketOpportunity.timeframe}
+              />
+            )}
 
-          {/* Competitor Comparison Table */}
-          {content.competitorComparison.metrics.length > 0 && (
-            <>
-              <Text style={styles.h2}>Competitive Landscape</Text>
-              <CompetitorComparisonTable metrics={content.competitorComparison.metrics} />
-            </>
-          )}
-        </View>
-        <PageFooter companyName={content.coverPage.companyName} />
-      </Page>
+            {/* Competitor Comparison Table */}
+            {content.competitorComparison?.metrics && content.competitorComparison.metrics.length > 0 && (
+              <>
+                <Text style={styles.h2}>Competitive Landscape</Text>
+                <CompetitorComparisonTable metrics={content.competitorComparison.metrics} />
+              </>
+            )}
+          </View>
+          <PageFooter companyName={content.coverPage.companyName} />
+        </Page>
+      )}
 
       {/* Current Situation & SWOT */}
       <Page size="A4" style={styles.page}>
@@ -396,12 +400,14 @@ export function ProposalTemplate({ content }: ProposalTemplateProps) {
           <Text style={styles.h1}>Projections & ROI</Text>
 
           {/* The Simple Math Breakdown */}
-          <SimpleMathBreakdown
-            steps={content.simpleMathBreakdown.steps}
-            totalInvestment={content.simpleMathBreakdown.totalInvestment}
-            totalReturn={content.simpleMathBreakdown.totalReturn}
-            roi={content.simpleMathBreakdown.roi}
-          />
+          {content.simpleMathBreakdown && content.simpleMathBreakdown.steps && (
+            <SimpleMathBreakdown
+              steps={content.simpleMathBreakdown.steps}
+              totalInvestment={content.simpleMathBreakdown.totalInvestment}
+              totalReturn={content.simpleMathBreakdown.totalReturn}
+              roi={content.simpleMathBreakdown.roi}
+            />
+          )}
 
           <Text style={styles.h2}>6-Month Projections</Text>
           <View style={styles.statRow}>

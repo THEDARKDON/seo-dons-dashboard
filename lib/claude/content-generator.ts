@@ -127,16 +127,17 @@ export interface ProposalContent {
   // ============================================================================
   // NEW: A1 Mobility Design Elements (Structured Data for Visual Components)
   // ============================================================================
+  // NOTE: These fields are optional - Claude may not populate them initially
 
   // Brutal Truth / Warning Callouts (orange/yellow boxes with provocative statements)
-  brutalTruthCallouts: Array<{
+  brutalTruthCallouts?: Array<{
     title: string; // e.g., "THE BRUTAL TRUTH:", "THE REALITY:"
     content: string; // The hard-hitting message
     type: 'warning' | 'info'; // warning = orange, info = cyan
   }>;
 
   // Statistics Comparison Cards (large numbers side-by-side)
-  statisticsCards: Array<{
+  statisticsCards?: Array<{
     currentNumber: string; // e.g., "174"
     currentLabel: string; // e.g., "monthly visitors"
     targetNumber: string; // e.g., "5,000+"
@@ -145,7 +146,7 @@ export interface ProposalContent {
   }>;
 
   // "The Simple Math" ROI Breakdown (step-by-step calculation)
-  simpleMathBreakdown: {
+  simpleMathBreakdown?: {
     steps: Array<{
       month: string; // e.g., "Month 6", "Month 12"
       traffic: number;
@@ -159,7 +160,7 @@ export interface ProposalContent {
   };
 
   // Competitive Comparison Table (structured competitor data)
-  competitorComparison: {
+  competitorComparison?: {
     metrics: Array<{
       metric: string; // e.g., "Monthly Traffic", "Domain Authority"
       yourBusiness: string;
@@ -170,7 +171,7 @@ export interface ProposalContent {
   };
 
   // Market Opportunity Statement (highlighted key insight)
-  marketOpportunity: {
+  marketOpportunity?: {
     title: string;
     currentState: string;
     opportunitySize: string;
