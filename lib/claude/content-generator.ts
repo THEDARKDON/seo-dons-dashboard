@@ -6,6 +6,7 @@
  */
 
 import { callClaudeForContent, sanitizeForPrompt } from './utils';
+import { getReferencePDF, hasReferencePDF } from './reference-pdf';
 import type { ResearchResult } from './research-agent';
 
 // ============================================================================
@@ -137,29 +138,46 @@ export interface ContentGenerationRequest {
 
 const GOD_PROMPT = `You are an expert SEO proposal writer with 15+ years of experience crafting compelling, data-driven proposals that close high-value clients.
 
-Your task is to generate a comprehensive 18-page SEO proposal that:
-1. Demonstrates deep understanding of the client's business and market
-2. Presents a clear, actionable strategy backed by research
-3. Quantifies expected outcomes with realistic projections
-4. Positions SEO as a strategic investment, not an expense
-5. Builds trust through expertise, transparency, and professionalism
+**REFERENCE DOCUMENT PROVIDED**: I've attached the A1 Mobility SEO proposal PDF as your design and content reference. This is the GOLD STANDARD - study it carefully and replicate its:
+- Tone and writing style (confident, direct, data-driven, slightly provocative)
+- Formatting and structure (clear hierarchy, bold statements, highlighted sections)
+- Content depth and specificity (real numbers, detailed breakdowns, industry insights)
+- Visual hierarchy (use of callouts, statistics blocks, tables, emphasis)
+- Persuasive techniques (problem-agitate-solve, ROI focus, urgency)
 
-WRITING STYLE:
-- Professional yet conversational tone
+Your task is to generate a comprehensive SEO proposal that MATCHES OR EXCEEDS the quality of the reference document by:
+1. Demonstrating deep understanding of the client's business and market (like A1 Mobility example)
+2. Presenting a clear, actionable strategy backed by research
+3. Quantifying expected outcomes with realistic projections
+4. Positioning SEO as a strategic investment, not an expense
+5. Building trust through expertise, transparency, and professionalism
+
+WRITING STYLE (Match the A1 Mobility reference):
+- Professional yet conversational and direct
 - Client-focused (use "you" and "your business")
 - Data-driven with specific numbers and examples
 - Action-oriented with clear next steps
-- Confident but not salesy
+- Confident and slightly provocative (like "THE BRUTAL TRUTH:" sections)
+- Use bold statements and statistics to grab attention
 
 CRITICAL REQUIREMENTS:
+- Study the A1 Mobility reference PDF carefully - match its quality and depth
 - Use REAL data from the research (no placeholders or [COMPANY NAME])
 - All numbers must be realistic and justified
 - Every claim must be supported by data or reasoning
 - No generic fluff - every sentence adds value
 - Focus on ROI and business outcomes, not just SEO metrics
+- Include compelling statistics, market data, and competitive analysis like the reference
+
+FORMATTING NOTES:
+- Use clear section headings and subheadings
+- Include numerical emphasis (e.g., "174 monthly visitors" vs "£660k monthly opportunity")
+- Create compelling callout boxes for important points
+- Use tables for comparisons and breakdowns
+- Include step-by-step timelines and processes
 
 OUTPUT FORMAT:
-Return a valid JSON object with all proposal content structured exactly as specified in the TypeScript interface.`;
+Return a valid JSON object with all proposal content structured exactly as specified in the TypeScript interface. Make the content as rich, detailed, and persuasive as the A1 Mobility reference.`;
 
 // ============================================================================
 // Content Generator Implementation
@@ -328,7 +346,19 @@ IMPORTANT:
 - No placeholders - every field must have real content
   `);
 
-  const response = await callClaudeForContent(GOD_PROMPT, userPrompt);
+  // Load the A1 Mobility reference PDF
+  const referencePdfBase64 = hasReferencePDF() ? getReferencePDF() : '';
+
+  if (referencePdfBase64) {
+    console.log('[Content Generator] Using A1 Mobility reference PDF for quality matching');
+  } else {
+    console.warn('[Content Generator] Reference PDF not available - proceeding without template');
+  }
+
+  // Call Claude with the reference PDF attached
+  const response = await callClaudeForContent(GOD_PROMPT, userPrompt, {
+    pdfBase64: referencePdfBase64,
+  });
 
   // Extract and parse JSON from response
   const content = extractAndParseJSON<ProposalContent>(response.content);

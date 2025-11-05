@@ -223,8 +223,29 @@ export async function callClaudeForContent(
     model?: string;
     maxTokens?: number;
     temperature?: number;
+    pdfBase64?: string; // Optional PDF reference document
   }
 ) {
+  // Build message content array
+  const messageContent: any[] = [
+    {
+      type: 'text',
+      text: userPrompt,
+    },
+  ];
+
+  // Add PDF reference document if provided
+  if (options?.pdfBase64) {
+    messageContent.unshift({
+      type: 'document',
+      source: {
+        type: 'base64',
+        media_type: 'application/pdf',
+        data: options.pdfBase64,
+      },
+    });
+  }
+
   const params: MessageCreateParams = {
     model: options?.model || CLAUDE_CONFIG.CONTENT_MODEL,
     max_tokens: options?.maxTokens || CLAUDE_CONFIG.MAX_TOKENS_CONTENT,
@@ -233,7 +254,7 @@ export async function callClaudeForContent(
     messages: [
       {
         role: 'user',
-        content: userPrompt,
+        content: messageContent,
       },
     ],
     stream: true, // Enable streaming to avoid timeouts
