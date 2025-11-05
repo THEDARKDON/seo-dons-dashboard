@@ -173,45 +173,62 @@ export async function callClaudeForResearch(
     stream: true, // Enable streaming to avoid timeouts
   };
 
-  // Use streaming API
-  const stream = await claudeWithRetry(() => anthropic.messages.create(params));
+  // Wrap entire streaming process in retry logic
+  return await claudeWithRetry(async () => {
+    // Create stream
+    const stream = await anthropic.messages.create(params);
 
-  // Collect all chunks
-  let textContent = '';
-  let inputTokens = 0;
-  let outputTokens = 0;
-  let modelName = '';
+    // Collect all chunks
+    let textContent = '';
+    let inputTokens = 0;
+    let outputTokens = 0;
+    let modelName = '';
 
-  for await (const event of stream) {
-    if (event.type === 'message_start') {
-      inputTokens = event.message.usage.input_tokens;
-      modelName = event.message.model;
-    } else if (event.type === 'content_block_delta') {
-      if (event.delta.type === 'text_delta') {
-        textContent += event.delta.text;
+    try {
+      for await (const event of stream) {
+        if (event.type === 'message_start') {
+          inputTokens = event.message.usage.input_tokens;
+          modelName = event.message.model;
+        } else if (event.type === 'content_block_delta') {
+          if (event.delta.type === 'text_delta') {
+            textContent += event.delta.text;
+          }
+        } else if (event.type === 'message_delta') {
+          outputTokens = event.usage.output_tokens;
+        }
       }
-    } else if (event.type === 'message_delta') {
-      outputTokens = event.usage.output_tokens;
+    } catch (error: any) {
+      // Re-throw with network error detection for retry wrapper
+      if (
+        error.code === 'UND_ERR_SOCKET' ||
+        error.message?.includes('terminated') ||
+        error.message?.includes('other side closed')
+      ) {
+        const streamError: any = new Error('Stream terminated unexpectedly');
+        streamError.code = 'UND_ERR_SOCKET';
+        throw streamError;
+      }
+      throw error;
     }
-  }
 
-  // Calculate thinking tokens used
-  const thinkingTokens = inputTokens - estimatePromptTokens(systemPrompt, userPrompt);
+    // Calculate thinking tokens used
+    const thinkingTokens = inputTokens - estimatePromptTokens(systemPrompt, userPrompt);
 
-  return {
-    content: textContent,
-    usage: {
-      inputTokens,
-      outputTokens,
-      thinkingTokens: Math.max(0, thinkingTokens),
-    },
-    cost: calculateCost(
-      inputTokens,
-      outputTokens,
-      Math.max(0, thinkingTokens)
-    ),
-    model: modelName,
-  };
+    return {
+      content: textContent,
+      usage: {
+        inputTokens,
+        outputTokens,
+        thinkingTokens: Math.max(0, thinkingTokens),
+      },
+      cost: calculateCost(
+        inputTokens,
+        outputTokens,
+        Math.max(0, thinkingTokens)
+      ),
+      model: modelName,
+    };
+  });
 }
 
 /**
@@ -268,42 +285,59 @@ export async function callClaudeForContent(
     stream: true, // Enable streaming to avoid timeouts
   };
 
-  // Use streaming API
-  const stream = await claudeWithRetry(() => anthropic.messages.create(params));
+  // Wrap entire streaming process in retry logic
+  return await claudeWithRetry(async () => {
+    // Create stream
+    const stream = await anthropic.messages.create(params);
 
-  // Collect all chunks
-  let textContent = '';
-  let inputTokens = 0;
-  let outputTokens = 0;
-  let modelName = '';
+    // Collect all chunks
+    let textContent = '';
+    let inputTokens = 0;
+    let outputTokens = 0;
+    let modelName = '';
 
-  for await (const event of stream) {
-    if (event.type === 'message_start') {
-      inputTokens = event.message.usage.input_tokens;
-      modelName = event.message.model;
-    } else if (event.type === 'content_block_delta') {
-      if (event.delta.type === 'text_delta') {
-        textContent += event.delta.text;
+    try {
+      for await (const event of stream) {
+        if (event.type === 'message_start') {
+          inputTokens = event.message.usage.input_tokens;
+          modelName = event.message.model;
+        } else if (event.type === 'content_block_delta') {
+          if (event.delta.type === 'text_delta') {
+            textContent += event.delta.text;
+          }
+        } else if (event.type === 'message_delta') {
+          outputTokens = event.usage.output_tokens;
+        }
       }
-    } else if (event.type === 'message_delta') {
-      outputTokens = event.usage.output_tokens;
+    } catch (error: any) {
+      // Re-throw with network error detection for retry wrapper
+      if (
+        error.code === 'UND_ERR_SOCKET' ||
+        error.message?.includes('terminated') ||
+        error.message?.includes('other side closed')
+      ) {
+        const streamError: any = new Error('Stream terminated unexpectedly');
+        streamError.code = 'UND_ERR_SOCKET';
+        throw streamError;
+      }
+      throw error;
     }
-  }
 
-  return {
-    content: textContent,
-    usage: {
-      inputTokens,
-      outputTokens,
-      thinkingTokens: 0,
-    },
-    cost: calculateCost(
-      inputTokens,
-      outputTokens,
-      0
-    ),
-    model: modelName,
-  };
+    return {
+      content: textContent,
+      usage: {
+        inputTokens,
+        outputTokens,
+        thinkingTokens: 0,
+      },
+      cost: calculateCost(
+        inputTokens,
+        outputTokens,
+        0
+      ),
+      model: modelName,
+    };
+  });
 }
 
 /**
