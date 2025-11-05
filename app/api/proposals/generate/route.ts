@@ -13,8 +13,8 @@ import { createClient } from '@/lib/supabase/server';
 import { generateCompleteProposal, validateProposalRequest } from '@/lib/claude/proposal-generator';
 import { generateProposalPDF, getProposalFilename, validateProposalContent } from '@/lib/pdf/generate';
 
-// Vercel serverless function timeout (5 minutes)
-export const maxDuration = 300;
+// Vercel serverless function timeout (10 minutes for research + content + PDF generation)
+export const maxDuration = 600;
 
 // ============================================================================
 // POST - Generate Proposal
