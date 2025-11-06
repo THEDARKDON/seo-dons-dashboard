@@ -6,13 +6,29 @@ ALTER TABLE proposals
 ADD COLUMN IF NOT EXISTS html_content TEXT,
 ADD COLUMN IF NOT EXISTS html_generated_at TIMESTAMPTZ,
 ADD COLUMN IF NOT EXISTS pdf_generated_at TIMESTAMPTZ,
-ADD COLUMN IF NOT EXISTS generation_stage VARCHAR(20) DEFAULT 'research';
+ADD COLUMN IF NOT EXISTS generation_stage VARCHAR(20) DEFAULT 'research',
+ADD COLUMN IF NOT EXISTS html_url TEXT,
+ADD COLUMN IF NOT EXISTS error_message TEXT;
 
 -- Create index for faster queries by generation_stage
 CREATE INDEX IF NOT EXISTS idx_proposals_generation_stage ON proposals(generation_stage);
 
 -- Add comment explaining generation stages
 COMMENT ON COLUMN proposals.generation_stage IS 'Possible values: research, content, html_ready, pdf_ready, error';
+
+-- Update status check constraint to include 'html_ready' and 'error'
+ALTER TABLE proposals DROP CONSTRAINT IF EXISTS proposals_status_check;
+ALTER TABLE proposals ADD CONSTRAINT proposals_status_check CHECK (status IN (
+    'draft',        -- Initial state
+    'generating',   -- Claude is working
+    'html_ready',   -- HTML generated, ready for review/edit (NEW)
+    'ready',        -- PDF generated, ready to send
+    'sent',         -- Sent to customer
+    'viewed',       -- Customer opened PDF
+    'accepted',     -- Customer accepted
+    'rejected',     -- Customer declined
+    'error'         -- Generation failed (NEW)
+));
 
 -- Update existing proposals to have correct generation_stage
 UPDATE proposals
