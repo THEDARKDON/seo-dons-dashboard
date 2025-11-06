@@ -900,19 +900,11 @@ function renderNextSteps(steps: ProposalContent['nextSteps']): string {
  * Escape HTML special characters to prevent XSS
  */
 function escapeHTML(text: string): string {
-  const div = { textContent: text } as any;
-  const textarea = document?.createElement?.('textarea');
-
-  // Server-side fallback (no DOM available)
-  if (!textarea) {
-    return text
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
-  }
-
-  textarea.textContent = text;
-  return textarea.innerHTML;
+  // Server-side - no DOM available, use manual escaping
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
