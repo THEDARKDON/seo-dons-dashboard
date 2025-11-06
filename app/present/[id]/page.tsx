@@ -48,7 +48,7 @@ export default async function PresentationPage({ params }: PresentationPageProps
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900">HTML Not Available</h1>
           <p className="mt-2 text-gray-600">
-            This proposal doesn't have HTML content yet.
+            This proposal doesn&apos;t have HTML content yet.
           </p>
         </div>
       </div>
