@@ -129,6 +129,8 @@ function getEmbeddedStyles(): string {
     .cover-details strong {
       display: inline-block;
       width: 40mm;
+      color: white;
+      font-weight: bold;
     }
 
     /* Content Pages */
@@ -307,7 +309,7 @@ function getEmbeddedStyles(): string {
     }
 
     /* A1 Mobility Exact CSS */
-    strong {
+    .content-page strong {
       font-weight: bold;
       color: #00CED1;
     }
@@ -619,7 +621,7 @@ function renderPageFooter(pageNumber: number): string {
 function renderCoverPage(cover: ProposalContent['coverPage']): string {
   return `
     <div class="page cover-page">
-      <div class="logo-section">SEO DONS</div>
+      <div class="logo-section">SEODONS</div>
       <div class="tagline">Data-Driven SEO That Delivers Results</div>
 
       <div class="cover-title">${escapeHTML(cover.title)}</div>
