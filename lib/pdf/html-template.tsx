@@ -306,14 +306,28 @@ function getEmbeddedStyles(): string {
       font-weight: bold;
     }
 
-    /* Missing CSS Classes from A1 Mobility */
+    /* A1 Mobility Exact CSS */
+    strong {
+      font-weight: bold;
+      color: #00CED1;
+    }
+
     .warning-box {
-      background: #FFF3CD;
-      border: 2px solid #FFD700;
-      border-radius: 8px;
-      padding: 15px;
-      margin: 20px 0;
+      background: #fff3cd;
+      border-left: 4px solid #ff9800;
+      padding: 5mm;
+      margin: 5mm 0;
       font-size: 14px;
+    }
+
+    a {
+      color: #00CED1;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    a:hover {
+      text-decoration: underline;
     }
 
     .stat-comparison {
@@ -352,8 +366,8 @@ function getEmbeddedStyles(): string {
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-      margin: 20px 0;
+      gap: 5mm;
+      margin: 5mm 0;
     }
 
     .swot-grid {
@@ -670,21 +684,24 @@ function renderCurrentSituation(
       <h1>Current Situation Analysis</h1>
 
         ${statsCards && statsCards.length > 0 ? `
-          <div class="stats-grid">
+          <div class="stat-grid">
             ${statsCards.map(card => `
-              <div class="stat-comparison">
-                <div class="stat-current">
-                  <div class="stat-number">${escapeHTML(card.currentNumber)}</div>
-                  <div class="stat-label">${escapeHTML(card.currentLabel)}</div>
-                </div>
-                <div class="stat-target">
-                  <div class="stat-number">${escapeHTML(card.targetNumber)}</div>
-                  <div class="stat-label">${escapeHTML(card.targetLabel)}</div>
-                </div>
+              <div class="stat-box">
+                <div class="number">${escapeHTML(card.currentNumber)}</div>
+                <div class="label">${escapeHTML(card.currentLabel)}</div>
               </div>
-              ${card.context ? `<p class="text-center">${escapeHTML(card.context)}</p>` : ''}
             `).join('')}
           </div>
+          ${statsCards.some(card => card.targetNumber) ? `
+          <div class="stat-grid">
+            ${statsCards.map(card => card.targetNumber ? `
+              <div class="stat-box">
+                <div class="number">${escapeHTML(card.targetNumber)}</div>
+                <div class="label">${escapeHTML(card.targetLabel)}</div>
+              </div>
+            ` : '<div class="stat-box"></div>').join('')}
+          </div>
+          ` : ''}
         ` : ''}
 
         <h2>Digital Presence Overview</h2>
