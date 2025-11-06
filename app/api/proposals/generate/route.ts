@@ -187,7 +187,8 @@ export async function POST(request: NextRequest) {
           const { error: htmlUploadError } = await supabaseServer.storage
             .from('proposals')
             .upload(`${proposal.id}/${htmlFilename}`, htmlContent, {
-              contentType: 'text/html',
+              contentType: 'text/html; charset=utf-8',
+              cacheControl: '3600',
               upsert: false,
             });
 
