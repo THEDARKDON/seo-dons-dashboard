@@ -312,7 +312,7 @@ export default function TestPDFRegeneratePage() {
               </Select>
 
               <div className="mt-3 text-xs text-gray-600 space-y-1">
-                <p><strong>Tip:</strong> Use "Both" mode to compare quality side-by-side!</p>
+                <p><strong>Tip:</strong> Use &quot;Both&quot; mode to compare quality side-by-side!</p>
                 <p>Puppeteer automatically falls back to React-PDF if it fails.</p>
               </div>
             </CardContent>
@@ -321,7 +321,7 @@ export default function TestPDFRegeneratePage() {
           {/* Info Box */}
           <Alert>
             <AlertDescription>
-              <strong>How it works:</strong> Select a generation method above, then click "Regenerate"
+              <strong>How it works:</strong> Select a generation method above, then click &quot;Regenerate&quot;
               to create a new file using the existing proposal content from the database. No research
               or content generation happens - just rendering. Perfect for testing design changes without spending money!
             </AlertDescription>
