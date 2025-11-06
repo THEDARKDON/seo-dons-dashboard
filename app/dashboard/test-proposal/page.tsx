@@ -258,7 +258,7 @@ export default function TestProposalPage() {
                     <p>Cost: <strong>£{result.metadata?.totalCost?.toFixed(4)}</strong></p>
                     <p>Tokens: <strong>{result.metadata?.totalTokensUsed?.toLocaleString()}</strong></p>
                   </div>
-                  <div className="pt-2">
+                  <div className="pt-2 flex gap-3 flex-wrap">
                     <a
                       href={result.pdfUrl}
                       target="_blank"
@@ -266,6 +266,21 @@ export default function TestProposalPage() {
                       className="inline-block px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                     >
                       Download PDF
+                    </a>
+                    <a
+                      href={`/api/proposals/${result.proposalId}/view-html`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700"
+                    >
+                      View HTML
+                    </a>
+                    <a
+                      href={result.pdfUrl?.replace('.pdf', '.html')}
+                      download
+                      className="inline-block px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+                    >
+                      Download HTML
                     </a>
                   </div>
                 </div>

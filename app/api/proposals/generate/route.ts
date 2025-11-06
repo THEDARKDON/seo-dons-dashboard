@@ -12,6 +12,7 @@ import { auth } from '@clerk/nextjs/server';
 import { createClient } from '@/lib/supabase/server';
 import { generateCompleteProposal, validateProposalRequest } from '@/lib/claude/proposal-generator';
 import { generateProposalPDF, getProposalFilename, validateProposalContent } from '@/lib/pdf/generate';
+import { generateProposalHTML } from '@/lib/pdf/html-template';
 
 // Vercel serverless function timeout (10 minutes for research + content + PDF generation)
 export const maxDuration = 600;
@@ -159,40 +160,65 @@ export async function POST(request: NextRequest) {
           );
 
           // ================================================================
-          // 8. GENERATE PDF
+          // 8. GENERATE HTML & PDF
           // ================================================================
-          await sendProgress('Generating PDF', 95, 'Creating document...');
+          await sendProgress('Generating HTML', 92, 'Creating HTML document...');
 
           validateProposalContent(result.content);
+          const htmlContent = generateProposalHTML(result.content);
+
+          await sendProgress('Generating PDF', 95, 'Creating PDF document...');
           const pdfBuffer = await generateProposalPDF(result.content);
 
           // ================================================================
-          // 9. UPLOAD PDF TO STORAGE
+          // 9. UPLOAD HTML & PDF TO STORAGE
           // ================================================================
-          await sendProgress('Uploading PDF', 97, 'Saving to storage...');
+          await sendProgress('Uploading files', 97, 'Saving to storage...');
 
-          const filename = getProposalFilename(
+          const baseFilename = getProposalFilename(
             customer.company || `${customer.first_name} ${customer.last_name}`,
             proposal.proposal_number
           );
 
-          const { data: uploadData, error: uploadError } = await supabaseServer.storage
+          const pdfFilename = baseFilename;
+          const htmlFilename = baseFilename.replace('.pdf', '.html');
+
+          // Upload HTML
+          const { error: htmlUploadError } = await supabaseServer.storage
             .from('proposals')
-            .upload(`${proposal.id}/${filename}`, pdfBuffer, {
+            .upload(`${proposal.id}/${htmlFilename}`, htmlContent, {
+              contentType: 'text/html',
+              upsert: false,
+            });
+
+          if (htmlUploadError) {
+            console.warn('[Proposal API] Failed to upload HTML:', htmlUploadError);
+            // Continue even if HTML upload fails
+          }
+
+          // Upload PDF
+          const { error: pdfUploadError } = await supabaseServer.storage
+            .from('proposals')
+            .upload(`${proposal.id}/${pdfFilename}`, pdfBuffer, {
               contentType: 'application/pdf',
               upsert: false,
             });
 
-          if (uploadError) {
-            throw new Error(`Failed to upload PDF: ${uploadError.message}`);
+          if (pdfUploadError) {
+            throw new Error(`Failed to upload PDF: ${pdfUploadError.message}`);
           }
 
-          // Get public URL
-          const { data: urlData } = supabaseServer.storage
+          // Get public URLs
+          const { data: pdfUrlData } = supabaseServer.storage
             .from('proposals')
-            .getPublicUrl(`${proposal.id}/${filename}`);
+            .getPublicUrl(`${proposal.id}/${pdfFilename}`);
 
-          const pdfUrl = urlData.publicUrl;
+          const { data: htmlUrlData } = supabaseServer.storage
+            .from('proposals')
+            .getPublicUrl(`${proposal.id}/${htmlFilename}`);
+
+          const pdfUrl = pdfUrlData.publicUrl;
+          const htmlUrl = htmlUrlData.publicUrl;
 
           // ================================================================
           // 10. UPDATE PROPOSAL RECORD (STATUS: READY)
@@ -204,6 +230,7 @@ export async function POST(request: NextRequest) {
             .update({
               status: 'ready',
               pdf_url: pdfUrl,
+              html_url: htmlUrl,
               research_data: result.research,
               content_sections: result.content,
               total_tokens_used: result.metadata.totalTokensUsed,
