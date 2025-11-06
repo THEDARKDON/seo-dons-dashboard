@@ -27,6 +27,7 @@ interface Proposal {
   generation_stage?: 'research' | 'content' | 'html_ready' | 'pdf_ready' | 'error';
   pdf_url: string | null;
   html_url: string | null;
+  html_content?: string | null;
   estimated_cost: number;
   generation_duration: number;
   created_at: string;
