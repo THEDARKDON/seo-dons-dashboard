@@ -47,6 +47,7 @@
     "next": "14.2.18",
     "openai": "^6.0.0",
     "papaparse": "^5.5.3",
+    "puppeteer": "^24.29.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.49.3",
