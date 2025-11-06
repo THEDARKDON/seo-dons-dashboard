@@ -6,14 +6,77 @@ import { useUser } from '@clerk/nextjs';
 import { supabase } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Upload, X, Image as ImageIcon } from 'lucide-react';
 import Link from 'next/link';
+
+interface ReferenceImage {
+  name: string;
+  type: string;
+  data: string; // base64
+  description: string;
+  uploaded_at: string;
+}
 
 export function NewCustomerForm() {
   const router = useRouter();
   const { user: clerkUser } = useUser();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [referenceImages, setReferenceImages] = useState<ReferenceImage[]>([]);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    const newImages: ReferenceImage[] = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setError(`${file.name} is not an image file`);
+        continue;
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setError(`${file.name} is too large (max 5MB)`);
+        continue;
+      }
+
+      // Convert to base64
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64 = event.target?.result as string;
+        const imageData: ReferenceImage = {
+          name: file.name,
+          type: file.type,
+          data: base64.split(',')[1], // Remove data:image/png;base64, prefix
+          description: '', // User can add description later
+          uploaded_at: new Date().toISOString(),
+        };
+        newImages.push(imageData);
+
+        // Update state when all files are processed
+        if (newImages.length === files.length) {
+          setReferenceImages((prev) => [...prev, ...newImages]);
+          setError('');
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setReferenceImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const updateImageDescription = (index: number, description: string) => {
+    setReferenceImages((prev) =>
+      prev.map((img, i) => (i === index ? { ...img, description } : img))
+    );
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -57,6 +120,7 @@ export function NewCustomerForm() {
       website: formData.get('website') as string || null,
       linkedin_url: formData.get('linkedin_url') as string || null,
       notes: formData.get('notes') as string || null,
+      reference_images: referenceImages.length > 0 ? referenceImages : null,
       status: 'active',
       owned_by: currentUser.id,
       created_by: currentUser.id,
@@ -266,6 +330,82 @@ export function NewCustomerForm() {
               rows={4}
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
+          </div>
+
+          {/* Reference Images Upload Section */}
+          <div className="space-y-4 rounded-lg border border-dashed border-muted-foreground/25 p-6">
+            <div className="space-y-2">
+              <label className="text-sm font-medium flex items-center gap-2">
+                <ImageIcon className="h-4 w-4" />
+                Reference Images (Optional)
+              </label>
+              <p className="text-sm text-muted-foreground">
+                Upload SEMrush reports, competitor analysis screenshots, or any reference images for Claude to analyze. Max 5MB per image.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <label
+                htmlFor="reference-images"
+                className="flex cursor-pointer items-center justify-center gap-2 rounded-md border-2 border-dashed border-muted-foreground/25 bg-muted/10 px-6 py-8 text-sm font-medium text-muted-foreground transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
+              >
+                <Upload className="h-5 w-5" />
+                <span>Click to upload images</span>
+                <input
+                  id="reference-images"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+              </label>
+
+              {/* Uploaded Images List */}
+              {referenceImages.length > 0 && (
+                <div className="space-y-3">
+                  <p className="text-sm font-medium">
+                    Uploaded Images ({referenceImages.length})
+                  </p>
+                  {referenceImages.map((image, index) => (
+                    <div
+                      key={index}
+                      className="flex items-start gap-3 rounded-md border bg-card p-3"
+                    >
+                      <div className="flex-shrink-0">
+                        <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                      </div>
+                      <div className="flex-1 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-medium">{image.name}</p>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeImage(index)}
+                            className="h-6 w-6 p-0"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="Add description (e.g., 'SEMrush traffic report', 'Competitor keywords')"
+                          value={image.description}
+                          onChange={(e) =>
+                            updateImageDescription(index, e.target.value)
+                          }
+                          className="w-full rounded-md border border-input bg-background px-2 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Uploaded {new Date(image.uploaded_at).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="flex items-center justify-between gap-4 border-t pt-6">

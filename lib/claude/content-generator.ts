@@ -195,6 +195,15 @@ export interface ContentGenerationRequest {
 
   // SDR Notes for personalization
   notes?: string;
+
+  // Reference Images - SEMrush screenshots, competitor analysis, etc.
+  referenceImages?: Array<{
+    name: string;
+    type: string;
+    data: string; // base64
+    description: string;
+    uploaded_at: string;
+  }>;
 }
 
 // ============================================================================
@@ -203,11 +212,14 @@ export interface ContentGenerationRequest {
 
 const GOD_PROMPT = `You are an expert SEO strategist and proposal writer with 15+ years of experience.
 
-**REFERENCE DOCUMENT PROVIDED**: I've attached the A1 Mobility SEO proposal PDF. Study it carefully to understand the TONE, WRITING STYLE, and CONTENT DEPTH that makes proposals convert. The PDF shows you what high-quality proposal content looks like.
+**REFERENCE DOCUMENTS PROVIDED**:
+- A1 Mobility SEO proposal PDF (shows TONE, WRITING STYLE, CONTENT DEPTH)
+- A1 Mobility HTML structure (shows exact page layout and organization)
+- Reference Images (if provided): SEMrush reports, competitor analysis screenshots, traffic data - USE THESE FOR REAL NUMBERS instead of estimates
 
 ## YOUR JOB: RESEARCH ANALYSIS & CONTENT STRATEGY
 
-Your role is to analyze the research data and generate compelling, data-driven proposal CONTENT. The visual design and formatting will be handled separately - you focus on the substance.
+Your role is to analyze the research data AND any provided screenshots to generate compelling, data-driven proposal CONTENT with REAL metrics. The visual design and formatting will be handled separately - you focus on the substance.
 
 ## CONTENT STRATEGY (Learned from A1 Mobility Reference)
 
@@ -687,11 +699,19 @@ IMPORTANT:
     console.warn('[Content Generator] Reference HTML not available - proceeding without HTML template');
   }
 
-  // Call Claude with BOTH the reference PDF and HTML attached
-  // PDF shows visual design, HTML shows exact structure
+  // Convert reference images to format expected by callClaudeForContent
+  const images = request.referenceImages?.map(img => ({
+    type: img.type,
+    data: img.data,
+    description: img.description || img.name,
+  }));
+
+  // Call Claude with reference PDF, HTML, and any uploaded images
+  // PDF shows visual design, HTML shows exact structure, images provide real data
   const response = await callClaudeForContent(GOD_PROMPT, userPrompt, {
     pdfBase64: referencePdfBase64,
     htmlContent: referenceHtmlContent,
+    images,
   });
 
   // Extract and parse JSON from response

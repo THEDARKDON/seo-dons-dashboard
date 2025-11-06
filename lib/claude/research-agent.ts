@@ -35,6 +35,15 @@ export interface ResearchRequest {
 
   // SDR Notes - Critical for personalization
   notes?: string;
+
+  // Reference Images - SEMrush screenshots, competitor analysis, etc.
+  referenceImages?: Array<{
+    name: string;
+    type: string;
+    data: string; // base64
+    description: string;
+    uploaded_at: string;
+  }>;
 }
 
 export interface CompanyAnalysis {
@@ -323,6 +332,8 @@ ${request.address ? `**Business Address:** ${request.address}` : ''}
 
 ${request.notes ? `**SDR Notes (IMPORTANT - Use these insights for personalization):**\n${request.notes}\n` : ''}
 
+${request.referenceImages && request.referenceImages.length > 0 ? `**Reference Images Provided:** ${request.referenceImages.length} screenshot(s) attached (SEMrush reports, competitor analysis, etc.). Analyze these images for additional insights about traffic, keywords, competitors, and market position.\n` : ''}
+
 ${request.additionalContext ? `**Additional Context:**\n${request.additionalContext}` : ''}
 
 Provide a comprehensive analysis in the following JSON format:
@@ -355,7 +366,16 @@ Provide a comprehensive analysis in the following JSON format:
 Think deeply about this company, their market position, and how SEO can drive real business results for them.
   `);
 
-  const response = await callClaudeForResearch(systemPrompt, userPrompt);
+  // Convert reference images to format expected by callClaudeForResearch
+  const images = request.referenceImages?.map(img => ({
+    type: img.type,
+    data: img.data,
+    description: img.description || img.name,
+  }));
+
+  const response = await callClaudeForResearch(systemPrompt, userPrompt, {
+    images,
+  });
   const data = extractJSON<CompanyAnalysis>(response.content);
 
   return {
@@ -495,6 +515,8 @@ Analyze the competitive landscape for this company:
 **Location:** ${request.location || companyAnalysis.businessOverview.geographicScope}
 **Value Proposition:** ${companyAnalysis.businessOverview.valueProposition}
 
+${request.referenceImages && request.referenceImages.length > 0 ? `**Reference Images Provided:** ${request.referenceImages.length} screenshot(s) attached. Use any SEMrush reports, competitor analysis, or traffic data from these images to inform your analysis with REAL numbers instead of estimates.\n` : ''}
+
 Provide competitive analysis in the following JSON format:
 
 \`\`\`json
@@ -572,7 +594,16 @@ CRITICAL INSTRUCTIONS:
 - competitiveGaps MUST have at least 3-4 rows with specific numbers
   `);
 
-  const response = await callClaudeForResearch(systemPrompt, userPrompt);
+  // Convert reference images to format expected by callClaudeForResearch
+  const images = request.referenceImages?.map(img => ({
+    type: img.type,
+    data: img.data,
+    description: img.description || img.name,
+  }));
+
+  const response = await callClaudeForResearch(systemPrompt, userPrompt, {
+    images,
+  });
   const data = extractJSON<CompetitorAnalysis>(response.content);
 
   return {

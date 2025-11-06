@@ -41,6 +41,15 @@ export interface ProposalGenerationRequest {
 
   // SDR Notes - Critical for personalization
   notes?: string;
+
+  // Reference Images - SEMrush screenshots, competitor analysis, etc.
+  referenceImages?: Array<{
+    name: string;
+    type: string;
+    data: string; // base64
+    description: string;
+    uploaded_at: string;
+  }>;
 }
 
 export interface ProposalResult {
@@ -111,6 +120,7 @@ export async function generateCompleteProposal(
       email: request.email,
       linkedInUrl: request.linkedInUrl,
       notes: request.notes,
+      referenceImages: request.referenceImages,
       address: request.address,
       postalCode: request.postalCode,
     };
@@ -150,6 +160,7 @@ export async function generateCompleteProposal(
       phoneNumber: request.phoneNumber,
       linkedInUrl: request.linkedInUrl,
       notes: request.notes,
+      referenceImages: request.referenceImages,
     };
 
     console.log(`[Proposal Generator] Generating content for: ${request.companyName}`);

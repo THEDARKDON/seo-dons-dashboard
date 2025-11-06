@@ -153,8 +153,43 @@ export async function callClaudeForResearch(
     maxTokens?: number;
     temperature?: number;
     thinkingBudget?: number;
+    images?: Array<{
+      type: string; // image/png, image/jpeg, etc.
+      data: string; // base64
+      description?: string;
+    }>;
   }
 ) {
+  // Build message content array
+  const messageContent: any[] = [];
+
+  // Add images if provided
+  if (options?.images && options.images.length > 0) {
+    for (const image of options.images) {
+      messageContent.push({
+        type: 'image',
+        source: {
+          type: 'base64',
+          media_type: image.type,
+          data: image.data,
+        },
+      });
+      // Add description if provided
+      if (image.description) {
+        messageContent.push({
+          type: 'text',
+          text: `[Image: ${image.description}]`,
+        });
+      }
+    }
+  }
+
+  // Add the main user prompt
+  messageContent.push({
+    type: 'text',
+    text: userPrompt,
+  });
+
   const params: MessageCreateParams = {
     model: options?.model || CLAUDE_CONFIG.RESEARCH_MODEL,
     max_tokens: options?.maxTokens || CLAUDE_CONFIG.MAX_TOKENS_RESEARCH,
@@ -167,7 +202,7 @@ export async function callClaudeForResearch(
     messages: [
       {
         role: 'user',
-        content: userPrompt,
+        content: messageContent,
       },
     ],
     stream: true, // Enable streaming to avoid timeouts
@@ -250,6 +285,11 @@ export async function callClaudeForContent(
     temperature?: number;
     pdfBase64?: string; // Optional PDF reference document
     htmlContent?: string; // Optional HTML reference document
+    images?: Array<{
+      type: string; // image/png, image/jpeg, etc.
+      data: string; // base64
+      description?: string;
+    }>;
   }
 ) {
   // Build message content array
@@ -274,6 +314,27 @@ export async function callClaudeForContent(
       type: 'text',
       text: `<reference_html>\nHere is the A1 Mobility HTML proposal that you MUST use as a structural and design reference:\n\n${options.htmlContent}\n</reference_html>\n\n`,
     });
+  }
+
+  // Add reference images if provided
+  if (options?.images && options.images.length > 0) {
+    for (const image of options.images) {
+      messageContent.push({
+        type: 'image',
+        source: {
+          type: 'base64',
+          media_type: image.type,
+          data: image.data,
+        },
+      });
+      // Add description if provided
+      if (image.description) {
+        messageContent.push({
+          type: 'text',
+          text: `[Image: ${image.description}]`,
+        });
+      }
+    }
   }
 
   // Add the main user prompt

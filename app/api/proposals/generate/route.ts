@@ -64,9 +64,9 @@ export async function POST(request: NextRequest) {
     }
 
     // ========================================================================
-    // 3. FETCH CUSTOMER DATA
+    // 3. FETCH CUSTOMER DATA (including reference images)
     // ========================================================================
-    const { data: customer, error: customerError } = await supabaseServer
+    const { data: customer, error: customerError} = await supabaseServer
       .from('customers')
       .select('*')
       .eq('id', body.customerId)
@@ -97,6 +97,7 @@ export async function POST(request: NextRequest) {
       email: customer.email,
       linkedInUrl: customer.linkedin_url,
       notes: customer.notes, // SDR notes - critical for personalization
+      referenceImages: customer.reference_images || [], // SEMrush screenshots, competitor analysis, etc.
       address: customer.address,
       postalCode: customer.postal_code,
     };
