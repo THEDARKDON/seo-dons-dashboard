@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Download, FileText, Clock, Eye, Edit, FileDown, Loader2 } from 'lucide-react';
+import { Download, FileText, Clock, Eye, Edit, FileDown, Loader2, Presentation } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -182,6 +182,20 @@ export function ProposalsList({ proposals }: ProposalsListProps) {
               </div>
 
               <div className="flex items-center gap-2">
+                {/* Present Button - Available for html_ready and pdf_ready */}
+                {(isHtmlReady || isPdfReady) && (proposal.html_url || proposal.html_content) && (
+                  <a
+                    href={`/present/${proposal.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Button size="sm" variant="default" className="gap-2">
+                      <Presentation className="h-4 w-4" />
+                      Present
+                    </Button>
+                  </a>
+                )}
+
                 {/* HTML Preview - Available for html_ready and pdf_ready */}
                 {(isHtmlReady || isPdfReady) && proposal.html_url && (
                   <a
