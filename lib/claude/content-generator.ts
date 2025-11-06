@@ -204,6 +204,11 @@ export interface ContentGenerationRequest {
     description: string;
     uploaded_at: string;
   }>;
+
+  // Business Metrics - For accurate ROI calculations
+  averageDealSize?: number;
+  profitPerDeal?: number;
+  conversionRate?: number;
 }
 
 // ============================================================================
@@ -406,7 +411,7 @@ Your JSON must be parseable by standard JSON.parse(). Any Unicode special charac
 export async function generateProposalContent(
   request: ContentGenerationRequest
 ): Promise<ProposalContent> {
-  const { researchData, companyName, packageTier, customInstructions, contactName, jobTitle, email, phoneNumber, linkedInUrl, notes } = request;
+  const { researchData, companyName, packageTier, customInstructions, contactName, jobTitle, email, phoneNumber, linkedInUrl, notes, averageDealSize, profitPerDeal, conversionRate } = request;
 
   // Build comprehensive context for Claude
   const userPrompt = sanitizeForPrompt(`
@@ -420,6 +425,8 @@ ${phoneNumber ? `**Phone:** ${phoneNumber}` : ''}
 ${linkedInUrl ? `**LinkedIn:** ${linkedInUrl}` : ''}
 
 ${notes ? `## SDR NOTES (CRITICAL - Use these insights to personalize the proposal tone, content, and recommendations):\n${notes}\n` : ''}
+
+${averageDealSize || profitPerDeal || conversionRate ? `## BUSINESS METRICS (CRITICAL - Use these REAL numbers for accurate ROI projections):\n${averageDealSize ? `- Average Deal Size: £${averageDealSize.toFixed(2)}\n` : ''}${profitPerDeal ? `- Profit Per Deal: £${profitPerDeal.toFixed(2)}\n` : ''}${conversionRate ? `- Website Conversion Rate: ${conversionRate}%\n` : ''}\n**IMPORTANT:** When calculating ROI, use these actual business metrics instead of generic estimates. For example:\n- If SEO brings 100 new monthly visitors and conversion rate is ${conversionRate || 'X'}%, that's ${conversionRate ? Math.round(100 * conversionRate / 100) : 'X'} new leads\n- ${profitPerDeal ? `At £${profitPerDeal.toFixed(2)} profit per deal, that's £${profitPerDeal && conversionRate ? (Math.round(100 * conversionRate / 100) * profitPerDeal).toFixed(2) : 'X'} in monthly profit` : 'Calculate profit based on leads × profit per deal'}\n` : ''}
 
 ## RESEARCH DATA
 

@@ -121,6 +121,9 @@ export function NewCustomerForm() {
       linkedin_url: formData.get('linkedin_url') as string || null,
       notes: formData.get('notes') as string || null,
       reference_images: referenceImages.length > 0 ? referenceImages : null,
+      average_deal_size: formData.get('average_deal_size') ? parseFloat(formData.get('average_deal_size') as string) : null,
+      profit_per_deal: formData.get('profit_per_deal') ? parseFloat(formData.get('profit_per_deal') as string) : null,
+      conversion_rate: formData.get('conversion_rate') ? parseFloat(formData.get('conversion_rate') as string) : null,
       status: 'active',
       owned_by: currentUser.id,
       created_by: currentUser.id,
@@ -318,6 +321,67 @@ export function NewCustomerForm() {
               name="country"
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
+          </div>
+
+          {/* Business Metrics Section */}
+          <div className="space-y-4 rounded-lg border border-muted-foreground/25 bg-muted/5 p-6">
+            <div className="space-y-2">
+              <h3 className="text-sm font-semibold">Business Metrics (Optional)</h3>
+              <p className="text-sm text-muted-foreground">
+                These metrics help Claude generate accurate ROI projections in proposals
+              </p>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-3">
+              <div className="space-y-2">
+                <label htmlFor="average_deal_size" className="text-sm font-medium">
+                  Average Deal Size (£)
+                </label>
+                <input
+                  type="number"
+                  id="average_deal_size"
+                  name="average_deal_size"
+                  step="0.01"
+                  min="0"
+                  placeholder="e.g., 1200.00"
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                />
+                <p className="text-xs text-muted-foreground">Average transaction value</p>
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="profit_per_deal" className="text-sm font-medium">
+                  Profit Per Deal (£)
+                </label>
+                <input
+                  type="number"
+                  id="profit_per_deal"
+                  name="profit_per_deal"
+                  step="0.01"
+                  min="0"
+                  placeholder="e.g., 400.00"
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                />
+                <p className="text-xs text-muted-foreground">Profit margin per sale</p>
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="conversion_rate" className="text-sm font-medium">
+                  Conversion Rate (%)
+                </label>
+                <input
+                  type="number"
+                  id="conversion_rate"
+                  name="conversion_rate"
+                  step="0.01"
+                  min="0"
+                  max="100"
+                  placeholder="e.g., 3.50"
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                />
+                <p className="text-xs text-muted-foreground">Website visitors to leads/sales</p>
+              </div>
+            </div>
           </div>
 
           <div className="space-y-2">

@@ -50,6 +50,11 @@ export interface ProposalGenerationRequest {
     description: string;
     uploaded_at: string;
   }>;
+
+  // Business Metrics - For accurate ROI calculations
+  averageDealSize?: number;
+  profitPerDeal?: number;
+  conversionRate?: number;
 }
 
 export interface ProposalResult {
@@ -123,6 +128,9 @@ export async function generateCompleteProposal(
       referenceImages: request.referenceImages,
       address: request.address,
       postalCode: request.postalCode,
+      averageDealSize: request.averageDealSize,
+      profitPerDeal: request.profitPerDeal,
+      conversionRate: request.conversionRate,
     };
 
     const researchProgressWrapper = async (stage: string, progress: number) => {
@@ -161,6 +169,9 @@ export async function generateCompleteProposal(
       linkedInUrl: request.linkedInUrl,
       notes: request.notes,
       referenceImages: request.referenceImages,
+      averageDealSize: request.averageDealSize,
+      profitPerDeal: request.profitPerDeal,
+      conversionRate: request.conversionRate,
     };
 
     console.log(`[Proposal Generator] Generating content for: ${request.companyName}`);

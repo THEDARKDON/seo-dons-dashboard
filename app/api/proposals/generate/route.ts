@@ -100,6 +100,11 @@ export async function POST(request: NextRequest) {
       referenceImages: customer.reference_images || [], // SEMrush screenshots, competitor analysis, etc.
       address: customer.address,
       postalCode: customer.postal_code,
+
+      // Business metrics for accurate ROI calculations
+      averageDealSize: customer.average_deal_size,
+      profitPerDeal: customer.profit_per_deal,
+      conversionRate: customer.conversion_rate,
     };
 
     const validation = validateProposalRequest(proposalRequest);

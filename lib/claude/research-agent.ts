@@ -44,6 +44,11 @@ export interface ResearchRequest {
     description: string;
     uploaded_at: string;
   }>;
+
+  // Business Metrics - For accurate ROI calculations
+  averageDealSize?: number;
+  profitPerDeal?: number;
+  conversionRate?: number;
 }
 
 export interface CompanyAnalysis {
@@ -333,6 +338,8 @@ ${request.address ? `**Business Address:** ${request.address}` : ''}
 ${request.notes ? `**SDR Notes (IMPORTANT - Use these insights for personalization):**\n${request.notes}\n` : ''}
 
 ${request.referenceImages && request.referenceImages.length > 0 ? `**Reference Images Provided:** ${request.referenceImages.length} screenshot(s) attached (SEMrush reports, competitor analysis, etc.). Analyze these images for additional insights about traffic, keywords, competitors, and market position.\n` : ''}
+
+${request.averageDealSize || request.profitPerDeal || request.conversionRate ? `**Business Metrics (Use for ROI calculations):**\n${request.averageDealSize ? `- Average Deal Size: £${request.averageDealSize.toFixed(2)}\n` : ''}${request.profitPerDeal ? `- Profit Per Deal: £${request.profitPerDeal.toFixed(2)}\n` : ''}${request.conversionRate ? `- Website Conversion Rate: ${request.conversionRate}%\n` : ''}` : ''}
 
 ${request.additionalContext ? `**Additional Context:**\n${request.additionalContext}` : ''}
 
