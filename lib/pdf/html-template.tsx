@@ -49,12 +49,16 @@ export function generateProposalHTML(content: ProposalContent): string {
 }
 
 // ============================================================================
-// CSS Styles - Matching A1 Mobility Design
+// CSS Styles - EXACT COPY from Visiting Angels Example
 // ============================================================================
 
 function getEmbeddedStyles(): string {
   return `
-    /* === RESET & BASE === */
+    @page {
+      size: A4;
+      margin: 0;
+    }
+
     * {
       margin: 0;
       padding: 0;
@@ -62,517 +66,251 @@ function getEmbeddedStyles(): string {
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      color: #333;
       line-height: 1.6;
-      color: #333333;
-      background: #ffffff;
+      background: white;
     }
 
-    /* === PAGE STRUCTURE === */
     .page {
-      width: 210mm; /* A4 width */
-      min-height: 297mm; /* A4 height */
-      padding: 40px;
+      width: 210mm;
+      min-height: 297mm;
+      padding: 0;
       margin: 0 auto;
       background: white;
       page-break-after: always;
       position: relative;
     }
 
-    .page-content {
-      min-height: calc(297mm - 160px); /* Account for header, footer, and padding */
-    }
-
-    @media print {
-      .page {
-        margin: 0;
-        page-break-after: always;
-      }
-
-      body {
-        background: white;
-      }
-    }
-
-    /* === COVER PAGE === */
+    /* Cover Page */
     .cover-page {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
       background: linear-gradient(135deg, #00CED1 0%, #20B2AA 100%);
       color: white;
-      padding: 80px 40px;
-      position: relative;
+      display: flex;
+      flex-direction: column;
+      height: 297mm;
+      padding: 40mm 30mm;
     }
 
-    .seodons-logo {
+    .logo-section {
       font-size: 48px;
-      font-weight: 800;
-      letter-spacing: 2px;
-      margin-bottom: 8px;
-      text-transform: uppercase;
+      font-weight: bold;
+      margin-bottom: 10mm;
     }
 
-    .seodons-tagline {
-      font-size: 14px;
-      font-weight: 300;
-      margin-bottom: 60px;
-      opacity: 0.9;
-      letter-spacing: 1px;
+    .tagline {
+      font-size: 20px;
+      margin-bottom: 60mm;
+      opacity: 0.95;
     }
 
     .cover-title {
-      font-size: 48px;
-      font-weight: 700;
-      margin-bottom: 20px;
-      letter-spacing: -0.5px;
+      font-size: 42px;
+      font-weight: bold;
+      margin-bottom: 8mm;
+      line-height: 1.2;
     }
 
     .cover-subtitle {
       font-size: 24px;
-      font-weight: 300;
-      margin-bottom: 40px;
-      opacity: 0.9;
+      margin-bottom: 40mm;
+      opacity: 0.95;
     }
 
-    .cover-company {
-      font-size: 32px;
-      font-weight: 600;
-      margin-bottom: 60px;
+    .cover-details {
+      margin-top: auto;
     }
 
-    .cover-date {
-      font-size: 16px;
-      opacity: 0.8;
+    .cover-details div {
+      margin-bottom: 5mm;
+      font-size: 14px;
     }
 
-    /* === PAGE HEADER & FOOTER === */
+    .cover-details strong {
+      display: inline-block;
+      width: 40mm;
+    }
+
+    /* Content Pages */
+    .content-page {
+      padding: 25mm 25mm 30mm 25mm;
+      position: relative;
+    }
+
     .page-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding-bottom: 16px;
-      margin-bottom: 32px;
+      margin-bottom: 15mm;
+      padding-bottom: 3mm;
       border-bottom: 2px solid #00CED1;
     }
 
-    .header-branding {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .header-logo {
-      font-size: 20px;
-      font-weight: 800;
+    .page-header .company {
+      font-size: 24px;
+      font-weight: bold;
       color: #00CED1;
-      letter-spacing: 1px;
     }
 
-    .header-tagline {
-      font-size: 10px;
-      color: #666666;
-      letter-spacing: 0.5px;
+    .tagline-small {
+      font-size: 14px;
+      color: #666;
+      font-style: italic;
     }
 
-    .page-footer {
-      position: absolute;
-      bottom: 40px;
-      left: 40px;
-      right: 40px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding-top: 16px;
-      border-top: 1px solid #e0e0e0;
-      font-size: 10px;
-      color: #666666;
-    }
-
-    .page-number {
-      font-weight: 600;
-    }
-
-    /* === TYPOGRAPHY === */
     h1 {
-      font-size: 32px;
-      font-weight: 700;
-      color: #00CED1;
-      margin-bottom: 24px;
-      line-height: 1.2;
+      font-size: 36px;
+      color: #333;
+      margin-bottom: 10mm;
+      font-weight: bold;
     }
 
     h2 {
       font-size: 24px;
-      font-weight: 700;
-      color: #333333;
-      margin-bottom: 16px;
-      margin-top: 32px;
-      line-height: 1.3;
+      color: #00CED1;
+      margin-top: 8mm;
+      margin-bottom: 5mm;
+      font-weight: bold;
     }
 
     h3 {
       font-size: 18px;
-      font-weight: 600;
-      color: #333333;
-      margin-bottom: 12px;
-      margin-top: 24px;
-      line-height: 1.4;
+      color: #333;
+      margin-top: 5mm;
+      margin-bottom: 3mm;
+      font-weight: bold;
     }
 
     p {
+      margin-bottom: 4mm;
+      text-align: justify;
       font-size: 14px;
-      line-height: 1.6;
-      color: #333333;
-      margin-bottom: 16px;
+      color: #333;
     }
 
-    ul, ol {
-      margin-left: 24px;
-      margin-bottom: 16px;
+    ul {
+      margin-left: 10mm;
+      margin-bottom: 5mm;
     }
 
     li {
+      margin-bottom: 2mm;
       font-size: 14px;
-      line-height: 1.6;
-      margin-bottom: 8px;
-      color: #333333;
     }
 
-    /* === CALLOUT BOXES === */
-    .brutal-truth {
-      background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
-      border-left: 4px solid #F59E0B;
-      padding: 20px 24px;
-      margin: 24px 0;
-      border-radius: 8px;
-    }
-
-    .brutal-truth-title {
-      font-size: 16px;
-      font-weight: 700;
-      color: #92400E;
-      margin-bottom: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .brutal-truth-content {
-      font-size: 15px;
-      line-height: 1.6;
-      color: #78350F;
-      font-weight: 500;
-    }
-
-    .info-callout {
-      background: linear-gradient(135deg, #E0F2FE 0%, #BAE6FD 100%);
-      border-left: 4px solid #0EA5E9;
-      padding: 20px 24px;
-      margin: 24px 0;
-      border-radius: 8px;
-    }
-
-    /* === STATISTICS CARDS === */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 24px;
-      margin: 32px 0;
-    }
-
-    .stat-card {
-      background: #f9f9f9;
-      border: 2px solid #e0e0e0;
-      border-radius: 12px;
-      padding: 24px;
-      text-align: center;
-    }
-
-    .stat-number {
-      font-size: 48px;
-      font-weight: 700;
-      color: #00CED1;
-      line-height: 1;
-      margin-bottom: 8px;
-    }
-
-    .stat-label {
-      font-size: 14px;
-      color: #666666;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .stat-comparison {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 16px;
-      margin: 16px 0;
-    }
-
-    .stat-current, .stat-target {
-      flex: 1;
-      padding: 16px;
-      background: white;
-      border-radius: 8px;
-      border: 2px solid #e0e0e0;
-    }
-
-    .stat-current {
-      border-color: #EF4444;
-    }
-
-    .stat-target {
-      border-color: #10B981;
-    }
-
-    .stat-current .stat-number {
-      color: #EF4444;
-    }
-
-    .stat-target .stat-number {
-      color: #10B981;
-    }
-
-    /* === TABLES === */
-    table {
+    .metrics-table {
       width: 100%;
       border-collapse: collapse;
-      margin: 24px 0;
+      margin: 5mm 0;
       font-size: 14px;
     }
 
-    thead {
+    .metrics-table th {
       background: #00CED1;
-    }
-
-    th {
-      padding: 12px 16px;
-      text-align: left;
-      font-size: 13px;
-      font-weight: 600;
       color: white;
-      background: #00CED1;
-      border-bottom: 2px solid #00CED1;
+      padding: 3mm;
+      text-align: left;
+      font-weight: bold;
     }
 
-    td {
-      padding: 12px 16px;
-      font-size: 14px;
-      color: #333333;
-      border-bottom: 1px solid #e0e0e0;
+    .metrics-table td {
+      border-bottom: 1px solid #ddd;
+      padding: 3mm;
     }
 
-    tr:nth-child(even) {
+    .metrics-table tr:nth-child(even) {
       background: #f9f9f9;
     }
 
-    tr:hover {
-      background: #f9fafb;
+    .highlight-box {
+      background: linear-gradient(135deg, #e8f9f9 0%, #e0f7f5 100%);
+      border-left: 4px solid #00CED1;
+      padding: 5mm;
+      margin: 5mm 0;
+      font-size: 14px;
     }
 
-    /* === PACKAGE OPTIONS === */
-    .package-grid {
+    .phase-box {
+      background: #f8f8f8;
+      border: 1px solid #ddd;
+      padding: 5mm;
+      margin: 5mm 0;
+    }
+
+    .phase-box h3 {
+      color: #00CED1;
+      margin-bottom: 3mm;
+    }
+
+    .page-footer {
+      position: absolute;
+      bottom: 15mm;
+      left: 25mm;
+      right: 25mm;
+      display: flex;
+      justify-content: space-between;
+      color: #666;
+      font-size: 12px;
+      padding-top: 3mm;
+      border-top: 1px solid #ddd;
+    }
+
+    .stat-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 24px;
-      margin: 32px 0;
+      gap: 5mm;
+      margin: 5mm 0;
     }
 
-    .package-card {
-      background: white;
-      border: 2px solid #e0e0e0;
-      border-radius: 12px;
-      padding: 24px;
-      transition: all 0.3s ease;
+    .stat-box {
+      background: #f8f8f8;
+      border: 1px solid #ddd;
+      padding: 4mm;
+      text-align: center;
     }
 
-    .package-card:hover {
-      border-color: #00CED1;
-      box-shadow: 0 4px 12px rgba(0, 206, 209, 0.15);
-    }
-
-    .package-name {
-      font-size: 20px;
-      font-weight: 700;
-      color: #333333;
-      margin-bottom: 16px;
-    }
-
-    .package-price {
-      font-size: 32px;
-      font-weight: 700;
-      color: #00CED1;
-      margin-bottom: 8px;
-    }
-
-    .package-price-period {
-      font-size: 14px;
-      color: #666666;
-      margin-bottom: 24px;
-    }
-
-    .package-features {
-      list-style: none;
-      margin-left: 0;
-    }
-
-    .package-features li {
-      padding-left: 24px;
-      position: relative;
-      margin-bottom: 12px;
-    }
-
-    .package-features li:before {
-      content: "✓";
-      position: absolute;
-      left: 0;
-      color: #10B981;
-      font-weight: 700;
-    }
-
-    /* === PROJECTIONS === */
-    .projection-timeline {
-      display: flex;
-      justify-content: space-between;
-      gap: 24px;
-      margin: 32px 0;
-    }
-
-    .projection-period {
-      flex: 1;
-      background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
-      border-radius: 12px;
-      padding: 24px;
-      border: 2px solid #e0e0e0;
-    }
-
-    .projection-label {
-      font-size: 16px;
-      font-weight: 700;
-      color: #666666;
-      margin-bottom: 16px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .projection-metric {
-      margin-bottom: 12px;
-    }
-
-    .projection-metric-label {
-      font-size: 12px;
-      color: #666666;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .projection-metric-value {
-      font-size: 28px;
-      font-weight: 700;
-      color: #00CED1;
-    }
-
-    /* === SIMPLE MATH BREAKDOWN === */
-    .simple-math {
-      background: linear-gradient(135deg, #E0F2FE 0%, #BAE6FD 100%);
-      border-radius: 12px;
-      padding: 32px;
-      margin: 32px 0;
-    }
-
-    .simple-math-title {
+    .stat-box .number {
       font-size: 24px;
-      font-weight: 700;
-      color: #0C4A6E;
-      margin-bottom: 24px;
-      text-align: center;
+      font-weight: bold;
+      color: #00CED1;
     }
 
-    .simple-math-step {
-      background: white;
-      border-radius: 8px;
-      padding: 16px 24px;
-      margin-bottom: 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    .stat-box .label {
+      font-size: 12px;
+      color: #666;
+      margin-top: 2mm;
     }
 
-    .simple-math-result {
-      background: #0EA5E9;
+    .pricing-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 5mm 0;
+    }
+
+    .pricing-table th {
+      background: #333;
       color: white;
-      border-radius: 8px;
-      padding: 24px;
-      margin-top: 24px;
+      padding: 4mm;
+      font-weight: bold;
+    }
+
+    .pricing-table td {
+      border: 1px solid #ddd;
+      padding: 3mm;
       text-align: center;
     }
 
-    .simple-math-result-value {
-      font-size: 48px;
-      font-weight: 700;
-      margin-bottom: 8px;
+    .pricing-table .package-name {
+      background: #00CED1;
+      color: white;
+      font-weight: bold;
     }
 
-    /* === SWOT GRID === */
-    .swot-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 24px;
-      margin: 32px 0;
-    }
-
-    .swot-box {
-      padding: 24px;
-      border-radius: 12px;
-      border: 2px solid #e0e0e0;
-    }
-
-    .swot-strengths {
-      background: #ECFDF5;
-      border-color: #10B981;
-    }
-
-    .swot-weaknesses {
-      background: #FEF2F2;
-      border-color: #EF4444;
-    }
-
-    .swot-opportunities {
-      background: #EFF6FF;
-      border-color: #3B82F6;
-    }
-
-    .swot-threats {
-      background: #FEF3C7;
-      border-color: #F59E0B;
-    }
-
-    .swot-title {
-      font-size: 18px;
-      font-weight: 700;
-      margin-bottom: 16px;
-    }
-
-    .swot-strengths .swot-title { color: #065F46; }
-    .swot-weaknesses .swot-title { color: #991B1B; }
-    .swot-opportunities .swot-title { color: #1E40AF; }
-    .swot-threats .swot-title { color: #92400E; }
-
-    /* === UTILITIES === */
-    .text-center {
-      text-align: center;
-    }
-
-    .mb-32 {
-      margin-bottom: 32px;
-    }
-
-    .mt-32 {
-      margin-top: 32px;
+    @media print {
+      .page {
+        page-break-after: always;
+        page-break-inside: avoid;
+      }
     }
   `;
 }
@@ -584,13 +322,10 @@ function getEmbeddedStyles(): string {
 function renderPageHeader(companyName: string): string {
   return `
     <div class="page-header">
-      <div class="header-branding">
-        <div class="header-logo">Seodons</div>
-        <div class="header-tagline">Data-Driven SEO That Delivers Results</div>
+      <div>
+        <div class="company">Seodons</div>
       </div>
-      <div style="text-align: right;">
-        <div style="font-size: 12px; font-weight: 600; color: #333;">${escapeHTML(companyName)}</div>
-      </div>
+      <div class="tagline-small">Data-Driven SEO That Delivers Results</div>
     </div>
   `;
 }
@@ -598,8 +333,8 @@ function renderPageHeader(companyName: string): string {
 function renderPageFooter(pageNumber: number): string {
   return `
     <div class="page-footer">
-      <div>© ${new Date().getFullYear()} Seodons. All rights reserved.</div>
-      <div class="page-number">Page ${pageNumber}</div>
+      <div>Page ${pageNumber}</div>
+      <div>seodons.co.uk</div>
     </div>
   `;
 }
@@ -607,13 +342,17 @@ function renderPageFooter(pageNumber: number): string {
 function renderCoverPage(cover: ProposalContent['coverPage']): string {
   return `
     <div class="page cover-page">
-      <div class="seodons-logo">SEO DONS</div>
-      <div class="seodons-tagline">Data-Driven SEO That Delivers Results</div>
+      <div class="logo-section">SEO DONS</div>
+      <div class="tagline">Data-Driven SEO That Delivers Results</div>
+
       <div class="cover-title">${escapeHTML(cover.title)}</div>
       <div class="cover-subtitle">${escapeHTML(cover.subtitle)}</div>
-      <div class="cover-company">${escapeHTML(cover.companyName)}</div>
-      <div class="cover-date">${escapeHTML(cover.preparedFor)}</div>
-      <div class="cover-date">${escapeHTML(cover.date)}</div>
+
+      <div class="cover-details">
+        <div><strong>Prepared for:</strong> ${escapeHTML(cover.preparedFor)}</div>
+        <div><strong>Date:</strong> ${escapeHTML(cover.date)}</div>
+        <div><strong>Contact:</strong> seodons.co.uk</div>
+      </div>
     </div>
   `;
 }
@@ -625,33 +364,32 @@ function renderExecutiveSummary(
   pageNumber: number
 ): string {
   return `
-    <div class="page">
+    <div class="page content-page">
       ${renderPageHeader(companyName)}
-      <div class="page-content">
-        <h1>Executive Summary</h1>
 
-        ${callouts && callouts.length > 0 ? callouts.map(callout => `
-          <div class="${callout.type === 'warning' ? 'brutal-truth' : 'info-callout'}">
-            <div class="brutal-truth-title">${escapeHTML(callout.title)}</div>
-            <div class="brutal-truth-content">${escapeHTML(callout.content)}</div>
-          </div>
-        `).join('') : ''}
+      <h1>Executive Summary</h1>
 
-        <p>${escapeHTML(summary.overview)}</p>
+      ${callouts && callouts.length > 0 ? callouts.map(callout => `
+        <div class="${callout.type === 'warning' ? 'highlight-box' : 'highlight-box'}">
+          <p style="font-size: 16px;"><strong>${escapeHTML(callout.title)}</strong> ${escapeHTML(callout.content)}</p>
+        </div>
+      `).join('') : ''}
 
-        <h2>Key Findings</h2>
-        <ul>
-          ${summary.keyFindings.map(finding => `<li>${escapeHTML(finding)}</li>`).join('')}
-        </ul>
+      <p>${escapeHTML(summary.overview)}</p>
 
-        <h2>Recommended Strategy</h2>
-        <p>${escapeHTML(summary.recommendedStrategy)}</p>
+      <h2>Key Findings</h2>
+      <ul>
+        ${summary.keyFindings.map(finding => `<li>${escapeHTML(finding)}</li>`).join('')}
+      </ul>
 
-        <h2>Expected Outcomes</h2>
-        <ul>
-          ${summary.expectedOutcomes.map(outcome => `<li>${escapeHTML(outcome)}</li>`).join('')}
-        </ul>
-      </div>
+      <h2>Recommended Strategy</h2>
+      <p>${escapeHTML(summary.recommendedStrategy)}</p>
+
+      <h2>Expected Outcomes</h2>
+      <ul>
+        ${summary.expectedOutcomes.map(outcome => `<li>${escapeHTML(outcome)}</li>`).join('')}
+      </ul>
+
       ${renderPageFooter(pageNumber)}
     </div>
   `;
