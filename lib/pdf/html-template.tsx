@@ -306,6 +306,269 @@ function getEmbeddedStyles(): string {
       font-weight: bold;
     }
 
+    /* Missing CSS Classes from A1 Mobility */
+    .warning-box {
+      background: #FFF3CD;
+      border: 2px solid #FFD700;
+      border-radius: 8px;
+      padding: 15px;
+      margin: 20px 0;
+      font-size: 14px;
+    }
+
+    .stat-comparison {
+      display: flex;
+      flex-direction: column;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .stat-current, .stat-target {
+      padding: 10px;
+    }
+
+    .stat-current {
+      border-bottom: 1px solid #eee;
+    }
+
+    .stat-number {
+      font-size: 36px;
+      font-weight: bold;
+      color: #00CED1;
+      line-height: 1.2;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: #666;
+      text-transform: uppercase;
+      margin-top: 5px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin: 20px 0;
+    }
+
+    .swot-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin: 20px 0;
+    }
+
+    .swot-box {
+      background: #f8f8f8;
+      border-radius: 8px;
+      padding: 15px;
+      min-height: 150px;
+    }
+
+    .swot-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid;
+    }
+
+    .swot-strengths .swot-title {
+      color: #28a745;
+      border-color: #28a745;
+    }
+
+    .swot-weaknesses .swot-title {
+      color: #dc3545;
+      border-color: #dc3545;
+    }
+
+    .swot-opportunities .swot-title {
+      color: #ffc107;
+      border-color: #ffc107;
+    }
+
+    .swot-threats .swot-title {
+      color: #6c757d;
+      border-color: #6c757d;
+    }
+
+    .swot-box ul {
+      margin-left: 5mm;
+      margin-top: 10px;
+    }
+
+    .swot-box li {
+      font-size: 13px;
+      margin-bottom: 5px;
+    }
+
+    .package-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin: 30px 0;
+    }
+
+    .package-card {
+      border: 2px solid #00CED1;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      background: white;
+      position: relative;
+    }
+
+    .package-name {
+      background: #00CED1;
+      color: white;
+      padding: 10px;
+      margin: -20px -20px 20px -20px;
+      border-radius: 6px 6px 0 0;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .package-price {
+      font-size: 36px;
+      font-weight: bold;
+      color: #333;
+      margin: 10px 0;
+    }
+
+    .package-price-period {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 20px;
+    }
+
+    .package-features {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      text-align: left;
+    }
+
+    .package-features li {
+      padding: 8px 0;
+      border-bottom: 1px solid #eee;
+      font-size: 13px;
+      position: relative;
+      padding-left: 25px;
+    }
+
+    .package-features li:before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: #00CED1;
+      font-weight: bold;
+    }
+
+    .projection-timeline {
+      background: linear-gradient(to right, #e8f9f9, #00CED1);
+      padding: 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+      display: flex;
+      justify-content: space-around;
+    }
+
+    .projection-period {
+      text-align: center;
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      min-width: 150px;
+    }
+
+    .projection-label {
+      font-size: 18px;
+      font-weight: bold;
+      color: #00CED1;
+      margin-bottom: 15px;
+    }
+
+    .projection-metric {
+      margin: 10px 0;
+    }
+
+    .projection-metric-label {
+      font-size: 12px;
+      color: #666;
+      text-transform: uppercase;
+    }
+
+    .projection-metric-value {
+      font-size: 20px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .simple-math {
+      background: #f0f8ff;
+      border: 2px solid #00CED1;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+
+    .simple-math-title {
+      font-size: 20px;
+      font-weight: bold;
+      color: #00CED1;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    .simple-math-step {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .simple-math-result {
+      background: #00CED1;
+      color: white;
+      padding: 15px;
+      margin-top: 15px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .simple-math-result-value {
+      font-size: 28px;
+      font-weight: bold;
+    }
+
+    .info-callout {
+      background: linear-gradient(135deg, #e8f9f9 0%, #e0f7f5 100%);
+      border: 2px solid #00CED1;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+
+    /* Utility Classes */
+    .mb-32 {
+      margin-bottom: 32px;
+    }
+
+    .mt-32 {
+      margin-top: 32px;
+    }
+
+    .text-center {
+      text-align: center;
+    }
+
     @media print {
       .page {
         page-break-after: always;
@@ -370,7 +633,7 @@ function renderExecutiveSummary(
       <h1>Executive Summary</h1>
 
       ${callouts && callouts.length > 0 ? callouts.map(callout => `
-        <div class="${callout.type === 'warning' ? 'highlight-box' : 'highlight-box'}">
+        <div class="${callout.type === 'warning' ? 'warning-box' : 'highlight-box'}">
           <p style="font-size: 16px;"><strong>${escapeHTML(callout.title)}</strong> ${escapeHTML(callout.content)}</p>
         </div>
       `).join('') : ''}
@@ -590,7 +853,7 @@ function renderCompetitorComparison(comparison: ProposalContent['competitorCompa
       ${renderPageHeader(companyName)}
       <h1>Competitive Analysis</h1>
 
-        <table>
+        <table class="metrics-table">
           <thead>
             <tr>
               <th>Metric</th>
