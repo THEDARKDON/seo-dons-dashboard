@@ -31,10 +31,10 @@ export async function generateMetadata({ params }: PresentationPageProps): Promi
 export default async function PresentationPage({ params }: PresentationPageProps) {
   const supabase = await createClient();
 
-  // Fetch proposal with HTML content
+  // Fetch proposal metadata
   const { data: proposal, error } = await supabase
     .from('proposals')
-    .select('id, html_content, html_url, title, company_name, proposal_number, pdf_url')
+    .select('id, html_url, company_name, proposal_number, pdf_url')
     .eq('id', params.id)
     .single();
 
@@ -42,7 +42,7 @@ export default async function PresentationPage({ params }: PresentationPageProps
     notFound();
   }
 
-  if (!proposal.html_content && !proposal.html_url) {
+  if (!proposal.html_url) {
     return (
       <div className="flex h-screen items-center justify-center bg-gray-100">
         <div className="text-center">
@@ -62,10 +62,7 @@ export default async function PresentationPage({ params }: PresentationPageProps
         pdfUrl={proposal.pdf_url}
       />
 
-      <PresentationContent
-        htmlContent={proposal.html_content}
-        htmlUrl={proposal.html_url}
-      />
+      <PresentationContent proposalId={proposal.id} />
     </div>
   );
 }
