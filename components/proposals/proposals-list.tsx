@@ -97,9 +97,9 @@ export function ProposalsList({ proposals }: ProposalsListProps) {
       setEditPrompt('');
       router.refresh();
 
-      // Open the new HTML in a new tab
-      if (data.htmlUrl) {
-        window.open(data.htmlUrl, '_blank');
+      // Open the new HTML in a new tab using view-html endpoint
+      if (data.proposalId) {
+        window.open(`/api/proposals/${data.proposalId}/view-html`, '_blank');
       }
     } catch (error) {
       console.error('Edit error:', error);
@@ -185,7 +185,7 @@ export function ProposalsList({ proposals }: ProposalsListProps) {
                 {/* HTML Preview - Available for html_ready and pdf_ready */}
                 {(isHtmlReady || isPdfReady) && proposal.html_url && (
                   <a
-                    href={proposal.html_url}
+                    href={`/api/proposals/${proposal.id}/view-html`}
                     target="_blank"
                     rel="noopener noreferrer"
                   >

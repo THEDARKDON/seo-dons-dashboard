@@ -9,7 +9,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { createClient } from '@/lib/supabase/server';
-import { generateProposalPDF, getProposalFilename } from '@/lib/pdf/generate';
+import { getProposalFilename } from '@/lib/pdf/generate';
+import { generateProposalPDFWithPuppeteer } from '@/lib/pdf/puppeteer-generator';
 
 export async function POST(
   request: NextRequest,
@@ -62,8 +63,12 @@ export async function POST(
       );
     }
 
-    // Generate PDF from content
-    const pdfBuffer = await generateProposalPDF(proposal.content_sections);
+    // Generate PDF from content using Puppeteer (HTML→PDF for perfect design match)
+    const { buffer: pdfBuffer, method } = await generateProposalPDFWithPuppeteer(
+      proposal.content_sections
+    );
+
+    console.log(`[PDF Conversion] Generated PDF using ${method}`);
 
     // Get customer for filename
     const { data: customer } = await supabaseServer

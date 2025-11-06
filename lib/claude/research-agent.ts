@@ -59,9 +59,40 @@ export interface MarketIntelligence {
   searchBehavior: {
     primarySearchIntents: string[];
     typicalCustomerJourney: string;
+    customerJourneySteps: Array<{
+      stage: 'Awareness' | 'Research' | 'Consideration' | 'Decision';
+      typicalBehavior: string;
+      exampleSearch: string;
+      painPoint: string;
+    }>;
   };
   competitiveGaps: string[];
   marketSize: string;
+
+  // Seasonal insights (critical for A1 Mobility-style proposals)
+  seasonalPatterns?: Array<{
+    period: string; // "Spring (Mar-May)"
+    searchVolume: 'Very High' | 'High' | 'Moderate' | 'Low';
+    buyingReason: string;
+    recommendedStrategy: string;
+  }>;
+
+  // Industry-specific insights for credibility
+  industrySpecificInsights: {
+    whySEOWorks: string; // Why SEO is particularly effective for THIS industry
+    buyingPsychology: string; // Emotional factors that drive purchases
+    trustFactors: string[]; // What builds trust in this industry
+    commonObjections: string[]; // What stops people from buying
+  };
+
+  // Conversion benchmarks for realistic ROI modeling
+  industryBenchmarks: {
+    averageConversionRate: string; // "3-5%"
+    averageTransactionValue: string; // "£1,200" or "£500-2,000"
+    typicalCloseRate: string; // "20-30%"
+    salesCycleLength: string; // "2-4 weeks"
+    customerLTV?: string; // "£3,500 over 3 years"
+  };
 }
 
 export interface CompetitorAnalysis {
@@ -71,9 +102,34 @@ export interface CompetitorAnalysis {
     strengths: string[];
     weaknesses: string[];
     keywordStrategy: string;
+    // Quantitative metrics (CRITICAL for A1-style comparison tables)
+    estimatedMetrics: {
+      monthlyTraffic: string; // "2,000 visitors/month" or "1,500-2,000"
+      rankingKeywords: string; // "350 keywords"
+      domainAuthority: string; // "DA 45"
+      contentPages: string; // "150 pages"
+    };
   }>;
+
+  // Client's current estimated metrics for comparison
+  clientCurrentMetrics: {
+    monthlyTraffic: string;
+    rankingKeywords: string;
+    domainAuthority: string;
+    contentPages: string;
+  };
+
   competitiveAdvantages: string[];
   differentiationOpportunities: string[];
+
+  // Gap analysis with specific numbers (for comparison tables)
+  competitiveGaps: Array<{
+    metric: string; // "Monthly Organic Traffic"
+    yourBusiness: string; // "174 visitors/month"
+    topCompetitorA: string; // "2,000 visitors/month"
+    topCompetitorB: string; // "1,500 visitors/month"
+    marketLeader: string; // "5,000+ visitors/month"
+  }>;
 }
 
 export interface KeywordResearch {
@@ -102,12 +158,36 @@ export interface LocationStrategy {
   localSEOOpportunities: string[];
 }
 
+export interface ROIProjection {
+  // Month-by-month progression (CRITICAL for realistic timelines)
+  monthlyProgression: Array<{
+    period: 'Month 1-3' | 'Month 4-6' | 'Month 7-9' | 'Month 10-12';
+    phaseLabel: string; // "Foundation", "Growth", "Acceleration", "Dominance"
+    activities: string[]; // What we'll do
+    expectedResults: string[]; // What they'll see
+    trafficIncrease: string; // "20-30% traffic increase"
+    estimatedLeads: string; // "15-20 leads/month"
+    estimatedRevenue: string; // "£5,000-12,000/month"
+  }>;
+
+  // Overall ROI calculation
+  roiCalculation: {
+    packageTier: 'local' | 'regional' | 'national';
+    monthlyInvestment: number; // £2,000, £3,000, or £5,000
+    totalYearOneInvestment: number; // Monthly × 12
+    projectedYearOneRevenue: string; // "£1.2M-1.56M"
+    netReturn: string; // "£1,164,000-1,524,000"
+    roiPercentage: string; // "3,233%-4,233%"
+  };
+}
+
 export interface ResearchResult {
   companyAnalysis: CompanyAnalysis;
   marketIntelligence: MarketIntelligence;
   competitorAnalysis: CompetitorAnalysis;
   keywordResearch: KeywordResearch;
   locationStrategy?: LocationStrategy;
+  roiProjection: ROIProjection; // NEW: Always included
 
   // Metadata
   researchedAt: string;
@@ -170,16 +250,28 @@ export async function performDeepResearch(
   totalCost += keywordResearch.cost;
   thinkingTokensUsed += keywordResearch.usage.thinkingTokens;
 
-  // Stage 5: Location Strategy (95%) - Only for local/regional packages
+  // Stage 5: Location Strategy (85%) - Only for local/regional packages
   let locationStrategy: LocationStrategy | undefined;
   if (request.packageTier === 'local' || request.packageTier === 'regional') {
-    await onProgress?.('Analyzing location-based opportunities', 95);
+    await onProgress?.('Analyzing location-based opportunities', 85);
     const locationResult = await researchLocations(request, companyAnalysis.data);
     locationStrategy = locationResult.data;
     totalTokensUsed += locationResult.usage.inputTokens + locationResult.usage.outputTokens;
     totalCost += locationResult.cost;
     thinkingTokensUsed += locationResult.usage.thinkingTokens;
   }
+
+  // Stage 6: ROI Projection (95%) - ALWAYS INCLUDED
+  await onProgress?.('Modeling ROI progression and timeline', 95);
+  const roiProjection = await modelROIProgression(
+    request,
+    keywordResearch.data,
+    marketIntelligence.data,
+    competitorAnalysis.data
+  );
+  totalTokensUsed += roiProjection.usage.inputTokens + roiProjection.usage.outputTokens;
+  totalCost += roiProjection.cost;
+  thinkingTokensUsed += roiProjection.usage.thinkingTokens;
 
   await onProgress?.('Finalizing research report', 100);
 
@@ -194,6 +286,7 @@ export async function performDeepResearch(
     competitorAnalysis: competitorAnalysis.data,
     keywordResearch: keywordResearch.data,
     locationStrategy,
+    roiProjection: roiProjection.data,
     researchedAt: new Date().toISOString(),
     totalTokensUsed,
     estimatedCost: totalCost,
@@ -302,17 +395,77 @@ Provide market intelligence in the following JSON format:
       "What are people searching for when looking for these services?",
       "List 3-5 primary search intents"
     ],
-    "typicalCustomerJourney": "Describe how potential customers search and make decisions in this industry"
+    "typicalCustomerJourney": "Describe how potential customers search and make decisions in this industry",
+    "customerJourneySteps": [
+      {
+        "stage": "Awareness",
+        "typicalBehavior": "What they're experiencing/thinking at this stage",
+        "exampleSearch": "Example Google search they'd make (e.g., 'stairlifts Blackpool')",
+        "painPoint": "Main problem or concern at this stage"
+      },
+      {
+        "stage": "Research",
+        "typicalBehavior": "How they research and compare options",
+        "exampleSearch": "Example search query",
+        "painPoint": "What's confusing or overwhelming them"
+      },
+      {
+        "stage": "Consideration",
+        "typicalBehavior": "How they narrow down choices",
+        "exampleSearch": "Example search query",
+        "painPoint": "What makes decision difficult"
+      },
+      {
+        "stage": "Decision",
+        "typicalBehavior": "Final factors influencing their choice",
+        "exampleSearch": "Example search query",
+        "painPoint": "Last objections or concerns"
+      }
+    ]
   },
   "competitiveGaps": [
     "List 3-5 gaps in the market that this company could fill with SEO",
     "Focus on underserved search queries or content opportunities"
   ],
-  "marketSize": "Brief assessment of the search demand and market size for this industry"
+  "marketSize": "Brief assessment of the search demand and market size for this industry",
+
+  "seasonalPatterns": [
+    {
+      "period": "e.g., Spring (Mar-May)",
+      "searchVolume": "Very High or High or Moderate or Low",
+      "buyingReason": "Why people buy during this season",
+      "recommendedStrategy": "What to promote/focus on"
+    }
+  ],
+
+  "industrySpecificInsights": {
+    "whySEOWorks": "Explain why SEO is particularly effective for THIS specific industry (2-3 sentences)",
+    "buyingPsychology": "What emotional factors drive purchases in this industry? What are customers really buying beyond the product?",
+    "trustFactors": [
+      "List 3-4 specific things that build trust in this industry",
+      "e.g., years in business, certifications, showroom visits, reviews"
+    ],
+    "commonObjections": [
+      "List 3-4 common reasons people hesitate to buy",
+      "e.g., price concerns, quality worries, installation fears"
+    ]
+  },
+
+  "industryBenchmarks": {
+    "averageConversionRate": "Typical website conversion rate for this industry (e.g., '3-5%' or '2-4%')",
+    "averageTransactionValue": "Typical sale value (e.g., '£1,200' or '£500-2,000')",
+    "typicalCloseRate": "What percentage of leads become sales (e.g., '20-30%' or '15-25%')",
+    "salesCycleLength": "How long from first contact to sale (e.g., '2-4 weeks' or 'same day to 3 months')",
+    "customerLTV": "Optional: Lifetime value if repeat purchases common (e.g., '£3,500 over 3 years')"
+  }
 }
 \`\`\`
 
-Focus on actionable insights that will inform the SEO strategy.
+IMPORTANT:
+- Seasonal patterns: If the industry doesn't have strong seasonality, provide "N/A" or minimal data
+- Customer journey: Be VERY specific with example searches - use real keywords people would type
+- Industry benchmarks: These are CRITICAL for ROI modeling - research typical conversion rates for this industry
+- Buying psychology: Think about what customers are REALLY buying (e.g., mobility equipment = independence, not just a scooter)
   `);
 
   const response = await callClaudeForResearch(systemPrompt, userPrompt);
@@ -352,9 +505,23 @@ Provide competitive analysis in the following JSON format:
       "website": "Their website URL (use typical format: competitor-name.co.uk)",
       "strengths": ["List 2-3 SEO/digital strengths"],
       "weaknesses": ["List 2-3 SEO/digital weaknesses or gaps"],
-      "keywordStrategy": "Brief summary of their keyword targeting approach"
+      "keywordStrategy": "Brief summary of their keyword targeting approach",
+      "estimatedMetrics": {
+        "monthlyTraffic": "Estimated monthly organic traffic (e.g., '2,000 visitors/month' or '1,500-2,000')",
+        "rankingKeywords": "Estimated ranking keywords (e.g., '350 keywords' or '200-400')",
+        "domainAuthority": "Estimated DA if known (e.g., 'DA 45' or 'DA 40-50')",
+        "contentPages": "Estimated content pages (e.g., '150 pages' or '100-200 pages')"
+      }
     }
   ],
+
+  "clientCurrentMetrics": {
+    "monthlyTraffic": "YOUR CLIENT's estimated current monthly traffic (be realistic, e.g., '174 visitors/month')",
+    "rankingKeywords": "YOUR CLIENT's current ranking keywords (e.g., '71 keywords')",
+    "domainAuthority": "YOUR CLIENT's estimated DA (e.g., 'DA 25')",
+    "contentPages": "YOUR CLIENT's current content pages (e.g., '20 pages')"
+  },
+
   "competitiveAdvantages": [
     "List 3-5 advantages this company has or could develop",
     "Focus on unique selling points that could be leveraged in SEO"
@@ -362,11 +529,47 @@ Provide competitive analysis in the following JSON format:
   "differentiationOpportunities": [
     "List 3-5 ways this company can differentiate through content and SEO",
     "Be specific and actionable"
+  ],
+
+  "competitiveGaps": [
+    {
+      "metric": "Monthly Organic Traffic",
+      "yourBusiness": "174 visitors/month",
+      "topCompetitorA": "2,000 visitors/month",
+      "topCompetitorB": "1,500 visitors/month",
+      "marketLeader": "5,000+ visitors/month"
+    },
+    {
+      "metric": "Ranking Keywords",
+      "yourBusiness": "71 keywords",
+      "topCompetitorA": "350 keywords",
+      "topCompetitorB": "280 keywords",
+      "marketLeader": "600+ keywords"
+    },
+    {
+      "metric": "Domain Authority",
+      "yourBusiness": "DA 25",
+      "topCompetitorA": "DA 45",
+      "topCompetitorB": "DA 42",
+      "marketLeader": "DA 55"
+    },
+    {
+      "metric": "Content Pages",
+      "yourBusiness": "20 pages",
+      "topCompetitorA": "150 pages",
+      "topCompetitorB": "120 pages",
+      "marketLeader": "200+ pages"
+    }
   ]
 }
 \`\`\`
 
-Include 3-5 top competitors. Be realistic and insightful.
+CRITICAL INSTRUCTIONS:
+- Include 3-5 top competitors with REAL estimated metrics
+- Use "Top Competitor A", "Top Competitor B", "Market Leader" naming in competitiveGaps
+- Metrics should be realistic educated guesses based on industry norms
+- clientCurrentMetrics should be conservative/realistic for a business needing SEO help
+- competitiveGaps MUST have at least 3-4 rows with specific numbers
   `);
 
   const response = await callClaudeForResearch(systemPrompt, userPrompt);
@@ -482,6 +685,157 @@ For regional packages: Focus on 5-10 cities across the region
 
   const response = await callClaudeForResearch(systemPrompt, userPrompt);
   const data = extractJSON<LocationStrategy>(response.content);
+
+  return {
+    data,
+    usage: response.usage,
+    cost: response.cost,
+  };
+}
+
+/**
+ * Stage 6: Model ROI progression (ALWAYS INCLUDED - critical for A1 Mobility-style proposals)
+ */
+async function modelROIProgression(
+  request: ResearchRequest,
+  keywordResearch: KeywordResearch,
+  marketIntelligence: MarketIntelligence,
+  competitorAnalysis: CompetitorAnalysis
+) {
+  const systemPrompt = `You are an expert SEO strategist and business analyst. Your task is to create realistic, month-by-month ROI projections based on keyword difficulty, industry benchmarks, and competitive analysis.`;
+
+  // Determine package investment
+  const packageInvestments = {
+    local: 2000,
+    regional: 3000,
+    national: 5000,
+  };
+  const monthlyInvestment = packageInvestments[request.packageTier || 'regional'];
+
+  const userPrompt = sanitizeForPrompt(`
+Create a realistic 12-month ROI progression for this SEO campaign:
+
+**Company:** ${request.companyName}
+**Package Tier:** ${request.packageTier || 'regional'} (£${monthlyInvestment}/month investment)
+**Industry Conversion Rate:** ${marketIntelligence.industryBenchmarks.averageConversionRate}
+**Average Transaction Value:** ${marketIntelligence.industryBenchmarks.averageTransactionValue}
+**Typical Close Rate:** ${marketIntelligence.industryBenchmarks.typicalCloseRate}
+**Sales Cycle:** ${marketIntelligence.industryBenchmarks.salesCycleLength}
+
+**Current Metrics:**
+- Monthly Traffic: ${competitorAnalysis.clientCurrentMetrics.monthlyTraffic}
+- Ranking Keywords: ${competitorAnalysis.clientCurrentMetrics.rankingKeywords}
+
+**Target Keywords:** ${keywordResearch.primaryKeywords.length} primary keywords with difficulty ranging from ${keywordResearch.primaryKeywords[0]?.difficulty || 'Medium'} to High
+
+**Competitive Landscape:** ${competitorAnalysis.topCompetitors.length} strong competitors identified
+
+Provide ROI projection in the following JSON format:
+
+\`\`\`json
+{
+  "monthlyProgression": [
+    {
+      "period": "Month 1-3",
+      "phaseLabel": "Foundation",
+      "activities": [
+        "Fix technical SEO issues",
+        "Optimize Google Business Profile",
+        "Launch first 15 content pages",
+        "Begin review generation campaign"
+      ],
+      "expectedResults": [
+        "20-30% traffic increase",
+        "First local rankings appear",
+        "15-20 Google reviews",
+        "Technical score improvement to 85+"
+      ],
+      "trafficIncrease": "20-30%",
+      "estimatedLeads": "15-20 leads/month",
+      "estimatedRevenue": "£5,000-12,000/month"
+    },
+    {
+      "period": "Month 4-6",
+      "phaseLabel": "Growth",
+      "activities": [
+        "30+ content pages published",
+        "Link building accelerates",
+        "Content library expanding",
+        "Conversion rate optimization"
+      ],
+      "expectedResults": [
+        "100-150% traffic increase from baseline",
+        "10-15 keywords ranking in top 10",
+        "40+ Google reviews",
+        "Lead quality improving"
+      ],
+      "trafficIncrease": "100-150%",
+      "estimatedLeads": "30-45 leads/month",
+      "estimatedRevenue": "£30,000-55,000/month"
+    },
+    {
+      "period": "Month 7-9",
+      "phaseLabel": "Acceleration",
+      "activities": [
+        "50+ content pages live",
+        "Authority building in full swing",
+        "Video content integration",
+        "PR and outreach campaigns"
+      ],
+      "expectedResults": [
+        "250-350% traffic increase from baseline",
+        "20-30 keywords in top 5",
+        "60+ Google reviews",
+        "Brand recognition building"
+      ],
+      "trafficIncrease": "250-350%",
+      "estimatedLeads": "50-70 leads/month",
+      "estimatedRevenue": "£65,000-105,000/month"
+    },
+    {
+      "period": "Month 10-12",
+      "phaseLabel": "Market Dominance",
+      "activities": [
+        "70+ comprehensive content pages",
+        "Market leader positioning",
+        "Advanced optimization techniques",
+        "Regional expansion planning"
+      ],
+      "expectedResults": [
+        "400-600% traffic increase from baseline",
+        "25-40 keywords in top 3 positions",
+        "100+ Google reviews",
+        "Consistent market leader visibility"
+      ],
+      "trafficIncrease": "400-600%",
+      "estimatedLeads": "70-100 leads/month",
+      "estimatedRevenue": "£100,000-150,000/month"
+    }
+  ],
+  "roiCalculation": {
+    "packageTier": "${request.packageTier || 'regional'}",
+    "monthlyInvestment": ${monthlyInvestment},
+    "totalYearOneInvestment": ${monthlyInvestment * 12},
+    "projectedYearOneRevenue": "Calculate realistic total based on monthly progression (e.g., '£1.2M-1.56M')",
+    "netReturn": "Calculate net return (revenue - investment, e.g., '£1,164,000-1,524,000')",
+    "roiPercentage": "Calculate ROI percentage (e.g., '3,233%-4,233%')"
+  }
+}
+\`\`\`
+
+CRITICAL INSTRUCTIONS:
+- Base progression on REALISTIC timelines (SEO takes 3-4 months to show results)
+- Traffic increases should be gradual and compound over time
+- Month 1-3 is foundation (minimal revenue increase)
+- Month 4-6 is where real traction begins
+- Month 7-12 is acceleration phase
+- Revenue calculations should use the industry benchmarks provided
+- ROI should be aggressive but believable (typical SEO ROI is 500-5,000%)
+- Higher investment packages (national) should show faster results and higher final numbers
+  `);
+
+  const response = await callClaudeForResearch(systemPrompt, userPrompt);
+  const data = extractJSON<ROIProjection>(response.content);
 
   return {
     data,

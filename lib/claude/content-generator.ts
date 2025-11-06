@@ -6,7 +6,8 @@
  */
 
 import { callClaudeForContent, sanitizeForPrompt } from './utils';
-import { getReferencePDF, hasReferencePDF } from './reference-pdf';
+import { getReferencePDF, hasReferencePDF, getReferenceHTML, hasReferenceHTML } from './reference-pdf';
+import { sanitizeObjectEncoding, getCorruptionStats } from '@/lib/utils/encoding';
 import type { ResearchResult } from './research-agent';
 
 // ============================================================================
@@ -265,15 +266,101 @@ Analyze the research data to populate:
   * Include market size if available from research
   * Show what they're currently missing
 
-## A1 MOBILITY DESIGN ELEMENTS (MANDATORY)
-You MUST populate ALL of these optional fields:
-- brutalTruthCallouts: 2-3 hard-hitting callouts
-- statisticsCards: 3 key comparisons
-- simpleMathBreakdown: Complete ROI calculation
-- competitorComparison: Full comparison table
-- marketOpportunity: Market opportunity statement
+## ⚠️ REFERENCE DOCUMENTS ⚠️
 
-These elements are what make the proposal convert. Without them, the proposal is generic.
+You have been provided with the A1 Mobility proposal as a reference:
+- **PDF Reference**: Shows the visual design and layout quality expected
+- **HTML Reference**: Shows the EXACT HTML structure, CSS classes, and content organization that converts at 70%+ close rates
+
+## 📐 HTML STRUCTURE & CONTENT DEPTH REQUIREMENTS
+
+Study the A1 Mobility HTML reference and match its structure EXACTLY:
+
+### Content Sections You MUST Include:
+
+1. **Executive Summary Page** (matching A1 structure):
+   - Opening impact statement in dark phase-box ("You have the UK's largest showroom... But online? Millercare gets 10x your traffic")
+   - Brutal truth callout in warning-box with SPECIFIC competitor names and numbers
+   - Market opportunity section with exact market size in pounds ("The £712.8 Million Opportunity")
+   - 3-column statistics grid showing current vs competitor vs opportunity
+   - Comparison table (4 columns: Current State | 12-Month Target | Competitor Average)
+   - Simple Math ROI breakdown with 7 step-by-step calculations
+
+2. **Market Analysis Page**:
+   - "Who's Searching" section with 3 customer personas and percentages
+   - Local competition table with competitor names, strengths, weaknesses, "How You'll Beat Them"
+   - Product category opportunities (3-column stat grid)
+   - Customer journey breakdown (4 stages with specific actions)
+   - Seasonal patterns table (if applicable) with Spring/Summer/Autumn/Winter
+
+3. **How SEO Works Page**:
+   - Industry-specific analogy section
+   - 6-step process table
+   - High-value keywords table with monthly value in pounds
+   - 3-box timeline stat grid
+
+4. **Content Strategy Page**:
+   - Why content matters (impact statement in dark phase-box)
+   - Content calendar table
+   - Location pages strategy
+   - Trust-building metrics (3-box stat grid)
+
+### Visual Element Requirements:
+- **warning-box**: For brutal truths and urgent messages (yellow background, orange border)
+- **phase-box**: For informational callouts (grey background)
+- **phase-box dark**: For impact statements (background: #333, white text)
+- **highlight-box**: For ROI calculations and key insights (gradient blue background)
+- **stat-grid**: For 3-column statistics displays
+- **metrics-table**: For all comparison tables (teal headers)
+
+### Tone & Style Matching:
+- Direct, confident, occasionally provocative ("THE BRUTAL TRUTH:", "CRITICAL TIMING:")
+- Extensive use of "you" language
+- Specific numbers instead of vague claims ("2,000 visitors" not "high traffic")
+- Shows urgency without being pushy
+- Demonstrates deep industry knowledge
+- Questions that challenge ("When someone's grandmother needs X, what do they Google?")
+
+### Content Depth:
+- A1 Mobility is ~3,500 words across 10 pages
+- Your content should match this depth and detail
+- Every table should have 4+ rows with real data
+- Every section should feel complete, not superficial
+
+## ⚠️ CRITICAL REQUIREMENTS - READ THIS CAREFULLY ⚠️
+
+The following fields are NOT optional. They are MANDATORY. Your proposal will be rejected if any are missing:
+
+1. **brutalTruthCallouts** (MANDATORY - Array of 2-3 callouts)
+   - MUST be provocative and use real numbers from research
+   - MUST have shocking statistics
+   - Look at the reference HTML to see the exact format and tone
+   - Example: "THE BRUTAL TRUTH: Your competitor gets 2,000 visitors while you get 174. They're stealing £100k monthly from you."
+
+2. **statisticsCards** (MANDATORY - Array of 3 comparison cards)
+   - MUST show current vs target numbers
+   - MUST include targetNumber and targetLabel for each card
+   - Study the reference HTML to see how these are formatted
+   - Example: currentNumber: "174", currentLabel: "monthly visitors", targetNumber: "2,000+", targetLabel: "competitor average"
+
+3. **simpleMathBreakdown** (MANDATORY - Complete ROI object)
+   - MUST have steps array with Month 3, Month 6, Month 12
+   - MUST calculate totalInvestment, totalReturn, roi
+   - Use industry conversion rates: 3-5% leads, 20-30% close rate
+   - See reference HTML for the table format
+
+4. **competitorComparison** (MANDATORY - Comparison table)
+   - MUST have metrics array with at least 3-4 rows
+   - MUST include: Traffic, Keywords, Domain Authority comparisons
+   - Use real competitor names from research
+   - Match the table structure in reference HTML
+
+5. **marketOpportunity** (MANDATORY - Opportunity statement)
+   - MUST include market size if available
+   - MUST show what they're currently missing
+   - Example: "The £712.8 Million Opportunity"
+
+**WARNING**: If you return a proposal without ALL FIVE of these populated with real data, you have failed the task. These are what differentiate a converting proposal from generic content.
 
 ## CRITICAL REQUIREMENTS
 - Use REAL data from the research provided (no generic statements)
@@ -284,7 +371,16 @@ These elements are what make the proposal convert. Without them, the proposal is
 - Focus on business impact, not just SEO tactics
 
 ## OUTPUT FORMAT
-Return a valid JSON object with all fields from the ProposalContent TypeScript interface. Populate EVERY field with high-quality, research-based content that matches the A1 Mobility standard.
+Return ONLY a valid JSON object with all fields from the ProposalContent TypeScript interface.
+
+CRITICAL CHARACTER ENCODING RULES:
+- Use standard double quotes (") for JSON strings, NOT curly quotes
+- Use standard single apostrophe (') for contractions, NOT curly apostrophe
+- For currency, use the word "pounds" or spell out "GBP" instead of the £ symbol
+- For emphasis, use ALL CAPS or **bold** markdown, NOT special Unicode characters
+- Use standard ASCII punctuation only
+
+Your JSON must be parseable by standard JSON.parse(). Any Unicode special characters or smart quotes will cause parsing errors.
 
 **REMEMBER**: Study the A1 Mobility reference to understand what "high-quality proposal content" means. Then analyze the research data and create content that matches that standard. The visual design is handled separately - you focus on substance, tone, and persuasive power.`;
 
@@ -456,29 +552,37 @@ Generate ALL proposal content following this exact structure:
   "brutalTruthCallouts": [
     {
       "title": "THE BRUTAL TRUTH:",
-      "content": "[Hard-hitting statement about their current situation vs competitors - be provocative]",
+      "content": "When someone searches [main keyword], [Competitor Name] shows up #1. You're invisible. They get [X] monthly visitors while you get [Y]. You're losing £[amount]+ monthly to competitors who rank better on Google.",
       "type": "warning"
     },
     {
       "title": "THE REALITY:",
-      "content": "[Another shocking insight from the research data]",
+      "content": "[Another shocking comparison with real numbers - e.g., competitor has 5,000+ pages of content while client has 20]",
       "type": "warning"
     }
   ],
 
   "statisticsCards": [
     {
-      "currentNumber": "[e.g., '174']",
-      "currentLabel": "[e.g., 'monthly organic visitors']",
-      "targetNumber": "[e.g., '2,000+']",
-      "targetLabel": "[e.g., 'competitor average']",
-      "context": "[Why this gap matters]"
+      "currentNumber": "174",
+      "currentLabel": "your monthly organic visitors",
+      "targetNumber": "2,000+",
+      "targetLabel": "competitor average",
+      "context": "You're missing 90% of potential customers"
     },
     {
-      "currentNumber": "[another key metric]",
-      "currentLabel": "[current state]",
-      "targetNumber": "[target/competitor number]",
-      "targetLabel": "[context]"
+      "currentNumber": "71",
+      "currentLabel": "ranking keywords",
+      "targetNumber": "500+",
+      "targetLabel": "market leader keywords",
+      "context": "Massive untapped keyword opportunity"
+    },
+    {
+      "currentNumber": "£5k-10k",
+      "currentLabel": "current monthly revenue from SEO",
+      "targetNumber": "£100k-250k",
+      "targetLabel": "12-month revenue target",
+      "context": "10-25x revenue growth potential"
     }
   ],
 
@@ -486,62 +590,69 @@ Generate ALL proposal content following this exact structure:
     "steps": [
       {
         "month": "Month 3",
-        "traffic": [realistic number],
-        "leads": [realistic number],
-        "customers": [realistic number],
-        "revenue": [realistic number]
+        "traffic": 500,
+        "leads": 18,
+        "customers": 5,
+        "revenue": 15000
       },
       {
         "month": "Month 6",
-        "traffic": [realistic number],
-        "leads": [realistic number],
-        "customers": [realistic number],
-        "revenue": [realistic number]
+        "traffic": 1200,
+        "leads": 42,
+        "customers": 11,
+        "revenue": 35000
       },
       {
         "month": "Month 12",
-        "traffic": [realistic number],
-        "leads": [realistic number],
-        "customers": [realistic number],
-        "revenue": [realistic number]
+        "traffic": 2000,
+        "leads": 70,
+        "customers": 18,
+        "revenue": 100000
       }
     ],
-    "totalInvestment": [12 months x package price],
-    "totalReturn": [sum of all revenue],
-    "roi": [calculate percentage]
+    "totalInvestment": 36000,
+    "totalReturn": 1200000,
+    "roi": 3233
   },
 
   "competitorComparison": {
     "metrics": [
       {
         "metric": "Monthly Organic Traffic",
-        "yourBusiness": "[current traffic]",
-        "topCompetitorA": "[competitor A traffic]",
-        "topCompetitorB": "[competitor B traffic]",
-        "marketLeader": "[market leader traffic]"
+        "yourBusiness": "174 visitors/month",
+        "topCompetitorA": "2,000 visitors/month",
+        "topCompetitorB": "1,500 visitors/month",
+        "marketLeader": "5,000+ visitors/month"
       },
       {
         "metric": "Ranking Keywords",
-        "yourBusiness": "[current keywords]",
-        "topCompetitorA": "[competitor A keywords]",
-        "topCompetitorB": "[competitor B keywords]",
-        "marketLeader": "[market leader keywords]"
+        "yourBusiness": "71 keywords",
+        "topCompetitorA": "350 keywords",
+        "topCompetitorB": "280 keywords",
+        "marketLeader": "600+ keywords"
       },
       {
         "metric": "Domain Authority",
-        "yourBusiness": "[current DA]",
-        "topCompetitorA": "[competitor A DA]",
-        "topCompetitorB": "[competitor B DA]",
-        "marketLeader": "[market leader DA]"
+        "yourBusiness": "DA 25",
+        "topCompetitorA": "DA 45",
+        "topCompetitorB": "DA 42",
+        "marketLeader": "DA 55"
+      },
+      {
+        "metric": "Content Pages",
+        "yourBusiness": "20 pages",
+        "topCompetitorA": "150 pages",
+        "topCompetitorB": "120 pages",
+        "marketLeader": "200+ pages"
       }
     ]
   },
 
   "marketOpportunity": {
-    "title": "The £[X] Million Opportunity",
-    "currentState": "[Current market position]",
-    "opportunitySize": "[Size of the market/opportunity]",
-    "timeframe": "[Timeline to capture it]"
+    "title": "The £712.8 Million Opportunity",
+    "currentState": "You're capturing less than 0.1% of the UK mobility equipment market despite having the largest showroom and 25+ years experience",
+    "opportunitySize": "UK mobility equipment market: £712.8M (2022) growing to £1.15B by 2030 at 6.2% annually. 9.8 million disabled people in UK with 40-60% researching online first",
+    "timeframe": "12-month SEO strategy can capture £1.2-1.5M annual revenue (conservative estimate based on local + regional dominance)"
   }
 }
 \`\`\`
@@ -565,15 +676,42 @@ IMPORTANT:
     console.warn('[Content Generator] Reference PDF not available - proceeding without template');
   }
 
-  // Call Claude with the reference PDF attached
+  // Load the A1 Mobility reference HTML
+  // CRITICAL: This shows Claude the EXACT HTML structure to replicate
+  const referenceHtmlContent = hasReferenceHTML() ? getReferenceHTML() : '';
+
+  if (referenceHtmlContent) {
+    const htmlSizeKB = Math.round(referenceHtmlContent.length / 1024);
+    console.log(`[Content Generator] Using A1 Mobility reference HTML (${htmlSizeKB}KB) for structure matching`);
+  } else {
+    console.warn('[Content Generator] Reference HTML not available - proceeding without HTML template');
+  }
+
+  // Call Claude with BOTH the reference PDF and HTML attached
+  // PDF shows visual design, HTML shows exact structure
   const response = await callClaudeForContent(GOD_PROMPT, userPrompt, {
     pdfBase64: referencePdfBase64,
+    htmlContent: referenceHtmlContent,
   });
 
   // Extract and parse JSON from response
-  const content = extractAndParseJSON<ProposalContent>(response.content);
+  const rawContent = extractAndParseJSON<ProposalContent>(response.content);
 
-  return content;
+  // CRITICAL: Sanitize content to fix UTF-8 encoding corruption
+  // This must happen BEFORE storing in database
+  console.log('[Content Generator] Checking for UTF-8 corruption...');
+  const corruptionStats = getCorruptionStats(JSON.stringify(rawContent));
+  if (corruptionStats.hasCorruption) {
+    console.warn(
+      `[Content Generator] Found ${corruptionStats.corruptedChars} corrupted characters. Examples:`,
+      corruptionStats.examples
+    );
+  }
+
+  const sanitizedContent = sanitizeObjectEncoding(rawContent);
+  console.log('[Content Generator] Content sanitization complete');
+
+  return sanitizedContent;
 }
 
 // ============================================================================

@@ -68,10 +68,14 @@ export async function GET(
     // Convert blob to text
     const htmlContent = await htmlData.text();
 
-    // Return HTML with proper content-type
+    // Get proposal number for filename
+    const filename = `proposal-${proposal.proposal_number || proposal.id}.html`;
+
+    // Return HTML as download to avoid browser encoding issues
     return new NextResponse(htmlContent, {
       headers: {
         'Content-Type': 'text/html; charset=utf-8',
+        'Content-Disposition': `attachment; filename="${filename}"`,
         'Cache-Control': 'private, max-age=3600',
       },
     });

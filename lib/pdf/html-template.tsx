@@ -512,7 +512,7 @@ function getEmbeddedStyles(): string {
     }
 
     .package-features li:before {
-      content: "✓";
+      content: "\\2713"; /* Unicode checkmark - avoids encoding issues */
       position: absolute;
       left: 0;
       color: #00CED1;
@@ -709,11 +709,25 @@ function renderExecutiveSummary(
       <p>${escapeHTML(summary.overview)}</p>
 
       ${statsCards && statsCards.length > 0 ? `
-        <div class="stat-grid">
+        <h2>Current vs. Target Performance</h2>
+        <div class="stats-grid">
           ${statsCards.map(card => `
-            <div class="stat-box">
-              <div class="number">${escapeHTML(card.currentNumber)}</div>
-              <div class="label">${escapeHTML(card.currentLabel)}</div>
+            <div class="stat-comparison">
+              <div class="stat-current">
+                <div class="stat-number">${escapeHTML(card.currentNumber)}</div>
+                <div class="stat-label">${escapeHTML(card.currentLabel)}</div>
+              </div>
+              ${card.targetNumber ? `
+                <div class="stat-target">
+                  <div class="stat-number">${escapeHTML(card.targetNumber)}</div>
+                  <div class="stat-label">${escapeHTML(card.targetLabel)}</div>
+                </div>
+              ` : ''}
+              ${card.context ? `
+                <div style="padding-top: 10px; font-size: 12px; color: #666; text-align: center; border-top: 1px solid #eee;">
+                  ${escapeHTML(card.context)}
+                </div>
+              ` : ''}
             </div>
           `).join('')}
         </div>
@@ -749,24 +763,28 @@ function renderCurrentSituation(
       <h1>Current Situation Analysis</h1>
 
         ${statsCards && statsCards.length > 0 ? `
-          <div class="stat-grid">
+          <h2>Performance Gap Analysis</h2>
+          <div class="stats-grid">
             ${statsCards.map(card => `
-              <div class="stat-box">
-                <div class="number">${escapeHTML(card.currentNumber)}</div>
-                <div class="label">${escapeHTML(card.currentLabel)}</div>
+              <div class="stat-comparison">
+                <div class="stat-current">
+                  <div class="stat-number">${escapeHTML(card.currentNumber)}</div>
+                  <div class="stat-label">${escapeHTML(card.currentLabel)}</div>
+                </div>
+                ${card.targetNumber ? `
+                  <div class="stat-target">
+                    <div class="stat-number">${escapeHTML(card.targetNumber)}</div>
+                    <div class="stat-label">${escapeHTML(card.targetLabel)}</div>
+                  </div>
+                ` : ''}
+                ${card.context ? `
+                  <div style="padding-top: 10px; font-size: 12px; color: #666; text-align: center; border-top: 1px solid #eee;">
+                    ${escapeHTML(card.context)}
+                  </div>
+                ` : ''}
               </div>
             `).join('')}
           </div>
-          ${statsCards.some(card => card.targetNumber) ? `
-          <div class="stat-grid">
-            ${statsCards.map(card => card.targetNumber ? `
-              <div class="stat-box">
-                <div class="number">${escapeHTML(card.targetNumber)}</div>
-                <div class="label">${escapeHTML(card.targetLabel)}</div>
-              </div>
-            ` : '<div class="stat-box"></div>').join('')}
-          </div>
-          ` : ''}
         ` : ''}
 
         <h2>Digital Presence Overview</h2>
@@ -972,7 +990,7 @@ function renderPackageOptions(packages: ProposalContent['packageOptions'], compa
           ${packages.map(pkg => `
             <div class="package-card">
               <div class="package-name">${escapeHTML(pkg.name)}</div>
-              <div class="package-price">£${pkg.monthlyInvestment.toLocaleString()}</div>
+              <div class="package-price">&pound;${pkg.monthlyInvestment.toLocaleString()}</div>
               <div class="package-price-period">per month</div>
 
               <ul class="package-features">
@@ -1013,7 +1031,7 @@ function renderProjections(
             </div>
             <div class="projection-metric">
               <div class="projection-metric-label">Revenue</div>
-              <div class="projection-metric-value">£${projections.month6.revenue.toLocaleString()}</div>
+              <div class="projection-metric-value">&pound;${projections.month6.revenue.toLocaleString()}</div>
             </div>
           </div>
 
@@ -1029,7 +1047,7 @@ function renderProjections(
             </div>
             <div class="projection-metric">
               <div class="projection-metric-label">Revenue</div>
-              <div class="projection-metric-value">£${projections.month12.revenue.toLocaleString()}</div>
+              <div class="projection-metric-value">&pound;${projections.month12.revenue.toLocaleString()}</div>
             </div>
           </div>
         </div>
@@ -1043,22 +1061,22 @@ function renderProjections(
                 <div>
                   <strong>${escapeHTML(step.month)}</strong>
                   <div style="font-size: 12px; color: #666;">
-                    ${step.traffic.toLocaleString()} visitors →
-                    ${step.leads.toLocaleString()} leads →
+                    ${step.traffic.toLocaleString()} visitors &rarr;
+                    ${step.leads.toLocaleString()} leads &rarr;
                     ${step.customers.toLocaleString()} customers
                   </div>
                 </div>
                 <div style="font-size: 20px; font-weight: 700; color: #00CED1;">
-                  £${step.revenue.toLocaleString()}
+                  &pound;${step.revenue.toLocaleString()}
                 </div>
               </div>
             `).join('')}
 
             <div class="simple-math-result">
               <div>Total Investment</div>
-              <div class="simple-math-result-value">£${simpleMath.totalInvestment.toLocaleString()}</div>
+              <div class="simple-math-result-value">&pound;${simpleMath.totalInvestment.toLocaleString()}</div>
               <div style="margin: 16px 0;">Total Return</div>
-              <div class="simple-math-result-value">£${simpleMath.totalReturn.toLocaleString()}</div>
+              <div class="simple-math-result-value">&pound;${simpleMath.totalReturn.toLocaleString()}</div>
               <div style="margin: 16px 0; font-size: 18px;">ROI</div>
               <div class="simple-math-result-value">${simpleMath.roi}%</div>
             </div>
@@ -1068,7 +1086,7 @@ function renderProjections(
         <h2>Return on Investment</h2>
         <p><strong>ROI:</strong> ${projections.roi.percentage}%</p>
         <p><strong>Payback Period:</strong> ${escapeHTML(projections.roi.paybackPeriod)}</p>
-        <p><strong>Lifetime Value:</strong> £${projections.roi.lifetimeValue.toLocaleString()}</p>
+        <p><strong>Lifetime Value:</strong> &pound;${projections.roi.lifetimeValue.toLocaleString()}</p>
       ${renderPageFooter(pageNumber)}
     </div>
   `;
@@ -1115,12 +1133,12 @@ function renderNextSteps(steps: ProposalContent['nextSteps'], companyName: strin
  */
 function escapeHTML(text: string): string {
   // Server-side - no DOM available, use manual escaping
-  // Only escape HTML syntax characters, let UTF-8 handle special chars (£, →, ✓)
+  // Only escape HTML syntax characters to prevent XSS
+  // Special chars (£, →, ✓) are handled via HTML entities in template to avoid encoding issues
   return text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
-  // Removed £, →, ✓ encoding - UTF-8 charset handles these naturally
 }

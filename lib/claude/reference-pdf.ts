@@ -1,7 +1,7 @@
 /**
- * Reference PDF Management
+ * Reference Document Management
  *
- * Loads and caches the A1 Mobility reference PDF for use in proposal generation
+ * Loads and caches the A1 Mobility reference PDF and HTML for use in proposal generation
  */
 
 import fs from 'fs';
@@ -9,6 +9,8 @@ import path from 'path';
 
 // Cache the PDF in memory to avoid reading from disk every time
 let cachedPdfBase64: string | null = null;
+// Cache the HTML in memory to avoid reading from disk every time
+let cachedHtmlContent: string | null = null;
 
 /**
  * Get the A1 Mobility reference PDF as base64
@@ -52,10 +54,67 @@ export function hasReferencePDF(): boolean {
 }
 
 /**
+ * Get the A1 Mobility reference HTML
+ * Uses in-memory caching for performance
+ *
+ * @returns HTML content as string
+ */
+export function getReferenceHTML(): string {
+  if (cachedHtmlContent) {
+    return cachedHtmlContent;
+  }
+
+  // Path to the reference HTML in the public directory
+  const htmlPath = path.join(process.cwd(), 'public', 'reference', 'a1-mobility-seo-proposal-2025.html');
+
+  try {
+    // Read the HTML file
+    cachedHtmlContent = fs.readFileSync(htmlPath, 'utf-8');
+
+    const sizeKB = Math.round(cachedHtmlContent.length / 1024);
+    console.log(`[Reference HTML] Loaded and cached A1 Mobility reference HTML (${sizeKB}KB)`);
+
+    return cachedHtmlContent;
+  } catch (error) {
+    console.error('[Reference HTML] Failed to load reference HTML:', error);
+    console.warn('[Reference HTML] Continuing without HTML reference');
+    return '';
+  }
+}
+
+/**
+ * Check if the reference HTML exists
+ *
+ * @returns true if the reference HTML is available
+ */
+export function hasReferenceHTML(): boolean {
+  const htmlPath = path.join(process.cwd(), 'public', 'reference', 'a1-mobility-seo-proposal-2025.html');
+  return fs.existsSync(htmlPath);
+}
+
+/**
  * Clear the cached reference PDF
  * Useful for testing or if the PDF is updated
  */
 export function clearReferencePDFCache(): void {
   cachedPdfBase64 = null;
   console.log('[Reference PDF] Cache cleared');
+}
+
+/**
+ * Clear the cached reference HTML
+ * Useful for testing or if the HTML is updated
+ */
+export function clearReferenceHTMLCache(): void {
+  cachedHtmlContent = null;
+  console.log('[Reference HTML] Cache cleared');
+}
+
+/**
+ * Clear all cached reference documents
+ */
+export function clearAllReferenceCache(): void {
+  clearReferencePDFCache();
+  clearReferenceHTMLCache();
+  console.log('[Reference] All caches cleared');
 }

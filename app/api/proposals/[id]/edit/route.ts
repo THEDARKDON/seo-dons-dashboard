@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { createClient } from '@/lib/supabase/server';
 import { generateProposalHTML } from '@/lib/pdf/html-template';
+import { sanitizeObjectEncoding } from '@/lib/utils/encoding';
 import Anthropic from '@anthropic-ai/sdk';
 
 export async function POST(
@@ -125,15 +126,24 @@ Return the updated proposal content in the exact same JSON structure.`;
       );
     }
 
-    // Generate new HTML
-    const newHtmlContent = generateProposalHTML(editedContent);
+    // CRITICAL: Sanitize edited content to fix UTF-8 encoding corruption
+    console.log('[Edit API] Sanitizing edited content encoding...');
+    const sanitizedContent = sanitizeObjectEncoding(editedContent);
+
+    // Generate new HTML with sanitized content
+    const newHtmlContent = generateProposalHTML(sanitizedContent);
 
     // Upload new HTML to storage
     const htmlFilename = `${proposal.proposal_number.replace('P-', '')}.html`;
 
-    const { error: uploadError } = await supabaseServer.storage
+    // Add UTF-8 BOM and convert to Buffer to ensure proper encoding
+    const utf8Bom = '\uFEFF';
+    const htmlWithBom = utf8Bom + newHtmlContent;
+    const htmlBuffer = Buffer.from(htmlWithBom, 'utf-8');
+
+    const { error: uploadError} = await supabaseServer.storage
       .from('proposals')
-      .upload(`${proposal.id}/${htmlFilename}`, newHtmlContent, {
+      .upload(`${proposal.id}/${htmlFilename}`, htmlBuffer, {
         contentType: 'text/html; charset=utf-8',
         cacheControl: '3600',
         upsert: true, // Overwrite existing
@@ -152,13 +162,13 @@ Return the updated proposal content in the exact same JSON structure.`;
       .from('proposals')
       .getPublicUrl(`${proposal.id}/${htmlFilename}`);
 
-    // Update proposal in database
+    // Update proposal in database with sanitized content
     const { error: updateError } = await supabaseServer
       .from('proposals')
       .update({
         html_content: newHtmlContent,
         html_url: htmlUrlData.publicUrl,
-        content_sections: editedContent,
+        content_sections: sanitizedContent,
         html_generated_at: new Date().toISOString(),
       })
       .eq('id', proposal.id);
@@ -180,6 +190,7 @@ Return the updated proposal content in the exact same JSON structure.`;
 
     return NextResponse.json({
       success: true,
+      proposalId: proposal.id,
       htmlUrl: htmlUrlData.publicUrl,
       message: 'Proposal edited successfully',
     });

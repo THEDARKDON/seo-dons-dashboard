@@ -249,19 +249,15 @@ export async function callClaudeForContent(
     maxTokens?: number;
     temperature?: number;
     pdfBase64?: string; // Optional PDF reference document
+    htmlContent?: string; // Optional HTML reference document
   }
 ) {
   // Build message content array
-  const messageContent: any[] = [
-    {
-      type: 'text',
-      text: userPrompt,
-    },
-  ];
+  const messageContent: any[] = [];
 
   // Add PDF reference document if provided
   if (options?.pdfBase64) {
-    messageContent.unshift({
+    messageContent.push({
       type: 'document',
       source: {
         type: 'base64',
@@ -270,6 +266,21 @@ export async function callClaudeForContent(
       },
     });
   }
+
+  // Add HTML reference if provided
+  // This shows Claude the EXACT HTML structure we want to replicate
+  if (options?.htmlContent) {
+    messageContent.push({
+      type: 'text',
+      text: `<reference_html>\nHere is the A1 Mobility HTML proposal that you MUST use as a structural and design reference:\n\n${options.htmlContent}\n</reference_html>\n\n`,
+    });
+  }
+
+  // Add the main user prompt
+  messageContent.push({
+    type: 'text',
+    text: userPrompt,
+  });
 
   const params: MessageCreateParams = {
     model: options?.model || CLAUDE_CONFIG.CONTENT_MODEL,

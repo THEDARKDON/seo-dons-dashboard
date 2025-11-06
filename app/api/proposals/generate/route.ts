@@ -188,10 +188,15 @@ export async function POST(request: NextRequest) {
 
           const htmlFilename = baseFilename.replace('.pdf', '.html');
 
-          // Upload HTML
+          // Upload HTML - Add UTF-8 BOM and convert to Buffer to ensure proper encoding
+          // The BOM (Byte Order Mark) tells browsers/editors this is UTF-8
+          const utf8Bom = '\uFEFF';
+          const htmlWithBom = utf8Bom + htmlContent;
+          const htmlBuffer = Buffer.from(htmlWithBom, 'utf-8');
+
           const { error: htmlUploadError } = await supabaseServer.storage
             .from('proposals')
-            .upload(`${proposal.id}/${htmlFilename}`, htmlContent, {
+            .upload(`${proposal.id}/${htmlFilename}`, htmlBuffer, {
               contentType: 'text/html; charset=utf-8',
               cacheControl: '3600',
               upsert: false,
@@ -219,10 +224,10 @@ export async function POST(request: NextRequest) {
               status: 'html_ready',
               generation_stage: 'html_ready',
               html_url: htmlUrl,
-              html_content: htmlContent,
+              html_content: htmlContent, // Store as string - PostgreSQL TEXT type handles UTF-8
               html_generated_at: new Date().toISOString(),
-              research_data: result.research,
-              content_sections: result.content,
+              research_data: result.research, // JSONB stores UTF-8 correctly
+              content_sections: result.content, // JSONB stores UTF-8 correctly
               total_tokens_used: result.metadata.totalTokensUsed,
               estimated_cost: result.metadata.totalCost,
               generation_time_seconds: result.metadata.totalDurationSeconds,
