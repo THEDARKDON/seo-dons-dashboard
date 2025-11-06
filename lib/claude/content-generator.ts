@@ -184,6 +184,16 @@ export interface ContentGenerationRequest {
   companyName: string;
   packageTier: 'local' | 'regional' | 'national';
   customInstructions?: string;
+
+  // Customer Contact Details
+  contactName?: string;
+  jobTitle?: string;
+  email?: string;
+  phoneNumber?: string;
+  linkedInUrl?: string;
+
+  // SDR Notes for personalization
+  notes?: string;
 }
 
 // ============================================================================
@@ -288,11 +298,20 @@ Return a valid JSON object with all fields from the ProposalContent TypeScript i
 export async function generateProposalContent(
   request: ContentGenerationRequest
 ): Promise<ProposalContent> {
-  const { researchData, companyName, packageTier, customInstructions } = request;
+  const { researchData, companyName, packageTier, customInstructions, contactName, jobTitle, email, phoneNumber, linkedInUrl, notes } = request;
 
   // Build comprehensive context for Claude
   const userPrompt = sanitizeForPrompt(`
 Generate a comprehensive SEO proposal for: **${companyName}**
+
+## CLIENT CONTACT INFORMATION
+${contactName ? `**Contact Name:** ${contactName}` : ''}
+${jobTitle ? `**Job Title:** ${jobTitle}` : ''}
+${email ? `**Email:** ${email}` : ''}
+${phoneNumber ? `**Phone:** ${phoneNumber}` : ''}
+${linkedInUrl ? `**LinkedIn:** ${linkedInUrl}` : ''}
+
+${notes ? `## SDR NOTES (CRITICAL - Use these insights to personalize the proposal tone, content, and recommendations):\n${notes}\n` : ''}
 
 ## RESEARCH DATA
 

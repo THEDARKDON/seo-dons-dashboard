@@ -30,6 +30,17 @@ export interface ProposalGenerationRequest {
 
   // Additional Context
   additionalContext?: string;
+
+  // Customer Contact Details
+  jobTitle?: string;
+  phoneNumber?: string;
+  email?: string;
+  linkedInUrl?: string;
+  address?: string;
+  postalCode?: string;
+
+  // SDR Notes - Critical for personalization
+  notes?: string;
 }
 
 export interface ProposalResult {
@@ -95,6 +106,13 @@ export async function generateCompleteProposal(
       location: request.location,
       packageTier: request.packageTier,
       additionalContext: request.additionalContext,
+      jobTitle: request.jobTitle,
+      phoneNumber: request.phoneNumber,
+      email: request.email,
+      linkedInUrl: request.linkedInUrl,
+      notes: request.notes,
+      address: request.address,
+      postalCode: request.postalCode,
     };
 
     const researchProgressWrapper = async (stage: string, progress: number) => {
@@ -126,6 +144,12 @@ export async function generateCompleteProposal(
       companyName: request.companyName,
       packageTier: request.packageTier,
       customInstructions: request.customInstructions,
+      contactName: request.contactName,
+      jobTitle: request.jobTitle,
+      email: request.email,
+      phoneNumber: request.phoneNumber,
+      linkedInUrl: request.linkedInUrl,
+      notes: request.notes,
     };
 
     console.log(`[Proposal Generator] Generating content for: ${request.companyName}`);

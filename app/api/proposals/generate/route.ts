@@ -90,6 +90,15 @@ export async function POST(request: NextRequest) {
       packageTier: body.packageTier,
       contactName: body.contactName || `${customer.first_name} ${customer.last_name}`,
       customInstructions: body.customInstructions,
+
+      // Additional customer context for personalized proposals
+      jobTitle: customer.job_title,
+      phoneNumber: customer.phone,
+      email: customer.email,
+      linkedInUrl: customer.linkedin_url,
+      notes: customer.notes, // SDR notes - critical for personalization
+      address: customer.address,
+      postalCode: customer.postal_code,
     };
 
     const validation = validateProposalRequest(proposalRequest);
@@ -160,27 +169,23 @@ export async function POST(request: NextRequest) {
           );
 
           // ================================================================
-          // 8. GENERATE HTML & PDF
+          // 8. GENERATE HTML ONLY (PDF conversion done separately)
           // ================================================================
           await sendProgress('Generating HTML', 92, 'Creating HTML document...');
 
           validateProposalContent(result.content);
           const htmlContent = generateProposalHTML(result.content);
 
-          await sendProgress('Generating PDF', 95, 'Creating PDF document...');
-          const pdfBuffer = await generateProposalPDF(result.content);
-
           // ================================================================
-          // 9. UPLOAD HTML & PDF TO STORAGE
+          // 9. UPLOAD HTML TO STORAGE
           // ================================================================
-          await sendProgress('Uploading files', 97, 'Saving to storage...');
+          await sendProgress('Uploading HTML', 95, 'Saving to storage...');
 
           const baseFilename = getProposalFilename(
             customer.company || `${customer.first_name} ${customer.last_name}`,
             proposal.proposal_number
           );
 
-          const pdfFilename = baseFilename;
           const htmlFilename = baseFilename.replace('.pdf', '.html');
 
           // Upload HTML
@@ -193,45 +198,29 @@ export async function POST(request: NextRequest) {
             });
 
           if (htmlUploadError) {
-            console.warn('[Proposal API] Failed to upload HTML:', htmlUploadError);
-            // Continue even if HTML upload fails
+            throw new Error(`Failed to upload HTML: ${htmlUploadError.message}`);
           }
 
-          // Upload PDF
-          const { error: pdfUploadError } = await supabaseServer.storage
-            .from('proposals')
-            .upload(`${proposal.id}/${pdfFilename}`, pdfBuffer, {
-              contentType: 'application/pdf',
-              upsert: false,
-            });
-
-          if (pdfUploadError) {
-            throw new Error(`Failed to upload PDF: ${pdfUploadError.message}`);
-          }
-
-          // Get public URLs
-          const { data: pdfUrlData } = supabaseServer.storage
-            .from('proposals')
-            .getPublicUrl(`${proposal.id}/${pdfFilename}`);
-
+          // Get HTML public URL
           const { data: htmlUrlData } = supabaseServer.storage
             .from('proposals')
             .getPublicUrl(`${proposal.id}/${htmlFilename}`);
 
-          const pdfUrl = pdfUrlData.publicUrl;
           const htmlUrl = htmlUrlData.publicUrl;
 
           // ================================================================
-          // 10. UPDATE PROPOSAL RECORD (STATUS: READY)
+          // 10. UPDATE PROPOSAL RECORD (STATUS: HTML_READY)
           // ================================================================
           await sendProgress('Finalizing proposal', 99);
 
           const { error: updateError } = await supabaseServer
             .from('proposals')
             .update({
-              status: 'ready',
-              pdf_url: pdfUrl,
+              status: 'html_ready',
+              generation_stage: 'html_ready',
               html_url: htmlUrl,
+              html_content: htmlContent,
+              html_generated_at: new Date().toISOString(),
               research_data: result.research,
               content_sections: result.content,
               total_tokens_used: result.metadata.totalTokensUsed,
@@ -247,21 +236,22 @@ export async function POST(request: NextRequest) {
           // Log completion
           await supabaseServer.from('proposal_activities').insert({
             proposal_id: proposal.id,
-            activity_type: 'pdf_created',
-            description: `Proposal generated successfully in ${result.metadata.totalDurationSeconds}s`,
+            activity_type: 'created',
+            description: `HTML proposal generated successfully in ${result.metadata.totalDurationSeconds}s. Ready for review and PDF conversion.`,
             user_id: user.id,
           });
 
           // ================================================================
           // 11. SEND COMPLETION EVENT
           // ================================================================
-          await sendProgress('Complete', 100, 'Proposal ready!');
+          await sendProgress('Complete', 100, 'HTML proposal ready for review!');
 
           const completionData = JSON.stringify({
             complete: true,
             proposalId: proposal.id,
             proposalNumber: proposal.proposal_number,
-            pdfUrl,
+            htmlUrl,
+            status: 'html_ready',
             metadata: result.metadata,
           });
 

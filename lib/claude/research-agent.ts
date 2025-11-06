@@ -24,6 +24,17 @@ export interface ResearchRequest {
   location?: string;
   packageTier?: 'local' | 'regional' | 'national';
   additionalContext?: string;
+
+  // Customer Contact Details
+  jobTitle?: string;
+  phoneNumber?: string;
+  email?: string;
+  linkedInUrl?: string;
+  address?: string;
+  postalCode?: string;
+
+  // SDR Notes - Critical for personalization
+  notes?: string;
 }
 
 export interface CompanyAnalysis {
@@ -210,6 +221,14 @@ Analyze this company for an SEO proposal:
 **Industry:** ${request.industry || 'Unknown'}
 **Location:** ${request.location || 'Unknown'}
 **Package Tier:** ${request.packageTier || 'Not specified'}
+
+${request.jobTitle ? `**Contact Job Title:** ${request.jobTitle}` : ''}
+${request.email ? `**Contact Email:** ${request.email}` : ''}
+${request.phoneNumber ? `**Contact Phone:** ${request.phoneNumber}` : ''}
+${request.linkedInUrl ? `**LinkedIn Profile:** ${request.linkedInUrl}` : ''}
+${request.address ? `**Business Address:** ${request.address}` : ''}
+
+${request.notes ? `**SDR Notes (IMPORTANT - Use these insights for personalization):**\n${request.notes}\n` : ''}
 
 ${request.additionalContext ? `**Additional Context:**\n${request.additionalContext}` : ''}
 

@@ -135,8 +135,9 @@ function getEmbeddedStyles(): string {
 
     /* Content Pages */
     .content-page {
-      padding: 25mm 25mm 30mm 25mm;
+      padding: 25mm 25mm 50mm 25mm;
       position: relative;
+      min-height: 247mm;
     }
 
     .page-header {
@@ -165,6 +166,7 @@ function getEmbeddedStyles(): string {
       color: #333;
       margin-bottom: 10mm;
       font-weight: bold;
+      page-break-after: avoid;
     }
 
     h2 {
@@ -173,6 +175,7 @@ function getEmbeddedStyles(): string {
       margin-top: 8mm;
       margin-bottom: 5mm;
       font-weight: bold;
+      page-break-after: avoid;
     }
 
     h3 {
@@ -181,6 +184,7 @@ function getEmbeddedStyles(): string {
       margin-top: 5mm;
       margin-bottom: 3mm;
       font-weight: bold;
+      page-break-after: avoid;
     }
 
     p {
@@ -205,6 +209,8 @@ function getEmbeddedStyles(): string {
       border-collapse: collapse;
       margin: 5mm 0;
       font-size: 14px;
+      table-layout: fixed;
+      page-break-inside: avoid;
     }
 
     .metrics-table th {
@@ -213,6 +219,18 @@ function getEmbeddedStyles(): string {
       padding: 3mm;
       text-align: left;
       font-weight: bold;
+    }
+
+    .metrics-table th:first-child,
+    .metrics-table td:first-child {
+      width: 25%;
+      text-align: left;
+    }
+
+    .metrics-table th:not(:first-child),
+    .metrics-table td:not(:first-child) {
+      width: 18.75%;
+      text-align: center;
     }
 
     .metrics-table td {
@@ -230,6 +248,7 @@ function getEmbeddedStyles(): string {
       padding: 5mm;
       margin: 5mm 0;
       font-size: 14px;
+      page-break-inside: avoid;
     }
 
     .phase-box {
@@ -237,6 +256,16 @@ function getEmbeddedStyles(): string {
       border: 1px solid #ddd;
       padding: 5mm;
       margin: 5mm 0;
+      page-break-inside: avoid;
+    }
+
+    .warning-box {
+      background: #fff3cd;
+      border-left: 4px solid #ff9800;
+      padding: 5mm;
+      margin: 5mm 0;
+      font-size: 14px;
+      page-break-inside: avoid;
     }
 
     .phase-box h3 {
@@ -261,7 +290,12 @@ function getEmbeddedStyles(): string {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 5mm;
-      margin: 5mm 0;
+      margin: 5mm 0 8mm 0;
+      page-break-inside: avoid;
+    }
+
+    .stat-grid + .stat-grid {
+      margin-top: 10mm;
     }
 
     .stat-box {
@@ -314,14 +348,6 @@ function getEmbeddedStyles(): string {
       color: #00CED1;
     }
 
-    .warning-box {
-      background: #fff3cd;
-      border-left: 4px solid #ff9800;
-      padding: 5mm;
-      margin: 5mm 0;
-      font-size: 14px;
-    }
-
     a {
       color: #00CED1;
       text-decoration: none;
@@ -341,14 +367,16 @@ function getEmbeddedStyles(): string {
       padding: 15px;
       text-align: center;
       margin-bottom: 10px;
+      page-break-inside: avoid;
     }
 
     .stat-current, .stat-target {
-      padding: 10px;
+      padding: 12px 10px;
     }
 
     .stat-current {
-      border-bottom: 1px solid #eee;
+      border-bottom: 2px solid #eee;
+      margin-bottom: 8px;
     }
 
     .stat-number {
@@ -377,13 +405,16 @@ function getEmbeddedStyles(): string {
       grid-template-columns: 1fr 1fr;
       gap: 15px;
       margin: 20px 0;
+      page-break-inside: avoid;
     }
 
     .swot-box {
       background: #f8f8f8;
       border-radius: 8px;
       padding: 15px;
-      min-height: 150px;
+      min-height: 200px;
+      display: flex;
+      flex-direction: column;
     }
 
     .swot-title {
@@ -427,26 +458,28 @@ function getEmbeddedStyles(): string {
     .package-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-      margin: 30px 0;
+      gap: 15px;
+      margin: 20px 0;
+      page-break-inside: avoid;
     }
 
     .package-card {
       border: 2px solid #00CED1;
       border-radius: 8px;
-      padding: 20px;
+      padding: 15px;
       text-align: center;
       background: white;
       position: relative;
+      page-break-inside: avoid;
     }
 
     .package-name {
       background: #00CED1;
       color: white;
       padding: 10px;
-      margin: -20px -20px 20px -20px;
+      margin: -15px -15px 15px -15px;
       border-radius: 6px 6px 0 0;
-      font-size: 20px;
+      font-size: 18px;
       font-weight: bold;
     }
 
@@ -488,19 +521,22 @@ function getEmbeddedStyles(): string {
 
     .projection-timeline {
       background: linear-gradient(to right, #e8f9f9, #00CED1);
-      padding: 20px;
+      padding: 15px;
       border-radius: 8px;
       margin: 20px 0;
       display: flex;
       justify-content: space-around;
+      gap: 10px;
+      page-break-inside: avoid;
     }
 
     .projection-period {
       text-align: center;
       background: white;
-      padding: 15px;
+      padding: 12px;
       border-radius: 8px;
-      min-width: 150px;
+      min-width: 140px;
+      flex: 1;
     }
 
     .projection-label {
@@ -530,8 +566,10 @@ function getEmbeddedStyles(): string {
       background: #f0f8ff;
       border: 2px solid #00CED1;
       border-radius: 8px;
-      padding: 20px;
+      padding: 15px;
       margin: 20px 0;
+      page-break-inside: avoid;
+      max-height: 180mm;
     }
 
     .simple-math-title {
@@ -570,6 +608,7 @@ function getEmbeddedStyles(): string {
       border-radius: 8px;
       padding: 20px;
       margin: 20px 0;
+      page-break-inside: avoid;
     }
 
     /* Utility Classes */
@@ -1076,10 +1115,12 @@ function renderNextSteps(steps: ProposalContent['nextSteps'], companyName: strin
  */
 function escapeHTML(text: string): string {
   // Server-side - no DOM available, use manual escaping
+  // Only escape HTML syntax characters, let UTF-8 handle special chars (£, →, ✓)
   return text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
+  // Removed £, →, ✓ encoding - UTF-8 charset handles these naturally
 }
