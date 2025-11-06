@@ -20,28 +20,30 @@ import type { ProposalContent } from '@/lib/claude/content-generator';
  */
 export function generateProposalHTML(content: ProposalContent): string {
   const styles = getEmbeddedStyles();
+  const companyName = content.coverPage.companyName;
+  let pageNumber = 1;
 
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SEO Proposal - ${escapeHTML(content.coverPage.companyName)}</title>
+  <title>SEO Proposal - ${escapeHTML(companyName)}</title>
   <style>${styles}</style>
 </head>
 <body>
   ${renderCoverPage(content.coverPage)}
-  ${renderExecutiveSummary(content.executiveSummary, content.brutalTruthCallouts)}
-  ${renderCurrentSituation(content.currentSituation, content.statisticsCards)}
-  ${renderStrategy(content.recommendedStrategy)}
-  ${renderTechnicalSEO(content.technicalSEO)}
-  ${renderContentStrategy(content.contentStrategy)}
-  ${content.localSEO ? renderLocalSEO(content.localSEO) : ''}
-  ${renderLinkBuilding(content.linkBuilding)}
-  ${renderCompetitorComparison(content.competitorComparison)}
-  ${renderPackageOptions(content.packageOptions)}
-  ${renderProjections(content.projections, content.simpleMathBreakdown)}
-  ${renderNextSteps(content.nextSteps)}
+  ${renderExecutiveSummary(content.executiveSummary, content.brutalTruthCallouts, companyName, ++pageNumber)}
+  ${renderCurrentSituation(content.currentSituation, content.statisticsCards, companyName, ++pageNumber)}
+  ${renderStrategy(content.recommendedStrategy, companyName, ++pageNumber)}
+  ${renderTechnicalSEO(content.technicalSEO, companyName, ++pageNumber)}
+  ${renderContentStrategy(content.contentStrategy, companyName, ++pageNumber)}
+  ${content.localSEO ? renderLocalSEO(content.localSEO, companyName, ++pageNumber) : ''}
+  ${renderLinkBuilding(content.linkBuilding, companyName, ++pageNumber)}
+  ${renderCompetitorComparison(content.competitorComparison, companyName, ++pageNumber)}
+  ${renderPackageOptions(content.packageOptions, companyName, ++pageNumber)}
+  ${renderProjections(content.projections, content.simpleMathBreakdown, companyName, ++pageNumber)}
+  ${renderNextSteps(content.nextSteps, companyName, ++pageNumber)}
 </body>
 </html>`;
 }
@@ -74,6 +76,11 @@ function getEmbeddedStyles(): string {
       margin: 0 auto;
       background: white;
       page-break-after: always;
+      position: relative;
+    }
+
+    .page-content {
+      min-height: calc(297mm - 160px); /* Account for header, footer, and padding */
     }
 
     @media print {
@@ -97,6 +104,23 @@ function getEmbeddedStyles(): string {
       background: linear-gradient(135deg, #00CED1 0%, #20B2AA 100%);
       color: white;
       padding: 80px 40px;
+      position: relative;
+    }
+
+    .seodons-logo {
+      font-size: 48px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    .seodons-tagline {
+      font-size: 14px;
+      font-weight: 300;
+      margin-bottom: 60px;
+      opacity: 0.9;
+      letter-spacing: 1px;
     }
 
     .cover-title {
@@ -122,6 +146,52 @@ function getEmbeddedStyles(): string {
     .cover-date {
       font-size: 16px;
       opacity: 0.8;
+    }
+
+    /* === PAGE HEADER & FOOTER === */
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 16px;
+      margin-bottom: 32px;
+      border-bottom: 2px solid #00CED1;
+    }
+
+    .header-branding {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header-logo {
+      font-size: 20px;
+      font-weight: 800;
+      color: #00CED1;
+      letter-spacing: 1px;
+    }
+
+    .header-tagline {
+      font-size: 10px;
+      color: #666666;
+      letter-spacing: 0.5px;
+    }
+
+    .page-footer {
+      position: absolute;
+      bottom: 40px;
+      left: 40px;
+      right: 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 16px;
+      border-top: 1px solid #e0e0e0;
+      font-size: 10px;
+      color: #666666;
+    }
+
+    .page-number {
+      font-weight: 600;
     }
 
     /* === TYPOGRAPHY === */
@@ -272,10 +342,11 @@ function getEmbeddedStyles(): string {
       width: 100%;
       border-collapse: collapse;
       margin: 24px 0;
+      font-size: 14px;
     }
 
     thead {
-      background: #f3f4f6;
+      background: #00CED1;
     }
 
     th {
@@ -283,8 +354,9 @@ function getEmbeddedStyles(): string {
       text-align: left;
       font-size: 13px;
       font-weight: 600;
-      color: #333333;
-      border-bottom: 2px solid #e0e0e0;
+      color: white;
+      background: #00CED1;
+      border-bottom: 2px solid #00CED1;
     }
 
     td {
@@ -292,6 +364,10 @@ function getEmbeddedStyles(): string {
       font-size: 14px;
       color: #333333;
       border-bottom: 1px solid #e0e0e0;
+    }
+
+    tr:nth-child(even) {
+      background: #f9f9f9;
     }
 
     tr:hover {
@@ -505,9 +581,34 @@ function getEmbeddedStyles(): string {
 // Page Renderers
 // ============================================================================
 
+function renderPageHeader(companyName: string): string {
+  return `
+    <div class="page-header">
+      <div class="header-branding">
+        <div class="header-logo">Seodons</div>
+        <div class="header-tagline">Data-Driven SEO That Delivers Results</div>
+      </div>
+      <div style="text-align: right;">
+        <div style="font-size: 12px; font-weight: 600; color: #333;">${escapeHTML(companyName)}</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderPageFooter(pageNumber: number): string {
+  return `
+    <div class="page-footer">
+      <div>© ${new Date().getFullYear()} Seodons. All rights reserved.</div>
+      <div class="page-number">Page ${pageNumber}</div>
+    </div>
+  `;
+}
+
 function renderCoverPage(cover: ProposalContent['coverPage']): string {
   return `
     <div class="page cover-page">
+      <div class="seodons-logo">SEO DONS</div>
+      <div class="seodons-tagline">Data-Driven SEO That Delivers Results</div>
       <div class="cover-title">${escapeHTML(cover.title)}</div>
       <div class="cover-subtitle">${escapeHTML(cover.subtitle)}</div>
       <div class="cover-company">${escapeHTML(cover.companyName)}</div>
@@ -519,375 +620,425 @@ function renderCoverPage(cover: ProposalContent['coverPage']): string {
 
 function renderExecutiveSummary(
   summary: ProposalContent['executiveSummary'],
-  callouts?: ProposalContent['brutalTruthCallouts']
+  callouts: ProposalContent['brutalTruthCallouts'] | undefined,
+  companyName: string,
+  pageNumber: number
 ): string {
   return `
     <div class="page">
-      <h1>Executive Summary</h1>
+      ${renderPageHeader(companyName)}
+      <div class="page-content">
+        <h1>Executive Summary</h1>
 
-      ${callouts && callouts.length > 0 ? callouts.map(callout => `
-        <div class="${callout.type === 'warning' ? 'brutal-truth' : 'info-callout'}">
-          <div class="brutal-truth-title">${escapeHTML(callout.title)}</div>
-          <div class="brutal-truth-content">${escapeHTML(callout.content)}</div>
-        </div>
-      `).join('') : ''}
+        ${callouts && callouts.length > 0 ? callouts.map(callout => `
+          <div class="${callout.type === 'warning' ? 'brutal-truth' : 'info-callout'}">
+            <div class="brutal-truth-title">${escapeHTML(callout.title)}</div>
+            <div class="brutal-truth-content">${escapeHTML(callout.content)}</div>
+          </div>
+        `).join('') : ''}
 
-      <p>${escapeHTML(summary.overview)}</p>
+        <p>${escapeHTML(summary.overview)}</p>
 
-      <h2>Key Findings</h2>
-      <ul>
-        ${summary.keyFindings.map(finding => `<li>${escapeHTML(finding)}</li>`).join('')}
-      </ul>
+        <h2>Key Findings</h2>
+        <ul>
+          ${summary.keyFindings.map(finding => `<li>${escapeHTML(finding)}</li>`).join('')}
+        </ul>
 
-      <h2>Recommended Strategy</h2>
-      <p>${escapeHTML(summary.recommendedStrategy)}</p>
+        <h2>Recommended Strategy</h2>
+        <p>${escapeHTML(summary.recommendedStrategy)}</p>
 
-      <h2>Expected Outcomes</h2>
-      <ul>
-        ${summary.expectedOutcomes.map(outcome => `<li>${escapeHTML(outcome)}</li>`).join('')}
-      </ul>
+        <h2>Expected Outcomes</h2>
+        <ul>
+          ${summary.expectedOutcomes.map(outcome => `<li>${escapeHTML(outcome)}</li>`).join('')}
+        </ul>
+      </div>
+      ${renderPageFooter(pageNumber)}
     </div>
   `;
 }
 
 function renderCurrentSituation(
   situation: ProposalContent['currentSituation'],
-  statsCards?: ProposalContent['statisticsCards']
+  statsCards: ProposalContent['statisticsCards'] | undefined,
+  companyName: string,
+  pageNumber: number
 ): string {
   return `
     <div class="page">
-      <h1>Current Situation Analysis</h1>
+      ${renderPageHeader(companyName)}
+      <div class="page-content">
+        <h1>Current Situation Analysis</h1>
 
-      ${statsCards && statsCards.length > 0 ? `
-        <div class="stats-grid">
-          ${statsCards.map(card => `
-            <div class="stat-comparison">
-              <div class="stat-current">
-                <div class="stat-number">${escapeHTML(card.currentNumber)}</div>
-                <div class="stat-label">${escapeHTML(card.currentLabel)}</div>
+        ${statsCards && statsCards.length > 0 ? `
+          <div class="stats-grid">
+            ${statsCards.map(card => `
+              <div class="stat-comparison">
+                <div class="stat-current">
+                  <div class="stat-number">${escapeHTML(card.currentNumber)}</div>
+                  <div class="stat-label">${escapeHTML(card.currentLabel)}</div>
+                </div>
+                <div class="stat-target">
+                  <div class="stat-number">${escapeHTML(card.targetNumber)}</div>
+                  <div class="stat-label">${escapeHTML(card.targetLabel)}</div>
+                </div>
               </div>
-              <div class="stat-target">
-                <div class="stat-number">${escapeHTML(card.targetNumber)}</div>
-                <div class="stat-label">${escapeHTML(card.targetLabel)}</div>
-              </div>
-            </div>
-            ${card.context ? `<p class="text-center">${escapeHTML(card.context)}</p>` : ''}
-          `).join('')}
-        </div>
-      ` : ''}
+              ${card.context ? `<p class="text-center">${escapeHTML(card.context)}</p>` : ''}
+            `).join('')}
+          </div>
+        ` : ''}
 
-      <h2>Digital Presence Overview</h2>
-      <p>${escapeHTML(situation.digitalPresence)}</p>
+        <h2>Digital Presence Overview</h2>
+        <p>${escapeHTML(situation.digitalPresence)}</p>
 
-      <div class="swot-grid">
-        <div class="swot-box swot-strengths">
-          <div class="swot-title">Strengths</div>
-          <ul>
-            ${situation.strengths.map(s => `<li>${escapeHTML(s)}</li>`).join('')}
-          </ul>
-        </div>
+        <div class="swot-grid">
+          <div class="swot-box swot-strengths">
+            <div class="swot-title">Strengths</div>
+            <ul>
+              ${situation.strengths.map(s => `<li>${escapeHTML(s)}</li>`).join('')}
+            </ul>
+          </div>
 
-        <div class="swot-box swot-weaknesses">
-          <div class="swot-title">Weaknesses</div>
-          <ul>
-            ${situation.weaknesses.map(w => `<li>${escapeHTML(w)}</li>`).join('')}
-          </ul>
-        </div>
+          <div class="swot-box swot-weaknesses">
+            <div class="swot-title">Weaknesses</div>
+            <ul>
+              ${situation.weaknesses.map(w => `<li>${escapeHTML(w)}</li>`).join('')}
+            </ul>
+          </div>
 
-        <div class="swot-box swot-opportunities">
-          <div class="swot-title">Opportunities</div>
-          <ul>
-            ${situation.opportunities.map(o => `<li>${escapeHTML(o)}</li>`).join('')}
-          </ul>
-        </div>
+          <div class="swot-box swot-opportunities">
+            <div class="swot-title">Opportunities</div>
+            <ul>
+              ${situation.opportunities.map(o => `<li>${escapeHTML(o)}</li>`).join('')}
+            </ul>
+          </div>
 
-        <div class="swot-box swot-threats">
-          <div class="swot-title">Threats</div>
-          <ul>
-            ${situation.threats.map(t => `<li>${escapeHTML(t)}</li>`).join('')}
-          </ul>
+          <div class="swot-box swot-threats">
+            <div class="swot-title">Threats</div>
+            <ul>
+              ${situation.threats.map(t => `<li>${escapeHTML(t)}</li>`).join('')}
+            </ul>
+          </div>
         </div>
       </div>
+      ${renderPageFooter(pageNumber)}
     </div>
   `;
 }
 
-function renderStrategy(strategy: ProposalContent['recommendedStrategy']): string {
+function renderStrategy(strategy: ProposalContent['recommendedStrategy'], companyName: string, pageNumber: number): string {
   return `
     <div class="page">
-      <h1>Recommended Strategy</h1>
+      ${renderPageHeader(companyName)}
+      <div class="page-content">
+        <h1>Recommended Strategy</h1>
 
-      <p>${escapeHTML(strategy.strategyOverview)}</p>
+        <p>${escapeHTML(strategy.strategyOverview)}</p>
 
-      <h2>Core Objectives</h2>
-      <ul>
-        ${strategy.coreObjectives.map(obj => `<li>${escapeHTML(obj)}</li>`).join('')}
-      </ul>
+        <h2>Core Objectives</h2>
+        <ul>
+          ${strategy.coreObjectives.map(obj => `<li>${escapeHTML(obj)}</li>`).join('')}
+        </ul>
 
-      <h2>Strategic Pillars</h2>
-      <ul>
-        ${strategy.keyPillars.map(pillar => `<li>${escapeHTML(pillar)}</li>`).join('')}
-      </ul>
+        <h2>Strategic Pillars</h2>
+        <ul>
+          ${strategy.keyPillars.map(pillar => `<li>${escapeHTML(pillar)}</li>`).join('')}
+        </ul>
 
-      <h2>Timeline</h2>
-      <p>${escapeHTML(strategy.timeline)}</p>
+        <h2>Timeline</h2>
+        <p>${escapeHTML(strategy.timeline)}</p>
+      </div>
+      ${renderPageFooter(pageNumber)}
     </div>
   `;
 }
 
-function renderTechnicalSEO(technical: ProposalContent['technicalSEO']): string {
+function renderTechnicalSEO(technical: ProposalContent['technicalSEO'], companyName: string, pageNumber: number): string {
   return `
     <div class="page">
-      <h1>Technical SEO</h1>
+      ${renderPageHeader(companyName)}
+      <div class="page-content">
+        <h1>Technical SEO</h1>
 
-      <p>${escapeHTML(technical.overview)}</p>
+        <p>${escapeHTML(technical.overview)}</p>
 
-      <h2>Priority Actions</h2>
-      ${technical.priorities.map(priority => `
-        <div class="mb-32">
-          <h3>${escapeHTML(priority.title)}</h3>
-          <p>${escapeHTML(priority.description)}</p>
-          <p><strong>Impact:</strong> ${escapeHTML(priority.impact)}</p>
-        </div>
-      `).join('')}
+        <h2>Priority Actions</h2>
+        ${technical.priorities.map(priority => `
+          <div class="mb-32">
+            <h3>${escapeHTML(priority.title)}</h3>
+            <p>${escapeHTML(priority.description)}</p>
+            <p><strong>Impact:</strong> ${escapeHTML(priority.impact)}</p>
+          </div>
+        `).join('')}
+      </div>
+      ${renderPageFooter(pageNumber)}
     </div>
   `;
 }
 
-function renderContentStrategy(content: ProposalContent['contentStrategy']): string {
+function renderContentStrategy(content: ProposalContent['contentStrategy'], companyName: string, pageNumber: number): string {
   return `
     <div class="page">
-      <h1>Content Strategy</h1>
+      ${renderPageHeader(companyName)}
+      <div class="page-content">
+        <h1>Content Strategy</h1>
 
-      <p>${escapeHTML(content.overview)}</p>
+        <p>${escapeHTML(content.overview)}</p>
 
-      <h2>Content Pillars</h2>
-      ${content.contentPillars.map(pillar => `
-        <div class="mb-32">
-          <h3>${escapeHTML(pillar.pillar)}</h3>
-          <p><strong>Topics:</strong> ${pillar.topics.map(escapeHTML).join(', ')}</p>
-          <p><strong>Target Keywords:</strong> ${pillar.keywords.map(escapeHTML).join(', ')}</p>
-        </div>
-      `).join('')}
+        <h2>Content Pillars</h2>
+        ${content.contentPillars.map(pillar => `
+          <div class="mb-32">
+            <h3>${escapeHTML(pillar.pillar)}</h3>
+            <p><strong>Topics:</strong> ${pillar.topics.map(escapeHTML).join(', ')}</p>
+            <p><strong>Target Keywords:</strong> ${pillar.keywords.map(escapeHTML).join(', ')}</p>
+          </div>
+        `).join('')}
 
-      <h2>Content Calendar</h2>
-      <p>${escapeHTML(content.contentCalendar)}</p>
+        <h2>Content Calendar</h2>
+        <p>${escapeHTML(content.contentCalendar)}</p>
+      </div>
+      ${renderPageFooter(pageNumber)}
     </div>
   `;
 }
 
-function renderLocalSEO(local: NonNullable<ProposalContent['localSEO']>): string {
+function renderLocalSEO(local: NonNullable<ProposalContent['localSEO']>, companyName: string, pageNumber: number): string {
   return `
     <div class="page">
-      <h1>Local SEO Strategy</h1>
+      ${renderPageHeader(companyName)}
+      <div class="page-content">
+        <h1>Local SEO Strategy</h1>
 
-      <p>${escapeHTML(local.overview)}</p>
+        <p>${escapeHTML(local.overview)}</p>
 
-      <h2>Tactics</h2>
-      <ul>
-        ${local.tactics.map(tactic => `<li>${escapeHTML(tactic)}</li>`).join('')}
-      </ul>
+        <h2>Tactics</h2>
+        <ul>
+          ${local.tactics.map(tactic => `<li>${escapeHTML(tactic)}</li>`).join('')}
+        </ul>
 
-      <h2>Location Pages</h2>
-      ${local.locationPages.map(page => `
-        <div class="mb-32">
-          <h3>${escapeHTML(page.location)}</h3>
-          <p><strong>Keywords:</strong> ${page.keywords.map(escapeHTML).join(', ')}</p>
-          <p>${escapeHTML(page.contentStrategy)}</p>
-        </div>
-      `).join('')}
+        <h2>Location Pages</h2>
+        ${local.locationPages.map(page => `
+          <div class="mb-32">
+            <h3>${escapeHTML(page.location)}</h3>
+            <p><strong>Keywords:</strong> ${page.keywords.map(escapeHTML).join(', ')}</p>
+            <p>${escapeHTML(page.contentStrategy)}</p>
+          </div>
+        `).join('')}
+      </div>
+      ${renderPageFooter(pageNumber)}
     </div>
   `;
 }
 
-function renderLinkBuilding(links: ProposalContent['linkBuilding']): string {
+function renderLinkBuilding(links: ProposalContent['linkBuilding'], companyName: string, pageNumber: number): string {
   return `
     <div class="page">
-      <h1>Link Building Strategy</h1>
+      ${renderPageHeader(companyName)}
+      <div class="page-content">
+        <h1>Link Building Strategy</h1>
 
-      <p>${escapeHTML(links.overview)}</p>
+        <p>${escapeHTML(links.overview)}</p>
 
-      <h2>Strategic Approach</h2>
-      <p>${escapeHTML(links.strategy)}</p>
+        <h2>Strategic Approach</h2>
+        <p>${escapeHTML(links.strategy)}</p>
 
-      <h2>Tactics</h2>
-      <ul>
-        ${links.tactics.map(tactic => `<li>${escapeHTML(tactic)}</li>`).join('')}
-      </ul>
+        <h2>Tactics</h2>
+        <ul>
+          ${links.tactics.map(tactic => `<li>${escapeHTML(tactic)}</li>`).join('')}
+        </ul>
 
-      <h2>Expected Acquisition</h2>
-      <p>${escapeHTML(links.expectedAcquisition)}</p>
+        <h2>Expected Acquisition</h2>
+        <p>${escapeHTML(links.expectedAcquisition)}</p>
+      </div>
+      ${renderPageFooter(pageNumber)}
     </div>
   `;
 }
 
-function renderCompetitorComparison(comparison?: ProposalContent['competitorComparison']): string {
+function renderCompetitorComparison(comparison: ProposalContent['competitorComparison'] | undefined, companyName: string, pageNumber: number): string {
   if (!comparison || !comparison.metrics || comparison.metrics.length === 0) {
     return '';
   }
 
   return `
     <div class="page">
-      <h1>Competitive Analysis</h1>
+      ${renderPageHeader(companyName)}
+      <div class="page-content">
+        <h1>Competitive Analysis</h1>
 
-      <table>
-        <thead>
-          <tr>
-            <th>Metric</th>
-            <th>Your Business</th>
-            <th>Competitor A</th>
-            <th>Competitor B</th>
-            <th>Market Leader</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${comparison.metrics.map(metric => `
+        <table>
+          <thead>
             <tr>
-              <td><strong>${escapeHTML(metric.metric)}</strong></td>
-              <td>${escapeHTML(metric.yourBusiness)}</td>
-              <td>${escapeHTML(metric.topCompetitorA)}</td>
-              <td>${escapeHTML(metric.topCompetitorB)}</td>
-              <td>${escapeHTML(metric.marketLeader)}</td>
+              <th>Metric</th>
+              <th>Your Business</th>
+              <th>Competitor A</th>
+              <th>Competitor B</th>
+              <th>Market Leader</th>
             </tr>
-          `).join('')}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            ${comparison.metrics.map(metric => `
+              <tr>
+                <td><strong>${escapeHTML(metric.metric)}</strong></td>
+                <td>${escapeHTML(metric.yourBusiness)}</td>
+                <td>${escapeHTML(metric.topCompetitorA)}</td>
+                <td>${escapeHTML(metric.topCompetitorB)}</td>
+                <td>${escapeHTML(metric.marketLeader)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+      ${renderPageFooter(pageNumber)}
     </div>
   `;
 }
 
-function renderPackageOptions(packages: ProposalContent['packageOptions']): string {
+function renderPackageOptions(packages: ProposalContent['packageOptions'], companyName: string, pageNumber: number): string {
   return `
     <div class="page">
-      <h1>Investment Options</h1>
+      ${renderPageHeader(companyName)}
+      <div class="page-content">
+        <h1>Investment Options</h1>
 
-      <div class="package-grid">
-        ${packages.map(pkg => `
-          <div class="package-card">
-            <div class="package-name">${escapeHTML(pkg.name)}</div>
-            <div class="package-price">£${pkg.monthlyInvestment.toLocaleString()}</div>
-            <div class="package-price-period">per month</div>
+        <div class="package-grid">
+          ${packages.map(pkg => `
+            <div class="package-card">
+              <div class="package-name">${escapeHTML(pkg.name)}</div>
+              <div class="package-price">£${pkg.monthlyInvestment.toLocaleString()}</div>
+              <div class="package-price-period">per month</div>
 
-            <ul class="package-features">
-              ${pkg.deliverables.map(d => `<li>${escapeHTML(d)}</li>`).join('')}
-              <li>${pkg.keywordCount} target keywords</li>
-              <li>${pkg.contentPerMonth} content pieces/month</li>
-              <li>${pkg.backlinksPerMonth} quality backlinks/month</li>
-            </ul>
-          </div>
-        `).join('')}
+              <ul class="package-features">
+                ${pkg.deliverables.map(d => `<li>${escapeHTML(d)}</li>`).join('')}
+                <li>${pkg.keywordCount} target keywords</li>
+                <li>${pkg.contentPerMonth} content pieces/month</li>
+                <li>${pkg.backlinksPerMonth} quality backlinks/month</li>
+              </ul>
+            </div>
+          `).join('')}
+        </div>
       </div>
+      ${renderPageFooter(pageNumber)}
     </div>
   `;
 }
 
 function renderProjections(
   projections: ProposalContent['projections'],
-  simpleMath?: ProposalContent['simpleMathBreakdown']
+  simpleMath: ProposalContent['simpleMathBreakdown'] | undefined,
+  companyName: string,
+  pageNumber: number
 ): string {
   return `
     <div class="page">
-      <h1>Growth Projections & ROI</h1>
+      ${renderPageHeader(companyName)}
+      <div class="page-content">
+        <h1>Growth Projections & ROI</h1>
 
-      <div class="projection-timeline">
-        <div class="projection-period">
-          <div class="projection-label">Month 6</div>
-          <div class="projection-metric">
-            <div class="projection-metric-label">Traffic</div>
-            <div class="projection-metric-value">${projections.month6.traffic.toLocaleString()}</div>
+        <div class="projection-timeline">
+          <div class="projection-period">
+            <div class="projection-label">Month 6</div>
+            <div class="projection-metric">
+              <div class="projection-metric-label">Traffic</div>
+              <div class="projection-metric-value">${projections.month6.traffic.toLocaleString()}</div>
+            </div>
+            <div class="projection-metric">
+              <div class="projection-metric-label">Leads</div>
+              <div class="projection-metric-value">${projections.month6.leads.toLocaleString()}</div>
+            </div>
+            <div class="projection-metric">
+              <div class="projection-metric-label">Revenue</div>
+              <div class="projection-metric-value">£${projections.month6.revenue.toLocaleString()}</div>
+            </div>
           </div>
-          <div class="projection-metric">
-            <div class="projection-metric-label">Leads</div>
-            <div class="projection-metric-value">${projections.month6.leads.toLocaleString()}</div>
-          </div>
-          <div class="projection-metric">
-            <div class="projection-metric-label">Revenue</div>
-            <div class="projection-metric-value">£${projections.month6.revenue.toLocaleString()}</div>
+
+          <div class="projection-period">
+            <div class="projection-label">Month 12</div>
+            <div class="projection-metric">
+              <div class="projection-metric-label">Traffic</div>
+              <div class="projection-metric-value">${projections.month12.traffic.toLocaleString()}</div>
+            </div>
+            <div class="projection-metric">
+              <div class="projection-metric-label">Leads</div>
+              <div class="projection-metric-value">${projections.month12.leads.toLocaleString()}</div>
+            </div>
+            <div class="projection-metric">
+              <div class="projection-metric-label">Revenue</div>
+              <div class="projection-metric-value">£${projections.month12.revenue.toLocaleString()}</div>
+            </div>
           </div>
         </div>
 
-        <div class="projection-period">
-          <div class="projection-label">Month 12</div>
-          <div class="projection-metric">
-            <div class="projection-metric-label">Traffic</div>
-            <div class="projection-metric-value">${projections.month12.traffic.toLocaleString()}</div>
-          </div>
-          <div class="projection-metric">
-            <div class="projection-metric-label">Leads</div>
-            <div class="projection-metric-value">${projections.month12.leads.toLocaleString()}</div>
-          </div>
-          <div class="projection-metric">
-            <div class="projection-metric-label">Revenue</div>
-            <div class="projection-metric-value">£${projections.month12.revenue.toLocaleString()}</div>
-          </div>
-        </div>
-      </div>
+        ${simpleMath ? `
+          <div class="simple-math">
+            <div class="simple-math-title">The Simple Math</div>
 
-      ${simpleMath ? `
-        <div class="simple-math">
-          <div class="simple-math-title">The Simple Math</div>
-
-          ${simpleMath.steps.map(step => `
-            <div class="simple-math-step">
-              <div>
-                <strong>${escapeHTML(step.month)}</strong>
-                <div style="font-size: 12px; color: #666;">
-                  ${step.traffic.toLocaleString()} visitors →
-                  ${step.leads.toLocaleString()} leads →
-                  ${step.customers.toLocaleString()} customers
+            ${simpleMath.steps.map(step => `
+              <div class="simple-math-step">
+                <div>
+                  <strong>${escapeHTML(step.month)}</strong>
+                  <div style="font-size: 12px; color: #666;">
+                    ${step.traffic.toLocaleString()} visitors →
+                    ${step.leads.toLocaleString()} leads →
+                    ${step.customers.toLocaleString()} customers
+                  </div>
+                </div>
+                <div style="font-size: 20px; font-weight: 700; color: #00CED1;">
+                  £${step.revenue.toLocaleString()}
                 </div>
               </div>
-              <div style="font-size: 20px; font-weight: 700; color: #00CED1;">
-                £${step.revenue.toLocaleString()}
-              </div>
+            `).join('')}
+
+            <div class="simple-math-result">
+              <div>Total Investment</div>
+              <div class="simple-math-result-value">£${simpleMath.totalInvestment.toLocaleString()}</div>
+              <div style="margin: 16px 0;">Total Return</div>
+              <div class="simple-math-result-value">£${simpleMath.totalReturn.toLocaleString()}</div>
+              <div style="margin: 16px 0; font-size: 18px;">ROI</div>
+              <div class="simple-math-result-value">${simpleMath.roi}%</div>
             </div>
-          `).join('')}
-
-          <div class="simple-math-result">
-            <div>Total Investment</div>
-            <div class="simple-math-result-value">£${simpleMath.totalInvestment.toLocaleString()}</div>
-            <div style="margin: 16px 0;">Total Return</div>
-            <div class="simple-math-result-value">£${simpleMath.totalReturn.toLocaleString()}</div>
-            <div style="margin: 16px 0; font-size: 18px;">ROI</div>
-            <div class="simple-math-result-value">${simpleMath.roi}%</div>
           </div>
-        </div>
-      ` : ''}
+        ` : ''}
 
-      <h2>Return on Investment</h2>
-      <p><strong>ROI:</strong> ${projections.roi.percentage}%</p>
-      <p><strong>Payback Period:</strong> ${escapeHTML(projections.roi.paybackPeriod)}</p>
-      <p><strong>Lifetime Value:</strong> £${projections.roi.lifetimeValue.toLocaleString()}</p>
+        <h2>Return on Investment</h2>
+        <p><strong>ROI:</strong> ${projections.roi.percentage}%</p>
+        <p><strong>Payback Period:</strong> ${escapeHTML(projections.roi.paybackPeriod)}</p>
+        <p><strong>Lifetime Value:</strong> £${projections.roi.lifetimeValue.toLocaleString()}</p>
+      </div>
+      ${renderPageFooter(pageNumber)}
     </div>
   `;
 }
 
-function renderNextSteps(steps: ProposalContent['nextSteps']): string {
+function renderNextSteps(steps: ProposalContent['nextSteps'], companyName: string, pageNumber: number): string {
   return `
     <div class="page">
-      <h1>Next Steps</h1>
+      ${renderPageHeader(companyName)}
+      <div class="page-content">
+        <h1>Next Steps</h1>
 
-      <h2>Immediate Actions</h2>
-      <ul>
-        ${steps.immediate.map(step => `<li>${escapeHTML(step)}</li>`).join('')}
-      </ul>
+        <h2>Immediate Actions</h2>
+        <ul>
+          ${steps.immediate.map(step => `<li>${escapeHTML(step)}</li>`).join('')}
+        </ul>
 
-      <h2>Onboarding Process</h2>
-      <ul>
-        ${steps.onboarding.map(step => `<li>${escapeHTML(step)}</li>`).join('')}
-      </ul>
+        <h2>Onboarding Process</h2>
+        <ul>
+          ${steps.onboarding.map(step => `<li>${escapeHTML(step)}</li>`).join('')}
+        </ul>
 
-      <h2>Project Kickoff</h2>
-      <p>${escapeHTML(steps.kickoff)}</p>
+        <h2>Project Kickoff</h2>
+        <p>${escapeHTML(steps.kickoff)}</p>
 
-      <div class="info-callout mt-32">
-        <p style="text-align: center; font-size: 16px; font-weight: 600; margin: 0;">
-          Ready to transform your digital presence?
-        </p>
-        <p style="text-align: center; margin: 8px 0 0 0;">
-          Let's schedule a call to discuss your growth strategy.
-        </p>
+        <div class="info-callout mt-32">
+          <p style="text-align: center; font-size: 16px; font-weight: 600; margin: 0;">
+            Ready to transform your digital presence?
+          </p>
+          <p style="text-align: center; margin: 8px 0 0 0;">
+            Let's schedule a call to discuss your growth strategy.
+          </p>
+        </div>
       </div>
+      ${renderPageFooter(pageNumber)}
     </div>
   `;
 }
