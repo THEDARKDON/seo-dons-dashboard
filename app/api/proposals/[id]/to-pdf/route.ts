@@ -37,8 +37,8 @@ export async function POST(
     const { data: proposal, error: proposalError } = await supabaseServer
       .from('proposals')
       .select('*')
-      .single()
-      .eq('id', params.id);
+      .eq('id', params.id)
+      .single();
 
     if (proposalError || !proposal) {
       return NextResponse.json(
