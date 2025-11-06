@@ -1,44 +1,69 @@
 /**
  * PDF Styles for SEO Proposal
  *
- * Professional styling matching A1 Mobility template
+ * Enhanced styling matching Visiting Angels professional design
+ * Color scheme: Turquoise/Cyan primary with clean gray text
  */
 
-import { StyleSheet, Font } from '@react-pdf/renderer';
+import { StyleSheet } from '@react-pdf/renderer';
 
-// Register fonts (using built-in fonts for now)
-// TODO: Add custom fonts if needed
+// TODO: Register custom fonts if needed in the future
+// import { Font } from '@react-pdf/renderer';
+// Font.register({ family: 'CustomFont', src: '/fonts/custom.ttf' });
 
 export const colors = {
-  primary: '#00CED1', // Cyan/Turquoise (A1 Mobility accent color)
-  secondary: '#64748b', // Slate
-  accent: '#0ea5e9', // Sky blue
-  text: '#1e293b', // Dark slate
-  textLight: '#64748b', // Light slate
+  // Primary brand colors (Visiting Angels style - Turquoise/Cyan)
+  primary: '#00CED1', // Turquoise/Cyan
+  primaryDark: '#20B2AA', // Light sea green
+  primaryVeryDark: '#006B6E', // Very dark cyan for covers
+
+  // Text colors (Visiting Angels uses darker, more readable grays)
+  text: '#333333', // Dark gray (more readable than slate)
+  textLight: '#666666', // Medium gray
+  textMuted: '#999999', // Light gray for subtle text
+
+  // Background colors
   background: '#ffffff',
-  border: '#e2e8f0',
+  backgroundLight: '#f9f9f9', // Light gray background
+  backgroundHighlight: '#e8f9f9', // Light cyan background (Visiting Angels style)
+  backgroundAlternate: '#f8f8f8', // Alternate row color
+
+  // Borders and dividers
+  border: '#ddd', // Visiting Angels uses lighter borders
+  borderLight: '#e2e8f0',
+
+  // Accent colors
   success: '#10b981',
-  warning: '#ff9800', // Orange (A1 Mobility warning color)
-  warningLight: '#fff3cd', // Light yellow background
-  cyan: '#00CED1', // A1 Mobility primary
-  cyanLight: '#e8f9f9', // Light cyan background
+  warning: '#ff9800',
+  warningLight: '#fff3cd',
+
+  // Legacy support (keep for backward compatibility)
+  secondary: '#64748b',
+  accent: '#0ea5e9',
+  cyan: '#00CED1',
+  cyanLight: '#e8f9f9',
 };
 
 export const styles = StyleSheet.create({
-  // Document
+  // ============================================================================
+  // DOCUMENT & PAGE
+  // ============================================================================
   page: {
     padding: 40,
     fontSize: 11,
     fontFamily: 'Helvetica',
     color: colors.text,
     backgroundColor: colors.background,
+    lineHeight: 1.5,
   },
 
-  // Cover Page (A1 Mobility Design with Cyan Gradient)
+  // ============================================================================
+  // COVER PAGE (Visiting Angels Style)
+  // ============================================================================
   coverPageContainer: {
     padding: 0,
     position: 'relative',
-    backgroundColor: '#006B6E', // Dark cyan base
+    backgroundColor: colors.primaryVeryDark,
   },
   coverGradient: {
     position: 'absolute',
@@ -46,7 +71,7 @@ export const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: '#006B6E', // Gradient from dark to light cyan
+    backgroundColor: colors.primaryVeryDark,
   },
   coverContent: {
     flex: 1,
@@ -60,48 +85,51 @@ export const styles = StyleSheet.create({
     fontFamily: 'Helvetica-Bold',
     color: '#ffffff',
     letterSpacing: 4,
-    marginBottom: 4,
+    marginBottom: 8,
   },
   coverBrandTagline: {
-    fontSize: 11,
+    fontSize: 12,
     color: '#ffffff',
     letterSpacing: 1,
     textTransform: 'uppercase',
-    marginBottom: 60,
+    marginBottom: 80,
+    opacity: 0.95,
   },
   coverTitleSection: {
-    marginBottom: 40,
+    marginBottom: 50,
   },
   coverMainTitle: {
-    fontSize: 36,
+    fontSize: 42,
     fontFamily: 'Helvetica-Bold',
     color: '#ffffff',
-    marginBottom: 12,
+    marginBottom: 16,
     lineHeight: 1.2,
   },
   coverSubtitleNew: {
-    fontSize: 16,
+    fontSize: 18,
     color: '#ffffff',
-    lineHeight: 1.4,
+    lineHeight: 1.5,
+    opacity: 0.95,
   },
   coverCompanyBox: {
     backgroundColor: '#ffffff',
-    padding: 24,
+    padding: 28,
     borderRadius: 4,
-    marginBottom: 40,
+    marginBottom: 50,
   },
   coverCompanyLabel: {
-    fontSize: 10,
+    fontSize: 11,
     fontFamily: 'Helvetica-Bold',
     color: colors.textLight,
-    letterSpacing: 1,
-    marginBottom: 8,
+    letterSpacing: 1.5,
+    marginBottom: 10,
+    textTransform: 'uppercase',
   },
   coverCompanyNameNew: {
-    fontSize: 28,
+    fontSize: 32,
     fontFamily: 'Helvetica-Bold',
     color: colors.primary,
-    marginBottom: 4,
+    marginBottom: 6,
   },
   coverPreparedForNew: {
     fontSize: 14,
@@ -113,13 +141,14 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
   },
   coverDateNew: {
-    fontSize: 11,
+    fontSize: 12,
     color: '#ffffff',
   },
   coverWebsite: {
-    fontSize: 11,
+    fontSize: 12,
     color: '#ffffff',
     fontFamily: 'Helvetica-Bold',
+    letterSpacing: 0.5,
   },
 
   // Legacy cover page styles (kept for backward compatibility)
@@ -130,152 +159,162 @@ export const styles = StyleSheet.create({
     textAlign: 'center',
   },
   coverTitle: {
-    fontSize: 32,
+    fontSize: 36,
     fontFamily: 'Helvetica-Bold',
     color: colors.primary,
-    marginBottom: 16,
+    marginBottom: 20,
   },
   coverSubtitle: {
-    fontSize: 18,
+    fontSize: 20,
     color: colors.textLight,
-    marginBottom: 40,
+    marginBottom: 50,
   },
   coverCompanyName: {
-    fontSize: 24,
+    fontSize: 28,
     fontFamily: 'Helvetica-Bold',
     color: colors.text,
-    marginBottom: 8,
+    marginBottom: 10,
   },
   coverPreparedFor: {
     fontSize: 14,
     color: colors.textLight,
-    marginBottom: 40,
+    marginBottom: 50,
   },
   coverDate: {
     fontSize: 12,
     color: colors.textLight,
   },
 
-  // Headers
+  // ============================================================================
+  // TYPOGRAPHY (Visiting Angels refined)
+  // ============================================================================
   h1: {
-    fontSize: 24,
+    fontSize: 28,
     fontFamily: 'Helvetica-Bold',
     color: colors.primary,
-    marginBottom: 16,
+    marginBottom: 20,
     marginTop: 0,
   },
   h2: {
-    fontSize: 18,
+    fontSize: 20,
     fontFamily: 'Helvetica-Bold',
     color: colors.text,
-    marginBottom: 12,
-    marginTop: 20,
+    marginBottom: 14,
+    marginTop: 24,
   },
   h3: {
-    fontSize: 14,
+    fontSize: 15,
     fontFamily: 'Helvetica-Bold',
     color: colors.text,
-    marginBottom: 8,
-    marginTop: 12,
+    marginBottom: 10,
+    marginTop: 16,
   },
-
-  // Text
   paragraph: {
     fontSize: 11,
     lineHeight: 1.6,
     marginBottom: 12,
     textAlign: 'justify',
+    color: colors.text,
   },
   paragraphLarge: {
-    fontSize: 12,
+    fontSize: 13,
     lineHeight: 1.6,
-    marginBottom: 12,
+    marginBottom: 14,
     textAlign: 'justify',
+    color: colors.text,
   },
   textSmall: {
     fontSize: 9,
     color: colors.textLight,
+    lineHeight: 1.4,
   },
   textBold: {
     fontFamily: 'Helvetica-Bold',
   },
 
-  // Lists
+  // ============================================================================
+  // LISTS (Visiting Angels style)
+  // ============================================================================
   bulletList: {
-    marginBottom: 12,
+    marginBottom: 16,
   },
   bulletItem: {
     flexDirection: 'row',
-    marginBottom: 6,
+    marginBottom: 8,
+    alignItems: 'flex-start',
   },
   bulletDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
     backgroundColor: colors.primary,
     marginTop: 6,
-    marginRight: 8,
+    marginRight: 10,
+    flexShrink: 0,
   },
   bulletText: {
     flex: 1,
     fontSize: 11,
-    lineHeight: 1.5,
+    lineHeight: 1.6,
+    color: colors.text,
   },
 
-  // Boxes & Cards
+  // ============================================================================
+  // BOXES & CARDS (Visiting Angels style)
+  // ============================================================================
   card: {
-    backgroundColor: '#f8fafc',
-    padding: 16,
-    marginBottom: 16,
-    borderRadius: 4,
+    backgroundColor: colors.backgroundLight,
+    padding: 18,
+    marginBottom: 18,
+    borderRadius: 3,
     borderWidth: 1,
     borderColor: colors.border,
     borderStyle: 'solid',
   },
   highlight: {
-    backgroundColor: '#eff6ff',
-    padding: 12,
-    marginBottom: 12,
-    borderLeftWidth: 3,
+    backgroundColor: colors.backgroundHighlight,
+    padding: 16,
+    marginBottom: 16,
+    borderLeftWidth: 4,
     borderLeftColor: colors.primary,
     borderLeftStyle: 'solid',
   },
 
-  // Table (Enhanced Professional Design)
+  // ============================================================================
+  // TABLES (Visiting Angels professional style)
+  // ============================================================================
   table: {
-    marginBottom: 16,
-    borderWidth: 2,
-    borderColor: colors.primary,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
     borderStyle: 'solid',
-    borderRadius: 4,
   },
   tableHeader: {
     flexDirection: 'row',
     backgroundColor: colors.primary,
-    padding: 10,
-    fontFamily: 'Helvetica-Bold',
-    color: '#ffffff',
+    padding: 12,
   },
   tableRow: {
     flexDirection: 'row',
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
     borderBottomStyle: 'solid',
-    padding: 10,
+    padding: 12,
     backgroundColor: '#ffffff',
   },
   tableRowAlt: {
     flexDirection: 'row',
-    backgroundColor: '#f8fafc',
+    backgroundColor: colors.backgroundLight,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
     borderBottomStyle: 'solid',
-    padding: 10,
+    padding: 12,
   },
   tableCell: {
     flex: 1,
     fontSize: 10,
     color: colors.text,
+    lineHeight: 1.5,
   },
   tableCellHeader: {
     flex: 1,
@@ -290,19 +329,21 @@ export const styles = StyleSheet.create({
     color: colors.primary,
   },
 
-  // Package Cards (Enhanced Visual Hierarchy)
+  // ============================================================================
+  // PACKAGE CARDS (Visiting Angels style)
+  // ============================================================================
   packageCard: {
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: colors.border,
     borderStyle: 'solid',
-    borderRadius: 4,
-    padding: 18,
-    marginBottom: 16,
+    borderRadius: 3,
+    padding: 20,
+    marginBottom: 18,
     backgroundColor: '#ffffff',
   },
   packageCardRecommended: {
-    backgroundColor: '#e0f2fe', // Light cyan background
-    borderWidth: 4,
+    backgroundColor: colors.backgroundHighlight,
+    borderWidth: 3,
     borderColor: colors.primary,
     borderStyle: 'solid',
     position: 'relative',
@@ -311,110 +352,115 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
-    paddingBottom: 10,
+    marginBottom: 14,
+    paddingBottom: 12,
     borderBottomWidth: 2,
     borderBottomColor: colors.primary,
     borderBottomStyle: 'solid',
   },
   packageName: {
-    fontSize: 18,
-    fontFamily: 'Helvetica-Bold',
-    color: colors.primary,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  packagePrice: {
-    fontSize: 22,
+    fontSize: 20,
     fontFamily: 'Helvetica-Bold',
     color: colors.text,
+  },
+  packagePrice: {
+    fontSize: 24,
+    fontFamily: 'Helvetica-Bold',
+    color: colors.primary,
   },
   packageBadge: {
     backgroundColor: colors.primary,
     color: '#ffffff',
-    fontSize: 10,
+    fontSize: 9,
     fontFamily: 'Helvetica-Bold',
     padding: 6,
     paddingLeft: 12,
     paddingRight: 12,
     borderRadius: 2,
-    marginBottom: 10,
+    marginBottom: 12,
     textAlign: 'center',
-    letterSpacing: 1,
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
   },
 
-  // SWOT Grid (Enhanced with Colored Quadrants)
+  // ============================================================================
+  // SWOT GRID (Visiting Angels colored quadrants)
+  // ============================================================================
   swotGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: 16,
-    gap: 8,
+    marginBottom: 20,
+    gap: 10,
   },
   swotQuadrant: {
     width: '48%',
-    padding: 14,
-    marginBottom: 8,
-    borderRadius: 4,
+    padding: 16,
+    marginBottom: 10,
+    borderRadius: 3,
     borderWidth: 2,
     borderStyle: 'solid',
   },
   swotStrengths: {
-    backgroundColor: '#d1fae5', // Light green background
-    borderColor: '#10b981', // Green border
+    backgroundColor: '#d1fae5',
+    borderColor: '#10b981',
   },
   swotWeaknesses: {
-    backgroundColor: '#fee2e2', // Light red background
-    borderColor: '#ef4444', // Red border
+    backgroundColor: '#fee2e2',
+    borderColor: '#ef4444',
   },
   swotOpportunities: {
-    backgroundColor: '#dbeafe', // Light blue background
-    borderColor: '#3b82f6', // Blue border
+    backgroundColor: '#dbeafe',
+    borderColor: '#3b82f6',
   },
   swotThreats: {
-    backgroundColor: '#fed7aa', // Light orange background
-    borderColor: '#f97316', // Orange border
+    backgroundColor: '#fed7aa',
+    borderColor: '#f97316',
   },
   swotTitle: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Helvetica-Bold',
-    marginBottom: 8,
+    marginBottom: 10,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
 
-  // Stats & Numbers (Large Impact Boxes)
+  // ============================================================================
+  // STATS & NUMBERS (Visiting Angels large impact)
+  // ============================================================================
   statRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 20,
-    gap: 12,
+    marginBottom: 24,
+    gap: 14,
   },
   statCard: {
     flex: 1,
     alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#f8fafc',
-    borderRadius: 4,
-    borderWidth: 2,
-    borderColor: colors.primary,
+    padding: 18,
+    backgroundColor: colors.backgroundLight,
+    borderRadius: 3,
+    borderWidth: 1,
+    borderColor: colors.border,
     borderStyle: 'solid',
   },
   statNumber: {
-    fontSize: 32,
+    fontSize: 36,
     fontFamily: 'Helvetica-Bold',
     color: colors.primary,
-    marginBottom: 6,
+    marginBottom: 8,
   },
   statLabel: {
     fontSize: 10,
     fontFamily: 'Helvetica-Bold',
-    color: colors.text,
+    color: colors.textLight,
     textTransform: 'uppercase',
     textAlign: 'center',
     letterSpacing: 0.5,
   },
 
-  // Header & Footer
+  // ============================================================================
+  // HEADER & FOOTER (Visiting Angels style)
+  // ============================================================================
   header: {
     position: 'absolute',
     top: 20,
@@ -423,26 +469,26 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingBottom: 10,
+    paddingBottom: 12,
     borderBottomWidth: 2,
     borderBottomColor: colors.primary,
     borderBottomStyle: 'solid',
   },
   headerBrand: {
-    fontSize: 14,
+    fontSize: 16,
     fontFamily: 'Helvetica-Bold',
     color: colors.primary,
     letterSpacing: 2,
     marginBottom: 2,
   },
   headerTagline: {
-    fontSize: 7,
+    fontSize: 8,
     color: colors.textLight,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   headerCompany: {
-    fontSize: 10,
+    fontSize: 11,
     fontFamily: 'Helvetica-Bold',
     color: colors.text,
   },
@@ -454,9 +500,9 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 10,
-    borderTopWidth: 2,
-    borderTopColor: colors.primary,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
     borderTopStyle: 'solid',
   },
   footerPageNumber: {
@@ -466,131 +512,149 @@ export const styles = StyleSheet.create({
   footerWebsite: {
     fontSize: 9,
     fontFamily: 'Helvetica-Bold',
-    color: colors.primary,
+    color: colors.textLight,
   },
   pageNumber: {
     fontSize: 9,
     color: colors.textLight,
   },
 
-  // Sections
+  // ============================================================================
+  // SECTIONS & LAYOUT
+  // ============================================================================
   section: {
-    marginBottom: 24,
+    marginBottom: 28,
   },
   sectionDivider: {
-    marginTop: 20,
-    marginBottom: 20,
-    borderBottomWidth: 2,
+    marginTop: 24,
+    marginBottom: 24,
+    borderBottomWidth: 1,
     borderBottomColor: colors.border,
     borderBottomStyle: 'solid',
   },
 
-  // Timeline
+  // ============================================================================
+  // TIMELINE
+  // ============================================================================
   timeline: {
-    marginBottom: 16,
+    marginBottom: 20,
   },
   timelineItem: {
     flexDirection: 'row',
-    marginBottom: 12,
+    marginBottom: 14,
   },
   timelineDot: {
     width: 12,
     height: 12,
     borderRadius: 6,
     backgroundColor: colors.primary,
-    marginTop: 3,
-    marginRight: 12,
+    marginTop: 4,
+    marginRight: 14,
+    flexShrink: 0,
   },
   timelineContent: {
     flex: 1,
   },
   timelineTitle: {
-    fontSize: 11,
+    fontSize: 12,
     fontFamily: 'Helvetica-Bold',
-    marginBottom: 4,
+    marginBottom: 6,
+    color: colors.text,
   },
   timelineText: {
     fontSize: 10,
     color: colors.textLight,
+    lineHeight: 1.5,
   },
 
-  // ROI Section
+  // ============================================================================
+  // ROI SECTION (Visiting Angels green success style)
+  // ============================================================================
   roiCard: {
     backgroundColor: '#ecfdf5',
-    padding: 20,
-    borderRadius: 4,
+    padding: 24,
+    borderRadius: 3,
     borderWidth: 2,
     borderColor: colors.success,
     borderStyle: 'solid',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   roiTitle: {
-    fontSize: 14,
+    fontSize: 16,
     fontFamily: 'Helvetica-Bold',
     color: colors.success,
-    marginBottom: 12,
+    marginBottom: 16,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   roiGrid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    gap: 20,
   },
   roiMetric: {
     alignItems: 'center',
+    flex: 1,
   },
   roiValue: {
-    fontSize: 28,
+    fontSize: 32,
     fontFamily: 'Helvetica-Bold',
     color: colors.success,
-    marginBottom: 4,
+    marginBottom: 6,
   },
   roiLabel: {
     fontSize: 10,
     color: colors.textLight,
+    textAlign: 'center',
+    fontFamily: 'Helvetica-Bold',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
 
   // ============================================================================
-  // A1 MOBILITY DESIGN ELEMENTS
+  // SPECIAL CALLOUT BOXES (Visiting Angels style)
   // ============================================================================
 
-  // Brutal Truth / Warning Box (dark background with cyan text - A1 Mobility style)
+  // Dark warning/brutal truth box
   warningBox: {
-    backgroundColor: '#1e293b', // Dark slate background
-    padding: 16,
-    marginBottom: 16,
-    borderRadius: 4,
+    backgroundColor: '#1e293b',
+    padding: 18,
+    marginBottom: 18,
+    borderRadius: 3,
     borderWidth: 3,
     borderColor: colors.primary,
     borderStyle: 'solid',
   },
   warningTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontFamily: 'Helvetica-Bold',
-    color: colors.primary, // Cyan text for titles
-    marginBottom: 8,
+    color: colors.primary,
+    marginBottom: 10,
     textTransform: 'uppercase',
-    letterSpacing: 1,
+    letterSpacing: 1.5,
   },
   warningContent: {
     fontSize: 12,
-    lineHeight: 1.6,
-    color: '#ffffff', // White text for content
+    lineHeight: 1.7,
+    color: '#ffffff',
   },
 
-  // Info/Highlight Box (cyan background - A1 Mobility style)
+  // Light info/highlight box
   cyanBox: {
-    backgroundColor: colors.cyanLight,
+    backgroundColor: colors.backgroundHighlight,
     borderLeftWidth: 4,
-    borderLeftColor: colors.cyan,
+    borderLeftColor: colors.primary,
     borderLeftStyle: 'solid',
-    padding: 16,
-    marginBottom: 16,
+    padding: 18,
+    marginBottom: 18,
   },
   cyanTitle: {
     fontSize: 14,
     fontFamily: 'Helvetica-Bold',
-    color: colors.cyan,
-    marginBottom: 8,
+    color: colors.primary,
+    marginBottom: 10,
     textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   cyanContent: {
     fontSize: 12,
@@ -598,57 +662,61 @@ export const styles = StyleSheet.create({
     color: colors.text,
   },
 
-  // Statistics Comparison Grid (3-column layout)
+  // ============================================================================
+  // STATISTICS & COMPARISON (Visiting Angels style)
+  // ============================================================================
   statGrid: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginBottom: 20,
-    gap: 12,
+    marginBottom: 24,
+    gap: 14,
   },
   statComparisonCard: {
     flex: 1,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: colors.backgroundLight,
     borderWidth: 1,
     borderColor: colors.border,
     borderStyle: 'solid',
-    padding: 16,
+    padding: 18,
     alignItems: 'center',
-    borderRadius: 4,
+    borderRadius: 3,
   },
   statComparisonNumber: {
-    fontSize: 32,
+    fontSize: 36,
     fontFamily: 'Helvetica-Bold',
-    color: colors.cyan,
-    marginBottom: 8,
+    color: colors.primary,
+    marginBottom: 10,
   },
   statComparisonLabel: {
     fontSize: 10,
     color: colors.textLight,
     textAlign: 'center',
+    lineHeight: 1.4,
   },
 
-  // "The Simple Math" Breakdown
+  // ============================================================================
+  // "THE SIMPLE MATH" BREAKDOWN (Visiting Angels style)
+  // ============================================================================
   simpleMathContainer: {
-    backgroundColor: '#f8fafc',
-    padding: 20,
-    borderRadius: 4,
-    borderWidth: 2,
-    borderColor: colors.cyan,
+    backgroundColor: colors.backgroundHighlight,
+    padding: 24,
+    borderRadius: 3,
+    borderWidth: 3,
+    borderColor: colors.primary,
     borderStyle: 'solid',
-    marginBottom: 20,
+    marginBottom: 24,
   },
   simpleMathTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontFamily: 'Helvetica-Bold',
-    color: colors.cyan,
-    marginBottom: 16,
-    textTransform: 'uppercase',
+    color: colors.primary,
+    marginBottom: 18,
   },
   simpleMathStep: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 12,
-    paddingBottom: 12,
+    marginBottom: 10,
+    paddingBottom: 10,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
     borderBottomStyle: 'solid',
@@ -657,42 +725,47 @@ export const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: 'Helvetica-Bold',
     color: colors.text,
+    flex: 2,
   },
   simpleMathValue: {
     fontSize: 11,
     color: colors.text,
+    flex: 1,
+    textAlign: 'right',
   },
   simpleMathTotal: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 8,
-    paddingTop: 12,
+    marginTop: 12,
+    paddingTop: 14,
     borderTopWidth: 2,
-    borderTopColor: colors.cyan,
+    borderTopColor: colors.primary,
     borderTopStyle: 'solid',
   },
   simpleMathTotalLabel: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Helvetica-Bold',
-    color: colors.cyan,
+    color: colors.primary,
   },
   simpleMathTotalValue: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Helvetica-Bold',
-    color: colors.cyan,
+    color: colors.primary,
   },
 
-  // Competitor Comparison Table (A1 Mobility style)
+  // ============================================================================
+  // COMPETITOR COMPARISON TABLE
+  // ============================================================================
   competitorTable: {
-    marginBottom: 20,
+    marginBottom: 24,
     borderWidth: 1,
     borderColor: colors.border,
     borderStyle: 'solid',
   },
   competitorTableHeader: {
     flexDirection: 'row',
-    backgroundColor: colors.cyan,
-    padding: 10,
+    backgroundColor: colors.primary,
+    padding: 12,
   },
   competitorTableHeaderCell: {
     flex: 1,
@@ -705,59 +778,66 @@ export const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
     borderBottomStyle: 'solid',
-    padding: 10,
+    padding: 12,
   },
   competitorTableRowAlt: {
     flexDirection: 'row',
-    backgroundColor: '#f8fafc',
+    backgroundColor: colors.backgroundLight,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
     borderBottomStyle: 'solid',
-    padding: 10,
+    padding: 12,
   },
   competitorTableCell: {
     flex: 1,
     fontSize: 9,
     color: colors.text,
+    lineHeight: 1.5,
   },
 
-  // Market Opportunity Card
+  // ============================================================================
+  // MARKET OPPORTUNITY CARD
+  // ============================================================================
   opportunityCard: {
-    backgroundColor: colors.cyanLight,
-    padding: 20,
-    borderRadius: 4,
+    backgroundColor: colors.backgroundHighlight,
+    padding: 24,
+    borderRadius: 3,
     borderWidth: 3,
-    borderColor: colors.cyan,
+    borderColor: colors.primary,
     borderStyle: 'solid',
-    marginBottom: 20,
+    marginBottom: 24,
   },
   opportunityTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontFamily: 'Helvetica-Bold',
-    color: colors.cyan,
-    marginBottom: 12,
-    textTransform: 'uppercase',
+    color: colors.primary,
+    marginBottom: 16,
   },
   opportunityRow: {
-    marginBottom: 10,
+    marginBottom: 12,
   },
   opportunityLabel: {
     fontSize: 10,
     fontFamily: 'Helvetica-Bold',
-    color: colors.text,
+    color: colors.textLight,
     marginBottom: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   opportunityValue: {
-    fontSize: 12,
+    fontSize: 13,
     color: colors.text,
+    lineHeight: 1.5,
   },
 
-  // 2-Column Layout (for side-by-side content)
+  // ============================================================================
+  // 2-COLUMN LAYOUT
+  // ============================================================================
   twoColumnRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 16,
-    gap: 16,
+    marginBottom: 20,
+    gap: 18,
   },
   twoColumnLeft: {
     flex: 1,
