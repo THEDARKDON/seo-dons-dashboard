@@ -33,7 +33,7 @@ export function generateProposalHTML(content: ProposalContent): string {
 </head>
 <body>
   ${renderCoverPage(content.coverPage)}
-  ${renderExecutiveSummary(content.executiveSummary, content.brutalTruthCallouts, companyName, ++pageNumber)}
+  ${renderExecutiveSummary(content.executiveSummary, content.brutalTruthCallouts, content.marketOpportunity, content.statisticsCards, companyName, ++pageNumber)}
   ${renderCurrentSituation(content.currentSituation, content.statisticsCards, companyName, ++pageNumber)}
   ${renderStrategy(content.recommendedStrategy, companyName, ++pageNumber)}
   ${renderTechnicalSEO(content.technicalSEO, companyName, ++pageNumber)}
@@ -639,6 +639,8 @@ function renderCoverPage(cover: ProposalContent['coverPage']): string {
 function renderExecutiveSummary(
   summary: ProposalContent['executiveSummary'],
   callouts: ProposalContent['brutalTruthCallouts'] | undefined,
+  marketOpp: ProposalContent['marketOpportunity'] | undefined,
+  statsCards: ProposalContent['statisticsCards'] | undefined,
   companyName: string,
   pageNumber: number
 ): string {
@@ -649,12 +651,34 @@ function renderExecutiveSummary(
       <h1>Executive Summary</h1>
 
       ${callouts && callouts.length > 0 ? callouts.map(callout => `
-        <div class="${callout.type === 'warning' ? 'warning-box' : 'highlight-box'}">
-          <p style="font-size: 16px;"><strong>${escapeHTML(callout.title)}</strong> ${escapeHTML(callout.content)}</p>
+        <div class="${callout.type === 'warning' ? 'warning-box' : 'phase-box'}" style="${callout.type === 'warning' ? '' : 'background: #333; color: white;'}">
+          <p style="font-size: 16px; ${callout.type === 'warning' ? '' : 'color: white; text-align: center; margin: 0;'}">
+            <strong style="${callout.type === 'warning' ? '' : 'color: white;'}">${escapeHTML(callout.title)}</strong> ${escapeHTML(callout.content)}
+          </p>
         </div>
       `).join('') : ''}
 
+      ${marketOpp ? `
+        <h2>${escapeHTML(marketOpp.title)}</h2>
+        <div class="phase-box">
+          <p><strong>Current State:</strong> ${escapeHTML(marketOpp.currentState)}</p>
+          <p><strong>Opportunity Size:</strong> ${escapeHTML(marketOpp.opportunitySize)}</p>
+          <p><strong>Timeframe:</strong> ${escapeHTML(marketOpp.timeframe)}</p>
+        </div>
+      ` : ''}
+
       <p>${escapeHTML(summary.overview)}</p>
+
+      ${statsCards && statsCards.length > 0 ? `
+        <div class="stat-grid">
+          ${statsCards.map(card => `
+            <div class="stat-box">
+              <div class="number">${escapeHTML(card.currentNumber)}</div>
+              <div class="label">${escapeHTML(card.currentLabel)}</div>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
 
       <h2>Key Findings</h2>
       <ul>

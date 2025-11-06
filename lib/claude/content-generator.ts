@@ -239,10 +239,31 @@ Match the A1 Mobility depth and specificity:
 ### 5. RESEARCH-TO-CONTENT TRANSFORMATION
 Analyze the research data to populate:
 - **brutalTruthCallouts**: Find the most shocking gaps/opportunities in the data
+  * Must be provocative and use real numbers from research
+  * Example: "THE BRUTAL TRUTH: When someone searches 'mobility scooters Blackpool', Millercare appears #1. You're invisible. They get 2,000+ monthly visitors while you get 174."
 - **statisticsCards**: Extract key current vs target comparisons
+  * Show the gap between current state and opportunity
+  * Use real metrics: traffic, rankings, keywords, revenue
 - **competitorComparison**: Build detailed table from competitor analysis
+  * Must include at least 3-4 competitors from research
+  * Show specific metrics where they're beating the client
 - **simpleMathBreakdown**: Calculate realistic ROI progression
+  * Step-by-step: Traffic → Leads → Customers → Revenue
+  * Use industry-standard conversion rates (3-5% for leads, 20-30% close rate)
+  * Show progression at Month 3, 6, and 12
 - **marketOpportunity**: Synthesize the biggest opportunity into clear statement
+  * Include market size if available from research
+  * Show what they're currently missing
+
+## A1 MOBILITY DESIGN ELEMENTS (MANDATORY)
+You MUST populate ALL of these optional fields:
+- brutalTruthCallouts: 2-3 hard-hitting callouts
+- statisticsCards: 3 key comparisons
+- simpleMathBreakdown: Complete ROI calculation
+- competitorComparison: Full comparison table
+- marketOpportunity: Market opportunity statement
+
+These elements are what make the proposal convert. Without them, the proposal is generic.
 
 ## CRITICAL REQUIREMENTS
 - Use REAL data from the research provided (no generic statements)
@@ -411,6 +432,97 @@ Generate ALL proposal content following this exact structure:
       "[4-5 onboarding steps if they proceed]"
     ],
     "kickoff": "[Description of the kickoff process and timeline]"
+  },
+
+  "brutalTruthCallouts": [
+    {
+      "title": "THE BRUTAL TRUTH:",
+      "content": "[Hard-hitting statement about their current situation vs competitors - be provocative]",
+      "type": "warning"
+    },
+    {
+      "title": "THE REALITY:",
+      "content": "[Another shocking insight from the research data]",
+      "type": "warning"
+    }
+  ],
+
+  "statisticsCards": [
+    {
+      "currentNumber": "[e.g., '174']",
+      "currentLabel": "[e.g., 'monthly organic visitors']",
+      "targetNumber": "[e.g., '2,000+']",
+      "targetLabel": "[e.g., 'competitor average']",
+      "context": "[Why this gap matters]"
+    },
+    {
+      "currentNumber": "[another key metric]",
+      "currentLabel": "[current state]",
+      "targetNumber": "[target/competitor number]",
+      "targetLabel": "[context]"
+    }
+  ],
+
+  "simpleMathBreakdown": {
+    "steps": [
+      {
+        "month": "Month 3",
+        "traffic": [realistic number],
+        "leads": [realistic number],
+        "customers": [realistic number],
+        "revenue": [realistic number]
+      },
+      {
+        "month": "Month 6",
+        "traffic": [realistic number],
+        "leads": [realistic number],
+        "customers": [realistic number],
+        "revenue": [realistic number]
+      },
+      {
+        "month": "Month 12",
+        "traffic": [realistic number],
+        "leads": [realistic number],
+        "customers": [realistic number],
+        "revenue": [realistic number]
+      }
+    ],
+    "totalInvestment": [12 months x package price],
+    "totalReturn": [sum of all revenue],
+    "roi": [calculate percentage]
+  },
+
+  "competitorComparison": {
+    "metrics": [
+      {
+        "metric": "Monthly Organic Traffic",
+        "yourBusiness": "[current traffic]",
+        "topCompetitorA": "[competitor A traffic]",
+        "topCompetitorB": "[competitor B traffic]",
+        "marketLeader": "[market leader traffic]"
+      },
+      {
+        "metric": "Ranking Keywords",
+        "yourBusiness": "[current keywords]",
+        "topCompetitorA": "[competitor A keywords]",
+        "topCompetitorB": "[competitor B keywords]",
+        "marketLeader": "[market leader keywords]"
+      },
+      {
+        "metric": "Domain Authority",
+        "yourBusiness": "[current DA]",
+        "topCompetitorA": "[competitor A DA]",
+        "topCompetitorB": "[competitor B DA]",
+        "marketLeader": "[market leader DA]"
+      }
+    ]
+  },
+
+  "marketOpportunity": {
+    "title": "The £[X] Million Opportunity",
+    "currentState": "[Current market position]",
+    "opportunitySize": "[Size of the market/opportunity]",
+    "timeframe": "[Timeline to capture it]"
   }
 }
 \`\`\`
