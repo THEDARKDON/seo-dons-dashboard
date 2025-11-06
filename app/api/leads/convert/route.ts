@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update lead to converted status
-    await supabase
+    const { error: updateError } = await supabase
       .from('leads')
       .update({
         status: 'converted',
@@ -88,6 +88,16 @@ export async function POST(request: NextRequest) {
         converted_by: user.id,
       })
       .eq('id', leadId);
+
+    if (updateError) {
+      console.error('Error updating lead:', updateError);
+      // Rollback: Delete the customer we just created
+      await supabase.from('customers').delete().eq('id', customer.id);
+      return NextResponse.json(
+        { error: 'Failed to update lead status: ' + updateError.message },
+        { status: 500 }
+      );
+    }
 
     // Log activity
     await supabase.from('lead_activities').insert({
