@@ -402,10 +402,9 @@ function renderCurrentSituation(
   pageNumber: number
 ): string {
   return `
-    <div class="page">
+    <div class="page content-page">
       ${renderPageHeader(companyName)}
-      <div class="page-content">
-        <h1>Current Situation Analysis</h1>
+      <h1>Current Situation Analysis</h1>
 
         ${statsCards && statsCards.length > 0 ? `
           <div class="stats-grid">
@@ -457,7 +456,6 @@ function renderCurrentSituation(
             </ul>
           </div>
         </div>
-      </div>
       ${renderPageFooter(pageNumber)}
     </div>
   `;
@@ -465,10 +463,9 @@ function renderCurrentSituation(
 
 function renderStrategy(strategy: ProposalContent['recommendedStrategy'], companyName: string, pageNumber: number): string {
   return `
-    <div class="page">
+    <div class="page content-page">
       ${renderPageHeader(companyName)}
-      <div class="page-content">
-        <h1>Recommended Strategy</h1>
+      <h1>Recommended Strategy</h1>
 
         <p>${escapeHTML(strategy.strategyOverview)}</p>
 
@@ -484,7 +481,6 @@ function renderStrategy(strategy: ProposalContent['recommendedStrategy'], compan
 
         <h2>Timeline</h2>
         <p>${escapeHTML(strategy.timeline)}</p>
-      </div>
       ${renderPageFooter(pageNumber)}
     </div>
   `;
@@ -492,10 +488,9 @@ function renderStrategy(strategy: ProposalContent['recommendedStrategy'], compan
 
 function renderTechnicalSEO(technical: ProposalContent['technicalSEO'], companyName: string, pageNumber: number): string {
   return `
-    <div class="page">
+    <div class="page content-page">
       ${renderPageHeader(companyName)}
-      <div class="page-content">
-        <h1>Technical SEO</h1>
+      <h1>Technical SEO</h1>
 
         <p>${escapeHTML(technical.overview)}</p>
 
@@ -507,7 +502,6 @@ function renderTechnicalSEO(technical: ProposalContent['technicalSEO'], companyN
             <p><strong>Impact:</strong> ${escapeHTML(priority.impact)}</p>
           </div>
         `).join('')}
-      </div>
       ${renderPageFooter(pageNumber)}
     </div>
   `;
@@ -515,10 +509,9 @@ function renderTechnicalSEO(technical: ProposalContent['technicalSEO'], companyN
 
 function renderContentStrategy(content: ProposalContent['contentStrategy'], companyName: string, pageNumber: number): string {
   return `
-    <div class="page">
+    <div class="page content-page">
       ${renderPageHeader(companyName)}
-      <div class="page-content">
-        <h1>Content Strategy</h1>
+      <h1>Content Strategy</h1>
 
         <p>${escapeHTML(content.overview)}</p>
 
@@ -533,7 +526,6 @@ function renderContentStrategy(content: ProposalContent['contentStrategy'], comp
 
         <h2>Content Calendar</h2>
         <p>${escapeHTML(content.contentCalendar)}</p>
-      </div>
       ${renderPageFooter(pageNumber)}
     </div>
   `;
@@ -541,10 +533,9 @@ function renderContentStrategy(content: ProposalContent['contentStrategy'], comp
 
 function renderLocalSEO(local: NonNullable<ProposalContent['localSEO']>, companyName: string, pageNumber: number): string {
   return `
-    <div class="page">
+    <div class="page content-page">
       ${renderPageHeader(companyName)}
-      <div class="page-content">
-        <h1>Local SEO Strategy</h1>
+      <h1>Local SEO Strategy</h1>
 
         <p>${escapeHTML(local.overview)}</p>
 
@@ -561,7 +552,6 @@ function renderLocalSEO(local: NonNullable<ProposalContent['localSEO']>, company
             <p>${escapeHTML(page.contentStrategy)}</p>
           </div>
         `).join('')}
-      </div>
       ${renderPageFooter(pageNumber)}
     </div>
   `;
@@ -569,10 +559,9 @@ function renderLocalSEO(local: NonNullable<ProposalContent['localSEO']>, company
 
 function renderLinkBuilding(links: ProposalContent['linkBuilding'], companyName: string, pageNumber: number): string {
   return `
-    <div class="page">
+    <div class="page content-page">
       ${renderPageHeader(companyName)}
-      <div class="page-content">
-        <h1>Link Building Strategy</h1>
+      <h1>Link Building Strategy</h1>
 
         <p>${escapeHTML(links.overview)}</p>
 
@@ -586,7 +575,6 @@ function renderLinkBuilding(links: ProposalContent['linkBuilding'], companyName:
 
         <h2>Expected Acquisition</h2>
         <p>${escapeHTML(links.expectedAcquisition)}</p>
-      </div>
       ${renderPageFooter(pageNumber)}
     </div>
   `;
@@ -598,10 +586,9 @@ function renderCompetitorComparison(comparison: ProposalContent['competitorCompa
   }
 
   return `
-    <div class="page">
+    <div class="page content-page">
       ${renderPageHeader(companyName)}
-      <div class="page-content">
-        <h1>Competitive Analysis</h1>
+      <h1>Competitive Analysis</h1>
 
         <table>
           <thead>
@@ -625,7 +612,6 @@ function renderCompetitorComparison(comparison: ProposalContent['competitorCompa
             `).join('')}
           </tbody>
         </table>
-      </div>
       ${renderPageFooter(pageNumber)}
     </div>
   `;
@@ -633,10 +619,9 @@ function renderCompetitorComparison(comparison: ProposalContent['competitorCompa
 
 function renderPackageOptions(packages: ProposalContent['packageOptions'], companyName: string, pageNumber: number): string {
   return `
-    <div class="page">
+    <div class="page content-page">
       ${renderPageHeader(companyName)}
-      <div class="page-content">
-        <h1>Investment Options</h1>
+      <h1>Investment Options</h1>
 
         <div class="package-grid">
           ${packages.map(pkg => `
@@ -654,7 +639,6 @@ function renderPackageOptions(packages: ProposalContent['packageOptions'], compa
             </div>
           `).join('')}
         </div>
-      </div>
       ${renderPageFooter(pageNumber)}
     </div>
   `;
@@ -667,10 +651,9 @@ function renderProjections(
   pageNumber: number
 ): string {
   return `
-    <div class="page">
+    <div class="page content-page">
       ${renderPageHeader(companyName)}
-      <div class="page-content">
-        <h1>Growth Projections & ROI</h1>
+      <h1>Growth Projections & ROI</h1>
 
         <div class="projection-timeline">
           <div class="projection-period">
@@ -741,7 +724,6 @@ function renderProjections(
         <p><strong>ROI:</strong> ${projections.roi.percentage}%</p>
         <p><strong>Payback Period:</strong> ${escapeHTML(projections.roi.paybackPeriod)}</p>
         <p><strong>Lifetime Value:</strong> £${projections.roi.lifetimeValue.toLocaleString()}</p>
-      </div>
       ${renderPageFooter(pageNumber)}
     </div>
   `;
@@ -749,10 +731,9 @@ function renderProjections(
 
 function renderNextSteps(steps: ProposalContent['nextSteps'], companyName: string, pageNumber: number): string {
   return `
-    <div class="page">
+    <div class="page content-page">
       ${renderPageHeader(companyName)}
-      <div class="page-content">
-        <h1>Next Steps</h1>
+      <h1>Next Steps</h1>
 
         <h2>Immediate Actions</h2>
         <ul>
@@ -775,7 +756,6 @@ function renderNextSteps(steps: ProposalContent['nextSteps'], companyName: strin
             Let's schedule a call to discuss your growth strategy.
           </p>
         </div>
-      </div>
       ${renderPageFooter(pageNumber)}
     </div>
   `;
