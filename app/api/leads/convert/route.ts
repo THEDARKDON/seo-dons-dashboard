@@ -65,6 +65,7 @@ export async function POST(request: NextRequest) {
         industry: lead.industry,
         notes: lead.notes,
         status: 'active',
+        owned_by: lead.assigned_to || user.id, // Inherit from lead's assigned_to, or current user
       })
       .select()
       .single();
