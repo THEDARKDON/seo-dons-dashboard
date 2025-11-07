@@ -9,6 +9,7 @@
 
 import { performDeepResearch, type ResearchRequest } from './research-agent';
 import { generateProposalContent, type ContentGenerationRequest, type ProposalContent } from './content-generator';
+import { generateConciseProposalContent, type ConciseContentGenerationRequest, type ConciseProposalContent } from './concise-content-generator';
 
 // ============================================================================
 // Type Definitions
@@ -55,6 +56,9 @@ export interface ProposalGenerationRequest {
   averageDealSize?: number;
   profitPerDeal?: number;
   conversionRate?: number;
+
+  // Proposal Format Mode
+  proposalMode?: 'concise' | 'detailed';
 }
 
 export interface ProposalResult {
@@ -71,8 +75,8 @@ export interface ProposalResult {
     thinkingTokensUsed: number;
   };
 
-  // Generated Content
-  content: ProposalContent;
+  // Generated Content (either detailed or concise)
+  content: ProposalContent | ConciseProposalContent;
 
   // Metadata
   metadata: {
@@ -157,28 +161,52 @@ export async function generateCompleteProposal(
     // =================================================================
     await onProgress?.('Generating proposal content', 55, 'Creating executive summary...');
 
-    const contentRequest: ContentGenerationRequest = {
-      researchData: researchResult,
-      companyName: request.companyName,
-      packageTier: request.packageTier,
-      customInstructions: request.customInstructions,
-      contactName: request.contactName,
-      jobTitle: request.jobTitle,
-      email: request.email,
-      phoneNumber: request.phoneNumber,
-      linkedInUrl: request.linkedInUrl,
-      notes: request.notes,
-      referenceImages: request.referenceImages,
-      averageDealSize: request.averageDealSize,
-      profitPerDeal: request.profitPerDeal,
-      conversionRate: request.conversionRate,
-    };
-
-    console.log(`[Proposal Generator] Generating content for: ${request.companyName}`);
+    console.log(`[Proposal Generator] Generating ${request.proposalMode || 'detailed'} content for: ${request.companyName}`);
     const contentStartTime = Date.now();
 
-    // Note: Content generation happens in one call, but we can simulate progress
-    const contentResult = await generateProposalContent(contentRequest);
+    let contentResult;
+
+    if (request.proposalMode === 'concise') {
+      // Generate concise proposal content (5-6 pages)
+      const conciseRequest: ConciseContentGenerationRequest = {
+        researchData: researchResult,
+        companyName: request.companyName,
+        packageTier: request.packageTier,
+        customInstructions: request.customInstructions,
+        contactName: request.contactName,
+        jobTitle: request.jobTitle,
+        email: request.email,
+        phoneNumber: request.phoneNumber,
+        linkedInUrl: request.linkedInUrl,
+        notes: request.notes,
+        referenceImages: request.referenceImages,
+        averageDealSize: request.averageDealSize,
+        profitPerDeal: request.profitPerDeal,
+        conversionRate: request.conversionRate,
+      };
+
+      contentResult = await generateConciseProposalContent(conciseRequest);
+    } else {
+      // Generate detailed proposal content (10-12 pages)
+      const contentRequest: ContentGenerationRequest = {
+        researchData: researchResult,
+        companyName: request.companyName,
+        packageTier: request.packageTier,
+        customInstructions: request.customInstructions,
+        contactName: request.contactName,
+        jobTitle: request.jobTitle,
+        email: request.email,
+        phoneNumber: request.phoneNumber,
+        linkedInUrl: request.linkedInUrl,
+        notes: request.notes,
+        referenceImages: request.referenceImages,
+        averageDealSize: request.averageDealSize,
+        profitPerDeal: request.profitPerDeal,
+        conversionRate: request.conversionRate,
+      };
+
+      contentResult = await generateProposalContent(contentRequest);
+    }
 
     const contentDuration = Math.round((Date.now() - contentStartTime) / 1000);
     console.log(

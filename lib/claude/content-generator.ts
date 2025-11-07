@@ -424,7 +424,7 @@ ${email ? `**Email:** ${email}` : ''}
 ${phoneNumber ? `**Phone:** ${phoneNumber}` : ''}
 ${linkedInUrl ? `**LinkedIn:** ${linkedInUrl}` : ''}
 
-${notes ? `## SDR NOTES (CRITICAL - Use these insights to personalize the proposal tone, content, and recommendations):\n${notes}\n` : ''}
+${notes ? `## SDR NOTES (MANDATORY - OVERRIDE ALL OTHER DATA WITH THESE NUMBERS):\n${notes}\n\n**ABSOLUTELY CRITICAL**: The SDR notes above contain the REAL metrics and requirements. You MUST use these exact numbers:\n- DO NOT make up traffic numbers, use what the SDR specified\n- DO NOT create random conversion rates, use the SDR's numbers\n- DO NOT suggest multiple packages if SDR specified one package\n- DO NOT add content that contradicts SDR instructions\n- KEEP IT CONCISE as requested by SDR\n` : ''}
 
 ${averageDealSize || profitPerDeal || conversionRate ? `## BUSINESS METRICS (CRITICAL - Use these REAL numbers for accurate ROI projections):\n${averageDealSize ? `- Average Deal Size: £${averageDealSize.toFixed(2)}\n` : ''}${profitPerDeal ? `- Profit Per Deal: £${profitPerDeal.toFixed(2)}\n` : ''}${conversionRate ? `- Website Conversion Rate: ${conversionRate}%\n` : ''}\n**IMPORTANT:** When calculating ROI, use these actual business metrics instead of generic estimates. For example:\n- If SEO brings 100 new monthly visitors and conversion rate is ${conversionRate || 'X'}%, that's ${conversionRate ? Math.round(100 * conversionRate / 100) : 'X'} new leads\n- ${profitPerDeal ? `At £${profitPerDeal.toFixed(2)} profit per deal, that's £${profitPerDeal && conversionRate ? (Math.round(100 * conversionRate / 100) * profitPerDeal).toFixed(2) : 'X'} in monthly profit` : 'Calculate profit based on leads × profit per deal'}\n` : ''}
 
@@ -537,7 +537,7 @@ Generate ALL proposal content following this exact structure:
   },
 
   "packageOptions": [
-    ${generatePackageOptionsJSON(packageTier)}
+    ${generatePackageOptionsJSON(packageTier, notes)}
   ],
 
   "projections": {
@@ -780,7 +780,7 @@ Geographic Coverage: ${details.locations}
   `;
 }
 
-function generatePackageOptionsJSON(recommendedTier: string): string {
+function generatePackageOptionsJSON(recommendedTier: string, sdrNotes?: string): string {
   const allPackages = [
     {
       tier: 'local',
@@ -834,6 +834,14 @@ function generatePackageOptionsJSON(recommendedTier: string): string {
     },
   ];
 
+  // Check if SDR notes specify to only show one package (e.g., £2k package)
+  if (sdrNotes && sdrNotes.toLowerCase().includes("don't give him the option") && sdrNotes.includes("£2k")) {
+    // Only return the local package when SDR specifically says not to offer other options
+    const localPackage = allPackages.find(pkg => pkg.tier === 'local');
+    return JSON.stringify(localPackage);
+  }
+
+  // Otherwise return all packages
   return allPackages.map(pkg => JSON.stringify(pkg)).join(',\n    ');
 }
 

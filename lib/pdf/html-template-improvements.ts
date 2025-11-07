@@ -124,28 +124,47 @@ export function renderEnhancedPackageOptions(
 ): string {
   // Helper to calculate expected results for each package
   const calculateResults = (pkg: any) => {
+    // Get base metrics from research
     const currentTraffic = parseInt(research?.competitorAnalysis?.clientCurrentMetrics?.monthlyTraffic?.replace(/[^\d]/g, '') || '200') || 200;
     const conversionRate = research?.roiProjection?.conversionRate || 0.03; // 3% default
     const avgDealValue = research?.roiProjection?.averageDealValue || 5000;
 
+    // Package-specific multipliers based on investment tier
     const trafficMultipliers: Record<string, number> = {
       'Local Dominance': 3,
       'Regional Authority': 5,
       'National Leader': 10
     };
 
+    // Calculate package-specific projections
     const mult = trafficMultipliers[pkg.name] || 3;
-    const projectedTraffic = currentTraffic * mult;
-    const projectedLeads = Math.round(projectedTraffic * conversionRate);
-    const projectedRevenue = projectedLeads * avgDealValue;
+    const projectedMonthlyTraffic = Math.round(currentTraffic * mult);
+    const projectedMonthlyLeads = Math.round(projectedMonthlyTraffic * conversionRate);
+
+    // Annual calculations
+    const annualTraffic = projectedMonthlyTraffic * 12;
+    const annualLeads = projectedMonthlyLeads * 12;
+    const annualRevenue = annualLeads * avgDealValue;
     const annualInvestment = pkg.monthlyInvestment * 12;
-    const roi = Math.round(((projectedRevenue - annualInvestment) / annualInvestment) * 100);
-    const breakeven = Math.ceil(annualInvestment / (projectedRevenue / 12));
+
+    // ROI and breakeven calculations
+    const roi = annualRevenue > annualInvestment
+      ? Math.round(((annualRevenue - annualInvestment) / annualInvestment) * 100)
+      : 0;
+    const monthlyRevenue = annualRevenue / 12;
+    const breakeven = monthlyRevenue > 0
+      ? Math.max(1, Math.ceil(annualInvestment / monthlyRevenue))
+      : 12;
+
+    // Debug logging to identify the issue
+    console.log(`Package: ${pkg.name}, Monthly Investment: £${pkg.monthlyInvestment}`);
+    console.log(`Base Traffic: ${currentTraffic}, Multiplier: ${mult}, Projected: ${projectedMonthlyTraffic}`);
+    console.log(`Monthly Leads: ${projectedMonthlyLeads}, Annual Revenue: £${annualRevenue}`);
 
     return {
-      traffic: projectedTraffic,
-      leads: projectedLeads,
-      revenue: projectedRevenue,
+      traffic: projectedMonthlyTraffic,
+      leads: projectedMonthlyLeads,
+      revenue: annualRevenue,
       roi: roi,
       breakeven: breakeven
     };
@@ -270,59 +289,97 @@ export function renderEnhancedPackageOptions(
           font-weight: bold;
           text-align: center;
           margin-bottom: 5mm;
+          color: #333;
+        }
+        .bar-chart-wrapper {
+          position: relative;
+          height: 60mm;
+          padding: 5mm;
+          background: white;
         }
         .bar-chart {
-          display: flex;
-          align-items: flex-end;
-          justify-content: space-around;
+          display: table;
+          width: 100%;
           height: 50mm;
           border-left: 2px solid #333;
           border-bottom: 2px solid #333;
-          padding: 5mm;
+          position: relative;
         }
         .bar-group {
-          flex: 1;
+          display: table-cell;
+          width: 33.33%;
+          vertical-align: bottom;
+          text-align: center;
+          position: relative;
+          padding: 0 5mm;
+        }
+        .bar-container {
+          position: relative;
+          height: 50mm;
           display: flex;
-          flex-direction: column;
-          align-items: center;
+          align-items: flex-end;
+          justify-content: center;
         }
         .bar {
-          width: 30mm;
-          background: linear-gradient(to top, #00CED1, #20B2AA);
+          width: 25mm;
+          background: #00CED1;
+          border-top: 2px solid #20B2AA;
           position: relative;
-          margin-bottom: 3mm;
         }
         .bar-value {
           position: absolute;
-          top: -6mm;
-          left: 50%;
-          transform: translateX(-50%);
+          top: -8mm;
+          left: 0;
+          right: 0;
+          text-align: center;
           font-weight: bold;
-          font-size: 12px;
+          font-size: 14px;
+          color: #333;
         }
         .bar-label {
+          position: absolute;
+          bottom: -10mm;
+          left: 0;
+          right: 0;
           font-size: 12px;
           text-align: center;
           font-weight: bold;
+          color: #333;
+        }
+        .chart-axis-label {
+          position: absolute;
+          left: -8mm;
+          top: 50%;
+          transform: rotate(-90deg) translateX(-50%);
+          font-size: 11px;
+          color: #666;
         }
       </style>
 
       <div class="chart-container">
         <div class="chart-title">Projected Annual Revenue by Package</div>
-        <div class="bar-chart">
-          ${packages.map(pkg => {
-            const results = calculateResults(pkg);
-            const maxRevenue = 3000000; // Set max for scaling
-            const barHeight = Math.min((results.revenue / maxRevenue) * 100, 100);
-            return `
-              <div class="bar-group">
-                <div class="bar" style="height: ${barHeight}%;">
-                  <div class="bar-value">£${(results.revenue / 1000).toFixed(0)}k</div>
+        <div class="bar-chart-wrapper">
+          <div class="bar-chart">
+            ${packages.map((pkg, index) => {
+              const results = calculateResults(pkg);
+              // Dynamic scaling based on actual values
+              const allRevenues = packages.map(p => calculateResults(p).revenue);
+              const maxRevenue = Math.max(...allRevenues) * 1.2; // Add 20% padding
+              const barHeight = Math.max(5, (results.revenue / maxRevenue) * 100); // Min 5% height for visibility
+              const isRecommended = pkg.name === 'National Leader';
+
+              return `
+                <div class="bar-group">
+                  <div class="bar-container">
+                    <div class="bar" style="height: ${barHeight}%; background: ${isRecommended ? '#00CED1' : '#20B2AA'};">
+                      <div class="bar-value">£${(results.revenue / 1000).toFixed(0)}k</div>
+                    </div>
+                  </div>
+                  <div class="bar-label">${escapeHTML(pkg.name)}</div>
                 </div>
-                <div class="bar-label">${escapeHTML(pkg.name)}</div>
-              </div>
-            `;
-          }).join('')}
+              `;
+            }).join('')}
+          </div>
         </div>
       </div>
 

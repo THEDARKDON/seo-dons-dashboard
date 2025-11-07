@@ -13,6 +13,7 @@ import { createClient } from '@/lib/supabase/server';
 import { generateCompleteProposal, validateProposalRequest } from '@/lib/claude/proposal-generator';
 import { generateProposalPDF, getProposalFilename, validateProposalContent } from '@/lib/pdf/generate';
 import { generateProposalHTML } from '@/lib/pdf/html-template';
+import { generateConciseProposalHTML } from '@/lib/pdf/concise-html-template';
 
 // Vercel serverless function timeout (10 minutes for research + content + PDF generation)
 export const maxDuration = 600;
@@ -26,6 +27,7 @@ interface GenerateProposalRequest {
   packageTier: 'local' | 'regional' | 'national';
   contactName?: string;
   customInstructions?: string;
+  proposalMode?: 'concise' | 'detailed';
 }
 
 export async function POST(request: NextRequest) {
@@ -90,6 +92,7 @@ export async function POST(request: NextRequest) {
       packageTier: body.packageTier,
       contactName: body.contactName || `${customer.first_name} ${customer.last_name}`,
       customInstructions: body.customInstructions,
+      proposalMode: body.proposalMode || 'detailed', // Default to detailed if not specified
 
       // Additional customer context for personalized proposals
       jobTitle: customer.job_title,
@@ -130,6 +133,7 @@ export async function POST(request: NextRequest) {
         company_website: customer.website,
         company_industry: customer.industry,
         selected_package: body.packageTier,
+        proposal_mode: body.proposalMode || 'detailed',
       })
       .select()
       .single();
@@ -179,8 +183,17 @@ export async function POST(request: NextRequest) {
           // ================================================================
           await sendProgress('Generating HTML', 92, 'Creating HTML document...');
 
-          validateProposalContent(result.content);
-          const htmlContent = generateProposalHTML(result.content, result.research);
+          // Generate appropriate HTML based on proposal mode
+          // Check if content has 'competition' property which exists only in concise proposals
+          const isConiseContent = 'competition' in result.content;
+
+          // Only validate detailed content (concise content has different structure)
+          if (!isConiseContent) {
+            validateProposalContent(result.content as any);
+          }
+          const htmlContent = isConiseContent
+            ? generateConciseProposalHTML(result.content as any, companyName)
+            : generateProposalHTML(result.content as any, result.research);
 
           // ================================================================
           // 9. UPLOAD HTML TO STORAGE

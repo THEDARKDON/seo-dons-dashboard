@@ -57,6 +57,7 @@ export interface CompanyAnalysis {
     valueProposition: string;
     targetAudience: string;
     geographicScope: string;
+    extractedAddress?: string | null;
   };
   currentDigitalPresence: {
     websiteQuality: string;
@@ -333,9 +334,19 @@ ${request.jobTitle ? `**Contact Job Title:** ${request.jobTitle}` : ''}
 ${request.email ? `**Contact Email:** ${request.email}` : ''}
 ${request.phoneNumber ? `**Contact Phone:** ${request.phoneNumber}` : ''}
 ${request.linkedInUrl ? `**LinkedIn Profile:** ${request.linkedInUrl}` : ''}
-${request.address ? `**Business Address:** ${request.address}` : ''}
+${request.address ? `**Business Address:** ${request.address}` : request.website ? '**Business Address:** Please extract from website (look for contact/footer sections)' : ''}
 
-${request.notes ? `**SDR Notes (IMPORTANT - Use these insights for personalization):**\n${request.notes}\n` : ''}
+${request.notes ? `**SDR Notes (ABSOLUTE PRIORITY - THESE OVERRIDE ALL OTHER DATA):**
+${request.notes}
+
+CRITICAL: The SDR has already spoken to the client and these notes contain:
+- The EXACT metrics to use (enquiries, conversion rates, revenue)
+- The SPECIFIC package agreed upon
+- The ACTUAL business focus (e.g., "Solar & Battery, NOT Electrical")
+- Any specific instructions about proposal format
+
+You MUST use these exact specifications, NOT generic industry estimates.
+` : ''}
 
 ${request.referenceImages && request.referenceImages.length > 0 ? `**Reference Images Provided:** ${request.referenceImages.length} screenshot(s) attached (SEMrush reports, competitor analysis, etc.). Analyze these images for additional insights about traffic, keywords, competitors, and market position.\n` : ''}
 
@@ -351,7 +362,8 @@ Provide a comprehensive analysis in the following JSON format:
     "coreBusiness": "What does this company do? What products/services do they offer?",
     "valueProposition": "What makes them unique? What value do they provide?",
     "targetAudience": "Who are their ideal customers?",
-    "geographicScope": "Where do they operate? Local, regional, national, international?"
+    "geographicScope": "Where do they operate? Local, regional, national, international?",
+    "extractedAddress": "Physical address if found on website (look in contact/footer sections, null if not found)"
   },
   "currentDigitalPresence": {
     "websiteQuality": "Assessment of their current website (design, content, functionality)",

@@ -21,8 +21,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CheckCircle2, Download, Loader2 } from 'lucide-react';
+import { CheckCircle2, Download, Loader2, FileText, Files } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 
 interface ProposalGenerationDialogProps {
   open: boolean;
@@ -33,6 +35,7 @@ interface ProposalGenerationDialogProps {
 }
 
 type PackageTier = 'local' | 'regional' | 'national';
+type ProposalMode = 'concise' | 'detailed';
 
 const packages = {
   local: {
@@ -67,6 +70,7 @@ export function ProposalGenerationDialog({
 }: ProposalGenerationDialogProps) {
   const router = useRouter();
   const [selectedTier, setSelectedTier] = useState<PackageTier>('local');
+  const [proposalMode, setProposalMode] = useState<ProposalMode>('detailed');
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
   const [currentStage, setCurrentStage] = useState('');
@@ -91,6 +95,7 @@ export function ProposalGenerationDialog({
         body: JSON.stringify({
           customerId,
           packageTier: selectedTier,
+          proposalMode: proposalMode,
         }),
       });
 
@@ -156,6 +161,7 @@ export function ProposalGenerationDialog({
       // Reset state after closing
       setTimeout(() => {
         setSelectedTier('local');
+        setProposalMode('detailed');
         setProgress(0);
         setCurrentStage('');
         setResult(null);
@@ -210,10 +216,62 @@ export function ProposalGenerationDialog({
               </div>
             </div>
 
+            {/* Proposal Format Selection */}
+            <div>
+              <h3 className="font-semibold mb-3">Proposal Format</h3>
+              <RadioGroup
+                defaultValue="detailed"
+                value={proposalMode}
+                onValueChange={(value: ProposalMode) => setProposalMode(value)}
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className={`flex items-start space-x-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                    proposalMode === 'concise'
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}>
+                    <RadioGroupItem value="concise" id="concise" className="mt-1" />
+                    <Label htmlFor="concise" className="cursor-pointer flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <FileText className="h-4 w-4" />
+                        <span className="font-semibold">Concise Proposal</span>
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        5-6 pages • Quick overview • Key highlights
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Perfect for follow-ups and initial presentations
+                      </p>
+                    </Label>
+                  </div>
+
+                  <div className={`flex items-start space-x-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                    proposalMode === 'detailed'
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}>
+                    <RadioGroupItem value="detailed" id="detailed" className="mt-1" />
+                    <Label htmlFor="detailed" className="cursor-pointer flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Files className="h-4 w-4" />
+                        <span className="font-semibold">Detailed Proposal</span>
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        10-12 pages • Comprehensive analysis • Full strategy
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Complete proposal with in-depth research and insights
+                      </p>
+                    </Label>
+                  </div>
+                </div>
+              </RadioGroup>
+            </div>
+
             {/* Selected Package Summary */}
             <Alert>
               <AlertDescription>
-                <strong>Selected:</strong> {packages[selectedTier].name}
+                <strong>Selected:</strong> {packages[selectedTier].name} • {proposalMode === 'concise' ? 'Concise' : 'Detailed'} Format
                 <br />
                 <strong>Estimated generation time:</strong> {packages[selectedTier].estimatedTime}
                 <br />
