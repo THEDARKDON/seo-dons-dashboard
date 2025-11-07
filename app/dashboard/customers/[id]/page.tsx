@@ -12,6 +12,7 @@ import { CustomerReassignButton } from '@/components/customers/customer-reassign
 import { ClickToCallButton } from '@/components/calling/click-to-call-button';
 import { DealCreateModal } from '@/components/deals/deal-create-modal';
 import { ProposalsList } from '@/components/proposals/proposals-list';
+import { GenerateProposalButton } from '@/components/proposals/generate-proposal-button';
 import { getStageLabel, ACTIVE_STAGES, CLOSED_STAGES } from '@/lib/constants/pipeline-stages';
 
 async function getCustomer(customerId: string) {
@@ -295,8 +296,13 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
 
       {/* Proposals */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>SEO Proposals ({proposals.length})</CardTitle>
+          <GenerateProposalButton
+            customerId={customer.id}
+            customerName={`${customer.first_name} ${customer.last_name}`}
+            companyName={customer.company}
+          />
         </CardHeader>
         <CardContent>
           <ProposalsList proposals={proposals} />
