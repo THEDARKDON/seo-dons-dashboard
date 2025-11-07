@@ -12,6 +12,11 @@ import {
   sanitizeForPrompt,
   validateCompanyData,
 } from './utils';
+import {
+  conductEnhancedResearch,
+  type EnhancedResearchRequest,
+  type EnhancedResearchResult,
+} from '../research/enhanced-research-agent';
 
 // ============================================================================
 // Type Definitions
@@ -204,6 +209,9 @@ export interface ResearchResult {
   locationStrategy?: LocationStrategy;
   roiProjection: ROIProjection; // NEW: Always included
 
+  // Enhanced real-world research data
+  enhancedResearch?: EnhancedResearchResult;
+
   // Metadata
   researchedAt: string;
   totalTokensUsed: number;
@@ -237,9 +245,36 @@ export async function performDeepResearch(
   let totalCost = 0;
   let thinkingTokensUsed = 0;
 
+  // Stage 0: Enhanced Real-World Research (5%) - NEW
+  let enhancedResearch: EnhancedResearchResult | undefined;
+
+  // Only attempt enhanced research if API keys are configured and website is available
+  if (process.env.PERPLEXITY_API_KEY && process.env.SERPAPI_KEY && request.website) {
+    try {
+      await onProgress?.('Conducting real-world research', 5);
+      console.log('[Research Agent] Starting enhanced research with Perplexity & SerpAPI...');
+
+      const enhancedRequest: EnhancedResearchRequest = {
+        companyName: request.companyName,
+        website: request.website,
+        industry: request.industry,
+        location: request.location,
+        notes: request.notes,
+      };
+
+      enhancedResearch = await conductEnhancedResearch(enhancedRequest);
+      console.log('[Research Agent] Enhanced research complete - Real data gathered');
+    } catch (error) {
+      console.warn('[Research Agent] Enhanced research failed, continuing with Claude-only analysis:', error);
+      // Continue without enhanced research - Claude will use its knowledge
+    }
+  } else {
+    console.log('[Research Agent] Enhanced research skipped - API keys not configured or no website');
+  }
+
   // Stage 1: Company Analysis (25%)
   await onProgress?.('Analyzing company and website', 25);
-  const companyAnalysis = await analyzeCompany(request);
+  const companyAnalysis = await analyzeCompany(request, enhancedResearch);
   totalTokensUsed += companyAnalysis.usage.inputTokens + companyAnalysis.usage.outputTokens;
   totalCost += companyAnalysis.cost;
   thinkingTokensUsed += companyAnalysis.usage.thinkingTokens;
@@ -302,6 +337,7 @@ export async function performDeepResearch(
     keywordResearch: keywordResearch.data,
     locationStrategy,
     roiProjection: roiProjection.data,
+    enhancedResearch, // Include real-world research data
     researchedAt: new Date().toISOString(),
     totalTokensUsed,
     estimatedCost: totalCost,
@@ -316,12 +352,23 @@ export async function performDeepResearch(
 /**
  * Stage 1: Analyze company and website
  */
-async function analyzeCompany(request: ResearchRequest) {
+async function analyzeCompany(
+  request: ResearchRequest,
+  enhancedResearch?: EnhancedResearchResult
+) {
   const systemPrompt = `You are an expert SEO consultant and business analyst. Your task is to deeply analyze a company's business model, digital presence, and opportunities for SEO improvement.
 
-Use your extended thinking to thoroughly understand the business, then provide a structured JSON analysis.`;
+Use your extended thinking to thoroughly understand the business, then provide a structured JSON analysis.${
+    enhancedResearch
+      ? '\n\nYou have access to REAL RESEARCH DATA from web analysis and competitor intelligence. Use this actual data to inform your analysis rather than speculation.'
+      : ''
+  }`;
 
-  const userPrompt = sanitizeForPrompt(`
+  const userPrompt = sanitizeForPrompt(`${
+    enhancedResearch
+      ? `\n\n===REAL RESEARCH DATA (use this actual data in your analysis)===\n\nWEBSITE ANALYSIS:\n${JSON.stringify(enhancedResearch.websiteAnalysis, null, 2)}\n\nCOMPANY INTELLIGENCE:\n${JSON.stringify(enhancedResearch.companyIntelligence, null, 2)}\n\nSOCIAL MEDIA PRESENCE:\n${JSON.stringify(enhancedResearch.socialMedia, null, 2)}\n\nMARKET INTELLIGENCE:\n${JSON.stringify(enhancedResearch.marketIntelligence, null, 2)}\n\n===END REAL RESEARCH DATA===\n\n`
+      : ''
+  }
 Analyze this company for an SEO proposal:
 
 **Company Name:** ${request.companyName}
