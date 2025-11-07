@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { CustomerEditButton } from '@/components/customers/customer-edit-button';
 import { CustomerDeleteButton } from '@/components/customers/customer-delete-button';
+import { CustomerReassignButton } from '@/components/customers/customer-reassign-button';
 import { ClickToCallButton } from '@/components/calling/click-to-call-button';
 import { DealCreateModal } from '@/components/deals/deal-create-modal';
 import { GenerateProposalButton } from '@/components/proposals/generate-proposal-button';
@@ -105,6 +106,11 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
           <Badge variant={customer.status === 'active' ? 'default' : 'secondary'}>
             {customer.status}
           </Badge>
+          <CustomerReassignButton
+            customerId={customer.id}
+            currentOwnerId={customer.owned_by}
+            customerName={`${customer.first_name} ${customer.last_name}`}
+          />
           <CustomerEditButton customer={customer} />
           <CustomerDeleteButton customerId={customer.id} customerName={`${customer.first_name} ${customer.last_name}`} />
         </div>

@@ -9,6 +9,7 @@ import { CommissionCalculator } from '@/lib/services/commission-calculator';
 import { notFound } from 'next/navigation';
 import { DealEditButton } from '@/components/deals/deal-edit-button';
 import { DealDeleteButton } from '@/components/deals/deal-delete-button';
+import { DealReassignButton } from '@/components/deals/deal-reassign-button';
 import { DealStagePipeline } from '@/components/deals/deal-stage-pipeline';
 import { DealActivities } from '@/components/deals/deal-activities';
 import { ClickToCallButton } from '@/components/calling/click-to-call-button';
@@ -93,6 +94,12 @@ export default async function DealDetailPage({ params }: { params: { id: string 
           <Badge variant={stageColors[deal.stage as keyof typeof stageColors]} className="text-sm px-3 py-1">
             {stageLabels[deal.stage as keyof typeof stageLabels]}
           </Badge>
+          <DealReassignButton
+            dealId={deal.id}
+            currentAssignedTo={deal.assigned_to}
+            dealName={deal.deal_name}
+            customerId={deal.customer_id}
+          />
           <DealEditButton deal={deal} />
           <DealDeleteButton dealId={deal.id} dealName={deal.deal_name} />
         </div>
