@@ -26,8 +26,7 @@ async function getCustomers(userId: string) {
     .from('customers')
     .select(`
       *,
-      deals (id, deal_name, deal_value, stage),
-      owner:owned_by(id, full_name, email)
+      deals (id, deal_name, deal_value, stage)
     `)
     .order('created_at', { ascending: false });
 
@@ -93,7 +92,6 @@ export default async function CustomersPage() {
                   <th className="pb-3 font-medium">Company</th>
                   <th className="pb-3 font-medium">Email</th>
                   <th className="pb-3 font-medium">Phone</th>
-                  <th className="pb-3 font-medium">Owner</th>
                   <th className="pb-3 font-medium">Deals</th>
                   <th className="pb-3 font-medium">Total Value</th>
                   <th className="pb-3 font-medium">Status</th>
@@ -103,7 +101,7 @@ export default async function CustomersPage() {
               <tbody>
                 {customersWithStats.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="py-8 text-center text-muted-foreground">
+                    <td colSpan={8} className="py-8 text-center text-muted-foreground">
                       No customers found. Create your first customer to get started.
                     </td>
                   </tr>
@@ -121,18 +119,6 @@ export default async function CustomersPage() {
                       <td className="py-4">{customer.company || '-'}</td>
                       <td className="py-4">{customer.email || '-'}</td>
                       <td className="py-4">{customer.phone || '-'}</td>
-                      <td className="py-4">
-                        {customer.owner ? (
-                          <div className="text-sm">
-                            <div className="font-medium">{customer.owner.full_name || customer.owner.email}</div>
-                            {customer.owner.full_name && (
-                              <div className="text-xs text-muted-foreground">{customer.owner.email}</div>
-                            )}
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </td>
                       <td className="py-4">
                         <div className="flex flex-col gap-1">
                           <span className="text-sm">

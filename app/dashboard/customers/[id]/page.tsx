@@ -8,12 +8,10 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { CustomerEditButton } from '@/components/customers/customer-edit-button';
 import { CustomerDeleteButton } from '@/components/customers/customer-delete-button';
-import { CustomerReassignButton } from '@/components/customers/customer-reassign-button';
 import { ClickToCallButton } from '@/components/calling/click-to-call-button';
 import { DealCreateModal } from '@/components/deals/deal-create-modal';
 import { GenerateProposalButton } from '@/components/proposals/generate-proposal-button';
 import { ProposalsList } from '@/components/proposals/proposals-list';
-import { auth } from '@clerk/nextjs/server';
 
 async function getCustomer(customerId: string) {
   const supabase = await createClient();
@@ -79,15 +77,6 @@ const activityTypeIcons = {
 
 export default async function CustomerDetailPage({ params }: { params: { id: string } }) {
   const { customer, deals, activities, proposals } = await getCustomer(params.id);
-  const { userId } = await auth();
-
-  // Get current user's role for reassignment button
-  const supabase = await createClient();
-  const { data: currentUser } = await supabase
-    .from('users')
-    .select('role')
-    .eq('clerk_id', userId)
-    .single();
 
   const totalDeals = deals.length;
   const activeDeals = deals.filter((d) => !['closed_won', 'closed_lost'].includes(d.stage)).length;
@@ -117,12 +106,6 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
             {customer.status}
           </Badge>
           <CustomerEditButton customer={customer} />
-          <CustomerReassignButton
-            customerId={customer.id}
-            currentOwnerId={customer.owned_by}
-            customerName={`${customer.first_name} ${customer.last_name}`}
-            userRole={currentUser?.role}
-          />
           <CustomerDeleteButton customerId={customer.id} customerName={`${customer.first_name} ${customer.last_name}`} />
         </div>
       </div>
