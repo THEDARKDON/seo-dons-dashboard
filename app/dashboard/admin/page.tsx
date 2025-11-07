@@ -330,7 +330,7 @@ export default async function AdminDashboard() {
       </Card>
 
       {/* Quick Links */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Link href="/dashboard/admin/sdrs">
           <Card className="cursor-pointer hover:bg-accent/50 transition-colors">
             <CardHeader>
@@ -355,11 +355,27 @@ export default async function AdminDashboard() {
             </CardHeader>
           </Card>
         </Link>
+        <Link href="/dashboard/admin/mobile-calls">
+          <Card className="cursor-pointer hover:bg-accent/50 transition-colors">
+            <CardHeader>
+              <CardTitle className="text-base">Mobile Call Tracking</CardTitle>
+              <CardDescription>Track and analyze mobile & external calls</CardDescription>
+            </CardHeader>
+          </Card>
+        </Link>
         <Link href="/dashboard/admin/users">
           <Card className="cursor-pointer hover:bg-accent/50 transition-colors">
             <CardHeader>
               <CardTitle className="text-base">User Management</CardTitle>
               <CardDescription>Manage users and permissions</CardDescription>
+            </CardHeader>
+          </Card>
+        </Link>
+        <Link href="/dashboard/admin/phone-numbers">
+          <Card className="cursor-pointer hover:bg-accent/50 transition-colors">
+            <CardHeader>
+              <CardTitle className="text-base">Phone Numbers</CardTitle>
+              <CardDescription>Manage Twilio phone numbers</CardDescription>
             </CardHeader>
           </Card>
         </Link>
