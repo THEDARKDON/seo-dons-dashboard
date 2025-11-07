@@ -13,23 +13,18 @@ import { DealReassignButton } from '@/components/deals/deal-reassign-button';
 import { DealStagePipeline } from '@/components/deals/deal-stage-pipeline';
 import { DealActivities } from '@/components/deals/deal-activities';
 import { ClickToCallButton } from '@/components/calling/click-to-call-button';
+import { getStageByValue, getStageLabel } from '@/lib/constants/pipeline-stages';
 
-const stageColors = {
-  prospecting: 'secondary',
-  qualification: 'default',
-  proposal: 'default',
-  negotiation: 'default',
-  closed_won: 'success',
-  closed_lost: 'destructive',
-} as const;
+// Helper function to get badge variant based on stage
+const getStageVariant = (stage: string): 'default' | 'secondary' | 'destructive' | 'outline' | 'success' => {
+  const stageConfig = getStageByValue(stage);
+  if (!stageConfig) return 'default';
 
-const stageLabels = {
-  prospecting: 'Prospecting',
-  qualification: 'Qualification',
-  proposal: 'Proposal',
-  negotiation: 'Negotiation',
-  closed_won: 'Won',
-  closed_lost: 'Lost',
+  // Map specific stages to badge variants
+  if (stage === 'closed_won') return 'success';
+  if (stage === 'closed_lost' || stage === 'dead_lead' || stage === 'meeting_cancelled') return 'destructive';
+  if (stage === 'new_leads_call') return 'secondary';
+  return 'default';
 };
 
 async function getDeal(dealId: string) {
@@ -91,8 +86,8 @@ export default async function DealDetailPage({ params }: { params: { id: string 
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <Badge variant={stageColors[deal.stage as keyof typeof stageColors]} className="text-sm px-3 py-1">
-            {stageLabels[deal.stage as keyof typeof stageLabels]}
+          <Badge variant={getStageVariant(deal.stage)} className="text-sm px-3 py-1">
+            {getStageLabel(deal.stage)}
           </Badge>
           <DealReassignButton
             dealId={deal.id}

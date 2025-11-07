@@ -6,15 +6,23 @@ import { Check, ArrowRight } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { PIPELINE_STAGES } from '@/lib/constants/pipeline-stages';
 
+// Filter and transform stages for the pipeline visualization
+// We'll show only key stages to keep the UI clean
 const stages = [
-  { value: 'prospecting', label: 'Prospecting', color: 'bg-gray-200' },
-  { value: 'qualification', label: 'Qualification', color: 'bg-blue-200' },
-  { value: 'proposal', label: 'Proposal', color: 'bg-purple-200' },
-  { value: 'negotiation', label: 'Negotiation', color: 'bg-orange-200' },
-  { value: 'closed_won', label: 'Won', color: 'bg-green-200' },
-  { value: 'closed_lost', label: 'Lost', color: 'bg-red-200' },
-];
+  PIPELINE_STAGES.find(s => s.value === 'new_leads_call'),
+  PIPELINE_STAGES.find(s => s.value === 'called_more_action'),
+  PIPELINE_STAGES.find(s => s.value === 'meeting_booked'),
+  PIPELINE_STAGES.find(s => s.value === 'proposal_sent'),
+  PIPELINE_STAGES.find(s => s.value === 'fup_call_booked'),
+  PIPELINE_STAGES.find(s => s.value === 'closed_won'),
+  PIPELINE_STAGES.find(s => s.value === 'closed_lost'),
+].filter(Boolean).map(stage => ({
+  value: stage!.value,
+  label: stage!.label,
+  color: stage!.color
+}));
 
 interface DealStagePipelineProps {
   dealId: string;

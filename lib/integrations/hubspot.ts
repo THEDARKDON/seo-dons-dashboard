@@ -105,15 +105,21 @@ export class HubSpotService {
    */
   private static mapStage(hubspotStage: string): string {
     const stageMap: Record<string, string> = {
-      'appointmentscheduled': 'prospecting',
-      'qualifiedtobuy': 'qualification',
-      'presentationscheduled': 'proposal',
-      'decisionmakerboughtin': 'negotiation',
+      'appointmentscheduled': 'meeting_booked',
+      'qualifiedtobuy': 'called_more_action',
+      'presentationscheduled': 'proposal_sent',
+      'decisionmakerboughtin': 'fup_call_booked',
+      'contractsent': 'proposal_sent',
       'closedwon': 'closed_won',
-      'closedlost': 'closed_lost'
+      'closedlost': 'closed_lost',
+      // Additional mappings for common HubSpot stages
+      'prospecting': 'new_leads_call',
+      'qualification': 'called_more_action',
+      'proposal': 'proposal_sent',
+      'negotiation': 'fup_call_booked'
     }
 
-    return stageMap[hubspotStage] || 'prospecting'
+    return stageMap[hubspotStage.toLowerCase()] || 'new_leads_call'
   }
 
   /**
@@ -121,14 +127,19 @@ export class HubSpotService {
    */
   static mapStageToHubSpot(internalStage: string): string {
     const stageMap: Record<string, string> = {
-      'prospecting': 'appointmentscheduled',
-      'qualification': 'qualifiedtobuy',
-      'proposal': 'presentationscheduled',
-      'negotiation': 'decisionmakerboughtin',
+      'new_leads_call': 'prospecting',
+      'called_no_answer': 'prospecting',
+      'called_more_action': 'qualifiedtobuy',
+      'meeting_booked': 'appointmentscheduled',
+      'meeting_rescheduled': 'appointmentscheduled',
+      'meeting_cancelled': 'closedlost',
+      'proposal_sent': 'presentationscheduled',
+      'fup_call_booked': 'decisionmakerboughtin',
       'closed_won': 'closedwon',
-      'closed_lost': 'closedlost'
+      'closed_lost': 'closedlost',
+      'dead_lead': 'closedlost'
     }
 
-    return stageMap[internalStage] || 'appointmentscheduled'
+    return stageMap[internalStage] || 'prospecting'
   }
 }

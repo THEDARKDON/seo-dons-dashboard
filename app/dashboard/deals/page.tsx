@@ -7,23 +7,14 @@ import { auth } from '@clerk/nextjs/server';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
+import { getStageLabel } from '@/lib/constants/pipeline-stages';
 
-const stageColors = {
-  prospecting: 'secondary',
-  qualification: 'default',
-  proposal: 'default',
-  negotiation: 'default',
-  closed_won: 'success',
-  closed_lost: 'destructive',
-} as const;
-
-const stageLabels = {
-  prospecting: 'Prospecting',
-  qualification: 'Qualification',
-  proposal: 'Proposal',
-  negotiation: 'Negotiation',
-  closed_won: 'Won',
-  closed_lost: 'Lost',
+// Helper function to get badge variant based on stage
+const getStageVariant = (stage: string): 'default' | 'secondary' | 'destructive' | 'outline' | 'success' => {
+  if (stage === 'closed_won') return 'success';
+  if (stage === 'closed_lost' || stage === 'dead_lead' || stage === 'meeting_cancelled') return 'destructive';
+  if (stage === 'new_leads_call') return 'secondary';
+  return 'default';
 };
 
 async function getDeals(userId: string) {
@@ -111,8 +102,8 @@ export default async function DealsPage() {
                     <div className="space-y-1 flex-1">
                       <div className="flex items-center gap-3">
                         <p className="font-medium">{deal.deal_name}</p>
-                        <Badge variant={stageColors[deal.stage as keyof typeof stageColors]}>
-                          {stageLabels[deal.stage as keyof typeof stageLabels]}
+                        <Badge variant={getStageVariant(deal.stage)}>
+                          {getStageLabel(deal.stage)}
                         </Badge>
                       </div>
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">

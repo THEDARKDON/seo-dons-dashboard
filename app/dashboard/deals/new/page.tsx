@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/lib/supabase/client';
 import { useUser } from '@clerk/nextjs';
 import { toast } from 'sonner';
+import { PIPELINE_STAGES } from '@/lib/constants/pipeline-stages';
 
 export default function NewDealPage() {
   const router = useRouter();
@@ -138,13 +139,13 @@ export default function NewDealPage() {
                   name="stage"
                   required
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  defaultValue="new_leads_call"
                 >
-                  <option value="prospecting">Prospecting</option>
-                  <option value="qualification">Qualification</option>
-                  <option value="proposal">Proposal</option>
-                  <option value="negotiation">Negotiation</option>
-                  <option value="closed_won">Closed Won</option>
-                  <option value="closed_lost">Closed Lost</option>
+                  {PIPELINE_STAGES.map((stage) => (
+                    <option key={stage.id} value={stage.value}>
+                      {stage.label}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>

@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { auth } from '@clerk/nextjs/server';
 import { formatCurrency } from '@/lib/utils';
 import { TrendingUp, DollarSign, Phone, Users, Target } from 'lucide-react';
+import { ACTIVE_STAGES, CLOSED_STAGES, INACTIVE_STAGES } from '@/lib/constants/pipeline-stages';
 
 async function getAnalytics(userId: string) {
   const supabase = await createClient();
@@ -83,14 +84,14 @@ export default async function AnalyticsPage() {
   const totalDeals = deals.length;
   const wonDeals = deals.filter(d => d.stage === 'closed_won').length;
   const lostDeals = deals.filter(d => d.stage === 'closed_lost').length;
-  const activeDeals = deals.filter(d => !['closed_won', 'closed_lost'].includes(d.stage)).length;
+  const activeDeals = deals.filter(d => ACTIVE_STAGES.includes(d.stage)).length;
 
   const totalRevenue = deals
     .filter(d => d.stage === 'closed_won')
     .reduce((sum, d) => sum + Number(d.deal_value), 0);
 
   const pipelineValue = deals
-    .filter(d => !['closed_won', 'closed_lost'].includes(d.stage))
+    .filter(d => ACTIVE_STAGES.includes(d.stage))
     .reduce((sum, d) => sum + Number(d.deal_value), 0);
 
   const totalCalls = calls.length;

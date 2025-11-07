@@ -1,6 +1,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { createClient } from '@/lib/supabase/server';
 import { DashboardClient } from '@/components/dashboard/dashboard-client';
+import { ACTIVE_STAGES } from '@/lib/constants/pipeline-stages';
 
 export default async function DashboardPage() {
   const { userId } = await auth();
@@ -36,7 +37,7 @@ export default async function DashboardPage() {
     .from('deals')
     .select('id, stage, deal_value')
     .eq('assigned_to', user.id)
-    .in('stage', ['prospecting', 'qualification', 'proposal', 'negotiation']);
+    .in('stage', ACTIVE_STAGES);
 
   const pipelineValue = activeDeals?.reduce((sum, deal) => sum + Number(deal.deal_value), 0) || 0;
 

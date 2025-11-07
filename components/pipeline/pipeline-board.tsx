@@ -18,15 +18,14 @@ import { PipelineColumn } from './pipeline-column';
 import { DealCard } from './deal-card';
 import { supabase } from '@/lib/supabase/client';
 import { toast } from 'sonner';
+import { PIPELINE_STAGES } from '@/lib/constants/pipeline-stages';
 
-const stages = [
-  { id: 'prospecting', label: 'Prospecting', color: 'bg-gray-100 dark:bg-gray-800' },
-  { id: 'qualification', label: 'Qualification', color: 'bg-blue-50 dark:bg-blue-950' },
-  { id: 'proposal', label: 'Proposal', color: 'bg-purple-50 dark:bg-purple-950' },
-  { id: 'negotiation', label: 'Negotiation', color: 'bg-orange-50 dark:bg-orange-950' },
-  { id: 'closed_won', label: 'Won', color: 'bg-green-50 dark:bg-green-950' },
-  { id: 'closed_lost', label: 'Lost', color: 'bg-red-50 dark:bg-red-950' },
-];
+// Use the global pipeline stages configuration
+const stages = PIPELINE_STAGES.map(stage => ({
+  id: stage.value,
+  label: stage.label,
+  color: stage.color,
+}));
 
 interface Deal {
   id: string;

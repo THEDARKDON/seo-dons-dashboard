@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { createClient } from '@/lib/supabase/server';
+import { ACTIVE_STAGES } from '@/lib/constants/pipeline-stages';
 
 interface DashboardStats {
   mrr: {
@@ -182,7 +183,7 @@ export async function GET(request: NextRequest) {
       .select('stage, deal_value')
       .eq('assigned_to', user.id);
 
-    const activeDeals = allDeals?.filter(d => !['closed_won', 'closed_lost'].includes(d.stage)) || [];
+    const activeDeals = allDeals?.filter(d => ACTIVE_STAGES.includes(d.stage)) || [];
     const wonDeals = allDeals?.filter(d => d.stage === 'closed_won') || [];
     const lostDeals = allDeals?.filter(d => d.stage === 'closed_lost') || [];
 

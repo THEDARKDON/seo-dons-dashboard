@@ -123,15 +123,21 @@ async function processWebhookEvents(events: any[]) {
  */
 function mapHubSpotStage(hubspotStage: string): string {
   const stageMap: Record<string, string> = {
-    'appointmentscheduled': 'prospecting',
-    'qualifiedtobuy': 'qualification',
-    'presentationscheduled': 'proposal',
-    'decisionmakerboughtin': 'negotiation',
+    'appointmentscheduled': 'meeting_booked',
+    'qualifiedtobuy': 'called_more_action',
+    'presentationscheduled': 'proposal_sent',
+    'decisionmakerboughtin': 'fup_call_booked',
+    'contractsent': 'proposal_sent',
     'closedwon': 'closed_won',
-    'closedlost': 'closed_lost'
+    'closedlost': 'closed_lost',
+    // Additional mappings for common HubSpot stages
+    'prospecting': 'new_leads_call',
+    'qualification': 'called_more_action',
+    'proposal': 'proposal_sent',
+    'negotiation': 'fup_call_booked'
   }
 
-  return stageMap[hubspotStage] || 'prospecting'
+  return stageMap[hubspotStage.toLowerCase()] || 'new_leads_call'
 }
 
 export const dynamic = 'force-dynamic';

@@ -26,6 +26,7 @@ import { supabase } from '@/lib/supabase/client';
 import { useUser } from '@clerk/nextjs';
 import { toast } from 'sonner';
 import { Plus } from 'lucide-react';
+import { PIPELINE_STAGES } from '@/lib/constants/pipeline-stages';
 
 interface DealCreateModalProps {
   customerId?: string;
@@ -52,7 +53,7 @@ export function DealCreateModal({ customerId, customerName, onSuccess, trigger }
   const [formData, setFormData] = useState({
     deal_name: '',
     deal_value: '',
-    stage: 'prospecting',
+    stage: 'new_leads_call', // Default to the first stage
     probability: '',
     expected_close_date: '',
     source: '',
@@ -138,7 +139,7 @@ export function DealCreateModal({ customerId, customerName, onSuccess, trigger }
       setFormData({
         deal_name: '',
         deal_value: '',
-        stage: 'prospecting',
+        stage: 'new_leads_call',
         probability: '',
         expected_close_date: '',
         source: '',
@@ -234,12 +235,11 @@ export function DealCreateModal({ customerId, customerName, onSuccess, trigger }
                   <SelectValue placeholder="Select stage" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="prospecting">Prospecting</SelectItem>
-                  <SelectItem value="qualification">Qualification</SelectItem>
-                  <SelectItem value="proposal">Proposal</SelectItem>
-                  <SelectItem value="negotiation">Negotiation</SelectItem>
-                  <SelectItem value="closed_won">Closed Won</SelectItem>
-                  <SelectItem value="closed_lost">Closed Lost</SelectItem>
+                  {PIPELINE_STAGES.map((stage) => (
+                    <SelectItem key={stage.id} value={stage.value}>
+                      {stage.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

@@ -6,6 +6,7 @@ import { auth } from '@clerk/nextjs/server';
 import { formatDate } from '@/lib/utils';
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
+import { ACTIVE_STAGES } from '@/lib/constants/pipeline-stages';
 
 async function getCustomers(userId: string) {
   const supabase = await createClient();
@@ -53,7 +54,7 @@ export default async function CustomersPage() {
   const customersWithStats = customers.map((customer) => {
     const deals = customer.deals as any[];
     const totalDeals = deals?.length || 0;
-    const activeDeals = deals?.filter((d) => !['closed_won', 'closed_lost'].includes(d.stage)).length || 0;
+    const activeDeals = deals?.filter((d) => ACTIVE_STAGES.includes(d.stage)).length || 0;
     const totalValue = deals?.reduce((sum, d) => sum + Number(d.deal_value || 0), 0) || 0;
 
     return {

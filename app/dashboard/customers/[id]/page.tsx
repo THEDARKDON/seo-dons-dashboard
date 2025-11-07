@@ -11,8 +11,8 @@ import { CustomerDeleteButton } from '@/components/customers/customer-delete-but
 import { CustomerReassignButton } from '@/components/customers/customer-reassign-button';
 import { ClickToCallButton } from '@/components/calling/click-to-call-button';
 import { DealCreateModal } from '@/components/deals/deal-create-modal';
-import { GenerateProposalButton } from '@/components/proposals/generate-proposal-button';
 import { ProposalsList } from '@/components/proposals/proposals-list';
+import { getStageLabel, ACTIVE_STAGES, CLOSED_STAGES } from '@/lib/constants/pipeline-stages';
 
 async function getCustomer(customerId: string) {
   const supabase = await createClient();
@@ -51,22 +51,12 @@ async function getCustomer(customerId: string) {
   return { customer, deals: deals || [], activities: activities || [], proposals: proposals || [] };
 }
 
-const stageColors = {
-  prospecting: 'secondary',
-  qualification: 'default',
-  proposal: 'default',
-  negotiation: 'default',
-  closed_won: 'success',
-  closed_lost: 'destructive',
-} as const;
-
-const stageLabels = {
-  prospecting: 'Prospecting',
-  qualification: 'Qualification',
-  proposal: 'Proposal',
-  negotiation: 'Negotiation',
-  closed_won: 'Won',
-  closed_lost: 'Lost',
+// Helper function to get badge variant based on stage
+const getStageVariant = (stage: string): 'default' | 'secondary' | 'destructive' | 'outline' | 'success' => {
+  if (stage === 'closed_won') return 'success';
+  if (stage === 'closed_lost' || stage === 'dead_lead' || stage === 'meeting_cancelled') return 'destructive';
+  if (stage === 'new_leads_call') return 'secondary';
+  return 'default';
 };
 
 const activityTypeIcons = {
@@ -80,7 +70,7 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
   const { customer, deals, activities, proposals } = await getCustomer(params.id);
 
   const totalDeals = deals.length;
-  const activeDeals = deals.filter((d) => !['closed_won', 'closed_lost'].includes(d.stage)).length;
+  const activeDeals = deals.filter((d) => ACTIVE_STAGES.includes(d.stage)).length;
   const totalValue = deals.reduce((sum, d) => sum + Number(d.deal_value || 0), 0);
   const wonDeals = deals.filter((d) => d.stage === 'closed_won').length;
 
@@ -292,8 +282,8 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
                         <p className="text-sm text-muted-foreground">{deal.probability}%</p>
                       )}
                     </div>
-                    <Badge variant={stageColors[deal.stage as keyof typeof stageColors]}>
-                      {stageLabels[deal.stage as keyof typeof stageLabels]}
+                    <Badge variant={getStageVariant(deal.stage)}>
+                      {getStageLabel(deal.stage)}
                     </Badge>
                   </div>
                 </Link>
@@ -305,13 +295,8 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
 
       {/* Proposals */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader>
           <CardTitle>SEO Proposals ({proposals.length})</CardTitle>
-          <GenerateProposalButton
-            customerId={customer.id}
-            customerName={`${customer.first_name} ${customer.last_name}`}
-            companyName={customer.company}
-          />
         </CardHeader>
         <CardContent>
           <ProposalsList proposals={proposals} />
