@@ -5,7 +5,6 @@
  * to gather actual competitor data, rankings, and market intelligence
  */
 
-import Anthropic from '@anthropic-ai/sdk';
 import { getJson } from 'serpapi';
 
 // ============================================================================
@@ -122,22 +121,40 @@ async function researchWithPerplexity(query: string): Promise<string> {
     throw new Error('Perplexity API key not configured');
   }
 
-  const anthropic = new Anthropic({
-    apiKey: PERPLEXITY_API_KEY,
-    baseURL: 'https://api.perplexity.ai',
-  });
-
   try {
-    const response = await anthropic.messages.create({
-      model: 'sonar-pro',
-      max_tokens: 4000,
-      messages: [{
-        role: 'user',
-        content: query,
-      }],
+    // Perplexity uses OpenAI-compatible API
+    const response = await fetch('https://api.perplexity.ai/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${PERPLEXITY_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'llama-3.1-sonar-large-128k-online',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a helpful research assistant. Provide factual, accurate information based on current web data.',
+          },
+          {
+            role: 'user',
+            content: query,
+          },
+        ],
+        max_tokens: 4000,
+        temperature: 0.2,
+        return_citations: true,
+        search_recency_filter: 'month',
+      }),
     });
 
-    return response.content[0].type === 'text' ? response.content[0].text : '';
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Perplexity API error: ${response.status} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    return data.choices[0]?.message?.content || '';
   } catch (error) {
     console.error('Perplexity research error:', error);
     throw error;
@@ -207,6 +224,34 @@ Focus on factual, verifiable information.`;
 // SERPAPI RANKING FUNCTIONS
 // ============================================================================
 
+/**
+ * Normalize location for SerpAPI
+ * SerpAPI is picky about location format - needs to be simple like "London, England" or "United Kingdom"
+ */
+function normalizeSerpAPILocation(location?: string): string {
+  if (!location) return 'United Kingdom';
+
+  // If location contains multiple parts, extract the most useful part
+  // "Baildon, Shipley, United Kingdom" -> "Shipley, England"
+  const parts = location.split(',').map(p => p.trim());
+
+  // If it's already simple, return as-is
+  if (parts.length === 1) return parts[0];
+
+  // If it ends with "United Kingdom", try to use the region before it
+  if (parts[parts.length - 1].toLowerCase().includes('united kingdom')) {
+    if (parts.length >= 2) {
+      // Return "City, England" format which SerpAPI tends to accept
+      const city = parts[parts.length - 2];
+      return `${city}, England`;
+    }
+    return 'United Kingdom';
+  }
+
+  // Default to United Kingdom for safety
+  return 'United Kingdom';
+}
+
 async function checkRealRankings(
   companyName: string,
   domain: string,
@@ -218,6 +263,7 @@ async function checkRealRankings(
   }
 
   const rankings: KeywordRanking[] = [];
+  const normalizedLocation = normalizeSerpAPILocation(location);
 
   for (const keyword of keywords) {
     try {
@@ -225,7 +271,7 @@ async function checkRealRankings(
         api_key: SERPAPI_KEY,
         engine: 'google',
         q: keyword,
-        location: location,
+        location: normalizedLocation,
         num: 100,
         gl: 'uk',
         hl: 'en',
@@ -272,6 +318,8 @@ async function findRealCompetitors(
     throw new Error('SerpAPI key not configured');
   }
 
+  const normalizedLocation = normalizeSerpAPILocation(location);
+
   const competitorMap = new Map<string, {
     name: string;
     domain: string;
@@ -286,7 +334,7 @@ async function findRealCompetitors(
         api_key: SERPAPI_KEY,
         engine: 'google',
         q: keyword,
-        location: location,
+        location: normalizedLocation,
         num: 10,
         gl: 'uk',
         hl: 'en',
