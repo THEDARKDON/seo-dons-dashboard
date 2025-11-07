@@ -180,7 +180,7 @@ export async function POST(request: NextRequest) {
           await sendProgress('Generating HTML', 92, 'Creating HTML document...');
 
           validateProposalContent(result.content);
-          const htmlContent = generateProposalHTML(result.content);
+          const htmlContent = generateProposalHTML(result.content, result.research);
 
           // ================================================================
           // 9. UPLOAD HTML TO STORAGE

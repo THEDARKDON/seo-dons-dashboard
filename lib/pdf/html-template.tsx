@@ -8,6 +8,13 @@
 
 import type { ProposalContent } from '@/lib/claude/content-generator';
 
+// Import enhanced rendering functions
+import {
+  renderEnhancedCompetitorComparison,
+  renderEnhancedPackageOptions,
+  renderEnhancedProjections
+} from './html-template-improvements';
+
 /**
  * Generate complete HTML document for a proposal
  *
@@ -16,9 +23,10 @@ import type { ProposalContent } from '@/lib/claude/content-generator';
  * converted to PDF via Puppeteer.
  *
  * @param content The proposal content structure
+ * @param research Optional research data for enhanced sections
  * @returns Complete HTML string (ready to save or render)
  */
-export function generateProposalHTML(content: ProposalContent): string {
+export function generateProposalHTML(content: ProposalContent, research?: any): string {
   const styles = getEmbeddedStyles();
   const companyName = content.coverPage.companyName;
   let pageNumber = 1;
@@ -40,9 +48,15 @@ export function generateProposalHTML(content: ProposalContent): string {
   ${renderContentStrategy(content.contentStrategy, companyName, ++pageNumber)}
   ${content.localSEO ? renderLocalSEO(content.localSEO, companyName, ++pageNumber) : ''}
   ${renderLinkBuilding(content.linkBuilding, companyName, ++pageNumber)}
-  ${renderCompetitorComparison(content.competitorComparison, companyName, ++pageNumber)}
-  ${renderPackageOptions(content.packageOptions, companyName, ++pageNumber)}
-  ${renderProjections(content.projections, content.simpleMathBreakdown, companyName, ++pageNumber)}
+  ${research ?
+    renderEnhancedCompetitorComparison(content.competitorComparison, research, companyName, ++pageNumber) :
+    renderCompetitorComparison(content.competitorComparison, companyName, ++pageNumber)}
+  ${research ?
+    renderEnhancedPackageOptions(content.packageOptions, research, companyName, ++pageNumber) :
+    renderPackageOptions(content.packageOptions, companyName, ++pageNumber)}
+  ${research ?
+    renderEnhancedProjections(content.projections, content.simpleMathBreakdown, research, companyName, ++pageNumber) :
+    renderProjections(content.projections, content.simpleMathBreakdown, companyName, ++pageNumber)}
   ${renderNextSteps(content.nextSteps, companyName, ++pageNumber)}
 </body>
 </html>`;
