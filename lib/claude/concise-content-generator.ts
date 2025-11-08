@@ -193,13 +193,22 @@ ${JSON.stringify(sanitizeResearchData(researchData.enhancedResearch.keywordAnaly
   topCompetitor: kw.topRankers[0]?.domain || 'N/A'
 }))), null, 2)}
 
-### Real Competitors (From Top 10 Rankings)
+### Real Competitors (From Top 10 Rankings - LOCAL BUSINESSES ONLY)
 ${JSON.stringify(sanitizeResearchData(researchData.enhancedResearch.competitors.slice(0, 5).map(comp => ({
   domain: comp.domain,
   name: comp.name,
   appearances: comp.rankings.length,
   keywords: comp.rankings.map(r => r.keyword).join(', ')
 }))), null, 2)}
+
+**COMPETITOR SELECTION RULES:**
+- ONLY use competitors from the list above (actual businesses)
+- DO NOT use trade associations (e.g., SolarEnergyUK.org, IEA.org)
+- DO NOT use directories (e.g., Which.co.uk, TheEcoExperts)
+- DO NOT use information sites (e.g., Wikipedia, gov.uk)
+- DO NOT invent or use knowledge of national brands (e.g., Octopus Energy, British Gas)
+- PREFER local businesses that appear multiple times in rankings
+- If fewer than 3 valid competitors exist, use "Local competitors with similar rankings" instead of inventing names
 
 ### Top Location Opportunities
 ${JSON.stringify(sanitizeResearchData(researchData.enhancedResearch.locationOpportunities.slice(0, 3).map(loc => ({

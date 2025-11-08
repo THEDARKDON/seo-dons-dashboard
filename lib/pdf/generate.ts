@@ -81,9 +81,8 @@ export function validateProposalContent(content: ProposalContent): boolean {
     throw new Error('Proposal content missing package options');
   }
 
-  if (!content.projections) {
-    throw new Error('Proposal content missing projections');
-  }
+  // Note: projections is now optional - calculated in rendering code
+  // No validation needed here
 
   return true;
 }

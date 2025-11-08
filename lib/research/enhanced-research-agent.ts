@@ -429,7 +429,7 @@ async function findRealCompetitors(
   console.log('Limit:', limit, 'competitors');
   console.log('========================================\n');
 
-  // Domains to exclude (directories, comparison sites, huge national brands)
+  // Domains to exclude (directories, comparison sites, huge national brands, trade associations)
   const excludedDomains = [
     // Comparison/directory sites
     'checkatrade.com', 'trustatrader.com', 'yell.com', 'thomsonlocal.com',
@@ -441,6 +441,17 @@ async function findRealCompetitors(
     // Generic platforms
     'amazon.co.uk', 'ebay.co.uk', 'gumtree.com', 'indeed.com', 'linkedin.com',
     'wikipedia.org', 'youtube.com', 'bbc.co.uk', 'gov.uk',
+    // Trade associations and industry bodies (not actual competitors)
+    'solarenergyuk.org', 'solarpowereurope.org', 'iea.org', 'fmb.org.uk',
+    'theecoexperts.co.uk', 'which.co.uk', 'independent.co.uk',
+    // Information/educational sites
+    'en.wikipedia.org', 'nationalgrid.com', 'energysavingtrust.org.uk',
+    // Government/academic sites
+    'webapp.services.coventry.ac.uk', 'find-and-update.company-information.service.gov.uk',
+    // Portals and aggregators
+    'solarpowerportal.co.uk', 'mcscertified.com', 'globalsolaratlas.info',
+    // Social/review platforms
+    'instagram.com', 'uk.trustpilot.com', 'trustpilot.com',
   ];
 
   const competitorMap = new Map<string, {
