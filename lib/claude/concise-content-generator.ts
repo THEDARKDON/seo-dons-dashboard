@@ -181,7 +181,7 @@ ${researchData?.enhancedResearch ? `
 
 ### Current Traffic
 Monthly Traffic: ${researchData.competitorAnalysis?.clientCurrentMetrics?.monthlyTraffic || 'Unknown'}
-Current Rankings: ${researchData.competitorAnalysis?.clientCurrentMetrics?.topRankings || 'Limited visibility'}
+Ranking Keywords: ${researchData.competitorAnalysis?.clientCurrentMetrics?.rankingKeywords || 'Limited visibility'}
 
 ### Target Keywords (Real SerpAPI Data)
 ${JSON.stringify(sanitizeResearchData(researchData.enhancedResearch.keywordAnalysis.map(kw => ({
