@@ -178,6 +178,55 @@ export interface ProposalContent {
     opportunitySize: string;
     timeframe: string;
   };
+
+  // ============================================================================
+  // NEW: Enhanced Data Utilization (Priority 1 Implementation)
+  // ============================================================================
+
+  // Keyword Ranking Analysis (shows actual positions for each keyword)
+  keywordRankingAnalysis?: {
+    overview: string;
+    rankings: Array<{
+      keyword: string;
+      position?: number;
+      searchVolume: number;
+      opportunity: string; // e.g., "Maintain and expand", "Move to #1", "Target top 3"
+      competitorAtTop?: string;
+    }>;
+  };
+
+  // Location Opportunities (geographic expansion strategy)
+  locationOpportunities?: {
+    overview: string;
+    currentStrength: Array<{
+      location: string;
+      performance: string; // e.g., "#1 for local searches"
+      strategy: string; // e.g., "Dominating - Maintain + Expand"
+    }>;
+    expansionOpportunities: Array<{
+      location: string;
+      priority: 'High' | 'Medium' | 'Low';
+      estimatedVolume: string;
+      competition: string;
+      strategy: string;
+    }>;
+  };
+
+  // Content Opportunities (PAA questions and related searches)
+  contentOpportunities?: {
+    overview: string;
+    paaQuestions: Array<{
+      question: string;
+      contentIdea: string;
+      searchIntent: string;
+      priority: 'High' | 'Medium' | 'Low';
+    }>;
+    relatedKeywords: Array<{
+      keyword: string;
+      searchVolume?: number;
+      contentIdea: string;
+    }>;
+  };
 }
 
 export interface ContentGenerationRequest {
@@ -444,6 +493,50 @@ ${JSON.stringify(researchData.keywordResearch, null, 2)}
 
 ${researchData.locationStrategy ? `### Location Strategy\n${JSON.stringify(researchData.locationStrategy, null, 2)}` : ''}
 
+${researchData.enhancedResearch ? `
+## ENHANCED REAL-WORLD RESEARCH DATA (CRITICAL - USE THIS DATA TO POPULATE NEW SECTIONS)
+
+### Keyword Ranking Analysis (Actual SerpAPI Data)
+This is REAL ranking data from Google - every keyword below was actually searched and ranked:
+${JSON.stringify(researchData.enhancedResearch.keywordAnalysis.map(kw => ({
+  keyword: kw.keyword,
+  currentPosition: kw.position || 'Not in top 100',
+  searchVolume: kw.searchVolume,
+  difficulty: kw.difficulty,
+  intent: kw.intent,
+  topCompetitors: kw.topRankers.slice(0, 3).map(r => r.domain),
+  peopleAlsoAsk: kw.peopleAlsoAsk || [],
+  relatedSearches: kw.relatedSearches || []
+})), null, 2)}
+
+### Location Opportunities (Extracted from Rankings)
+Geographic opportunities identified from keyword analysis and competitor domains:
+${JSON.stringify(researchData.enhancedResearch.locationOpportunities, null, 2)}
+
+### Content Opportunities (PAA Questions + Related Searches)
+Real questions people are asking on Google + related keyword opportunities:
+${JSON.stringify(researchData.enhancedResearch.contentOpportunities, null, 2)}
+
+### Real Competitors (From Top 10 Rankings)
+These competitors actually appear in the top 10 for your target keywords:
+${JSON.stringify(researchData.enhancedResearch.competitors.map(comp => ({
+  domain: comp.domain,
+  name: comp.name,
+  appearsInTopTenFor: comp.rankings.length + ' keywords',
+  rankings: comp.rankings,
+  estimatedTraffic: comp.estimatedTraffic,
+  strengths: comp.strengths
+})), null, 2)}
+
+**INSTRUCTIONS FOR USING THIS DATA:**
+1. Use the keywordAnalysis array to populate "keywordRankingAnalysis" section in your JSON response
+2. Use the locationOpportunities array to populate "locationOpportunities" section
+3. Use the contentOpportunities array to populate "contentOpportunities" section
+4. Extract competitor names and rankings for the competitive comparison table
+5. Use PAA questions for specific content recommendations in the content strategy
+6. Use related searches for keyword expansion recommendations
+` : ''}
+
 ## PACKAGE TIER
 ${packageTier.toUpperCase()} Package
 ${getPackageDetails(packageTier)}
@@ -672,6 +765,67 @@ Generate ALL proposal content following this exact structure:
     "currentState": "You're capturing less than 0.1% of the UK mobility equipment market despite having the largest showroom and 25+ years experience",
     "opportunitySize": "UK mobility equipment market: £712.8M (2022) growing to £1.15B by 2030 at 6.2% annually. 9.8 million disabled people in UK with 40-60% researching online first",
     "timeframe": "12-month SEO strategy can capture £1.2-1.5M annual revenue (conservative estimate based on local + regional dominance)"
+  },
+
+  // ============================================================================
+  // NEW: Enhanced Data Utilization (Use the ENHANCED REAL-WORLD RESEARCH DATA above)
+  // ============================================================================
+
+  "keywordRankingAnalysis": {
+    "overview": "[1-2 paragraphs explaining current keyword performance and opportunities]",
+    "rankings": [
+      {
+        "keyword": "[Exact keyword from enhancedResearch.keywordAnalysis]",
+        "position": 1, // Use actual position from data, or undefined if not ranking
+        "searchVolume": 300, // Use actual search volume from data
+        "opportunity": "Maintain and expand", // For #1-3: "Maintain and expand", #4-10: "Move to top 3", 10+: "Target first page"
+        "competitorAtTop": "[domain of #1 competitor if client isn't #1]"
+      }
+      // Include ALL keywords from enhancedResearch.keywordAnalysis array
+    ]
+  },
+
+  "locationOpportunities": {
+    "overview": "[2-3 paragraphs about geographic SEO opportunities identified from the data]",
+    "currentStrength": [
+      {
+        "location": "[City name from enhancedResearch.locationOpportunities where currentRanking exists]",
+        "performance": "#1 for local searches", // Use actual ranking
+        "strategy": "Dominating - Maintain + Expand"
+      }
+      // Include locations where client currently ranks well
+    ],
+    "expansionOpportunities": [
+      {
+        "location": "[City name from enhancedResearch.locationOpportunities]",
+        "priority": "High", // Use actual priority from data
+        "estimatedVolume": "500-1000/month", // Use actual estimatedVolume from data
+        "competition": "Medium", // Use actual competition from data
+        "strategy": "Create dedicated location page targeting '[location] + [main service]' keywords"
+      }
+      // Include top 4-6 location opportunities from enhancedResearch.locationOpportunities
+    ]
+  },
+
+  "contentOpportunities": {
+    "overview": "[2-3 paragraphs about content gaps identified from real Google data (PAA questions and related searches)]",
+    "paaQuestions": [
+      {
+        "question": "[Exact question from enhancedResearch.contentOpportunities]",
+        "contentIdea": "[Exact contentIdea from enhancedResearch.contentOpportunities]",
+        "searchIntent": "[Exact searchIntent from data]",
+        "priority": "High" // Use actual priority from data
+      }
+      // Include top 8-12 PAA questions from enhancedResearch.contentOpportunities
+    ],
+    "relatedKeywords": [
+      {
+        "keyword": "[Related search keyword]",
+        "searchVolume": 300, // If available
+        "contentIdea": "[How to target this keyword]"
+      }
+      // Include top 6-8 related keywords from relatedSearches in keywordAnalysis
+    ]
   }
 }
 \`\`\`

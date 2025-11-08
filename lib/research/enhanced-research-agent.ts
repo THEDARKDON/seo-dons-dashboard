@@ -62,6 +62,8 @@ export interface KeywordRanking {
     title: string;
     position: number;
   }[];
+  relatedSearches?: string[];
+  peopleAlsoAsk?: string[];
 }
 
 export interface RealCompetitor {
@@ -84,6 +86,23 @@ export interface MarketIntelligence {
   quickWins: string[];
 }
 
+export interface LocationOpportunity {
+  location: string;
+  priority: 'High' | 'Medium' | 'Low';
+  estimatedVolume: string;
+  competition: string;
+  competitorDomains: string[];
+  currentRanking?: number;
+}
+
+export interface ContentOpportunity {
+  question: string;
+  keyword: string;
+  contentIdea: string;
+  searchIntent: string;
+  priority: 'High' | 'Medium' | 'Low';
+}
+
 export interface EnhancedResearchResult {
   companyIntelligence: CompanyIntelligence;
   websiteAnalysis: WebsiteAnalysis;
@@ -91,6 +110,8 @@ export interface EnhancedResearchResult {
   keywordAnalysis: KeywordRanking[];
   competitors: RealCompetitor[];
   marketIntelligence: MarketIntelligence;
+  locationOpportunities: LocationOpportunity[];
+  contentOpportunities: ContentOpportunity[];
   rawResearchData: {
     perplexityInsights: string[];
     serpData: any[];
@@ -355,6 +376,12 @@ async function checkRealRankings(
       const searchVolume = await estimateSearchVolume(keyword);
       console.log(`  └─ Estimated Search Volume: ${searchVolume}/month\n`);
 
+      // Extract related searches
+      const relatedSearches = results.related_searches?.map((rs: any) => rs.query).filter(Boolean) || [];
+
+      // Extract People Also Ask questions
+      const peopleAlsoAsk = results.related_questions?.map((rq: any) => rq.question).filter(Boolean) || [];
+
       rankings.push({
         keyword,
         position: position >= 0 ? position + 1 : undefined,
@@ -366,6 +393,8 @@ async function checkRealRankings(
           title: r.title,
           position: idx + 1,
         })) || [],
+        relatedSearches: relatedSearches.slice(0, 8), // Top 8 related searches
+        peopleAlsoAsk: peopleAlsoAsk.slice(0, 4), // Top 4 PAA questions
       });
 
       // Rate limit to avoid API throttling
@@ -686,6 +715,190 @@ function extractDomainAuthority(text: string): number | undefined {
 }
 
 // ============================================================================
+// OPPORTUNITY EXTRACTION
+// ============================================================================
+
+function extractLocationOpportunities(
+  keywordAnalysis: KeywordRanking[],
+  competitors: RealCompetitor[],
+  clientDomain?: string
+): LocationOpportunity[] {
+  const locationMap = new Map<string, {
+    mentions: number;
+    competitorDomains: Set<string>;
+    clientRanking?: number;
+    keywords: string[];
+  }>();
+
+  // Extract locations from keywords and competitor domains
+  const ukCities = [
+    'London', 'Birmingham', 'Manchester', 'Leeds', 'Liverpool', 'Sheffield',
+    'Bristol', 'Newcastle', 'Nottingham', 'Leicester', 'Coventry', 'Bradford',
+    'Hull', 'Southampton', 'Reading', 'Derby', 'Plymouth', 'York', 'Cambridge',
+    'Oxford', 'Brighton', 'Exeter', 'Norwich', 'Ipswich', 'Gloucester',
+    'Cheltenham', 'Harrogate', 'Shipley', 'Baildon'
+  ];
+
+  // Scan keywords for location mentions
+  keywordAnalysis.forEach(kw => {
+    ukCities.forEach(city => {
+      if (kw.keyword.toLowerCase().includes(city.toLowerCase())) {
+        if (!locationMap.has(city)) {
+          locationMap.set(city, {
+            mentions: 0,
+            competitorDomains: new Set(),
+            keywords: []
+          });
+        }
+        const loc = locationMap.get(city)!;
+        loc.mentions++;
+        loc.keywords.push(kw.keyword);
+
+        // Track if client ranks for this
+        if (kw.position && kw.position <= 10) {
+          loc.clientRanking = kw.position;
+        }
+
+        // Track competitors appearing for this location
+        kw.topRankers.forEach(ranker => {
+          loc.competitorDomains.add(ranker.domain);
+        });
+      }
+    });
+  });
+
+  // Convert to array and prioritize
+  const opportunities: LocationOpportunity[] = [];
+
+  locationMap.forEach((data, location) => {
+    const competitorDomains = Array.from(data.competitorDomains);
+    const hasClientRanking = data.clientRanking !== undefined;
+    const competitorCount = competitorDomains.length;
+
+    let priority: 'High' | 'Medium' | 'Low' = 'Low';
+
+    if (hasClientRanking && data.clientRanking! <= 3) {
+      // Already ranking well - maintain and expand
+      priority = 'High';
+    } else if (competitorCount <= 2) {
+      // Low competition opportunity
+      priority = 'High';
+    } else if (data.mentions >= 2) {
+      // Multiple keyword mentions
+      priority = 'Medium';
+    }
+
+    opportunities.push({
+      location,
+      priority,
+      estimatedVolume: estimateLocationVolume(location, data.mentions),
+      competition: competitorCount <= 2 ? 'Low' : competitorCount <= 4 ? 'Medium' : 'High',
+      competitorDomains: competitorDomains.slice(0, 3),
+      currentRanking: data.clientRanking
+    });
+  });
+
+  // Sort by priority
+  return opportunities.sort((a, b) => {
+    const priorityOrder = { High: 3, Medium: 2, Low: 1 };
+    return priorityOrder[b.priority] - priorityOrder[a.priority];
+  });
+}
+
+function estimateLocationVolume(location: string, mentions: number): string {
+  // Rough estimates based on city size and mentions
+  const largeUKCities = ['London', 'Birmingham', 'Manchester', 'Leeds', 'Liverpool'];
+  const mediumUKCities = ['Sheffield', 'Bristol', 'Newcastle', 'Nottingham', 'Leicester'];
+
+  if (largeUKCities.includes(location)) {
+    return '500-1000/month';
+  } else if (mediumUKCities.includes(location)) {
+    return '300-500/month';
+  } else {
+    return '100-300/month';
+  }
+}
+
+function extractContentOpportunities(
+  keywordAnalysis: KeywordRanking[]
+): ContentOpportunity[] {
+  const contentOpps: ContentOpportunity[] = [];
+
+  keywordAnalysis.forEach(kw => {
+    // Extract PAA questions as content opportunities
+    kw.peopleAlsoAsk?.forEach(question => {
+      const contentIdea = generateContentIdeaFromQuestion(question);
+
+      contentOpps.push({
+        question,
+        keyword: kw.keyword,
+        contentIdea,
+        searchIntent: determineQuestionIntent(question),
+        priority: kw.searchVolume > 300 ? 'High' : kw.searchVolume > 150 ? 'Medium' : 'Low'
+      });
+    });
+
+    // Extract related searches as content opportunities
+    kw.relatedSearches?.forEach(relatedSearch => {
+      // Convert related search to a question format
+      const question = `Content targeting: ${relatedSearch}`;
+
+      contentOpps.push({
+        question,
+        keyword: relatedSearch,
+        contentIdea: `Create page/post targeting "${relatedSearch}"`,
+        searchIntent: detectIntent(relatedSearch),
+        priority: 'Medium'
+      });
+    });
+  });
+
+  // Deduplicate and prioritize
+  const uniqueOpps = contentOpps.filter((opp, index, self) =>
+    index === self.findIndex(o => o.question === opp.question)
+  );
+
+  return uniqueOpps
+    .sort((a, b) => {
+      const priorityOrder = { High: 3, Medium: 2, Low: 1 };
+      return priorityOrder[b.priority] - priorityOrder[a.priority];
+    })
+    .slice(0, 20); // Top 20 content opportunities
+}
+
+function generateContentIdeaFromQuestion(question: string): string {
+  const lowerQ = question.toLowerCase();
+
+  if (lowerQ.includes('how much') || lowerQ.includes('cost') || lowerQ.includes('price')) {
+    return `Pricing guide: "${question}"`;
+  } else if (lowerQ.includes('how to') || lowerQ.includes('how do')) {
+    return `How-to guide: "${question}"`;
+  } else if (lowerQ.includes('what is') || lowerQ.includes('what are')) {
+    return `Educational post: "${question}"`;
+  } else if (lowerQ.includes('best') || lowerQ.includes('top')) {
+    return `Comparison/listicle: "${question}"`;
+  } else if (lowerQ.includes('can i') || lowerQ.includes('do i')) {
+    return `FAQ page: "${question}"`;
+  } else {
+    return `Blog post answering: "${question}"`;
+  }
+}
+
+function determineQuestionIntent(question: string): string {
+  const lowerQ = question.toLowerCase();
+
+  if (lowerQ.includes('buy') || lowerQ.includes('price') || lowerQ.includes('cost')) {
+    return 'Transactional';
+  } else if (lowerQ.includes('how to') || lowerQ.includes('what is') || lowerQ.includes('guide')) {
+    return 'Informational';
+  } else if (lowerQ.includes('best') || lowerQ.includes('top') || lowerQ.includes('review')) {
+    return 'Commercial Investigation';
+  } else {
+    return 'Informational';
+  }
+}
+
+// ============================================================================
 // MAIN RESEARCH ORCHESTRATION
 // ============================================================================
 
@@ -752,6 +965,10 @@ export async function conductEnhancedResearch(
     quickWins: identifyQuickWins(keywordAnalysis, competitors),
   };
 
+  // Extract location and content opportunities
+  const locationOpportunities = extractLocationOpportunities(keywordAnalysis, competitors, website);
+  const contentOpportunities = extractContentOpportunities(keywordAnalysis);
+
   // LOG: Final aggregated research results
   console.log('\n╔════════════════════════════════════════════════════════════════╗');
   console.log('║  ENHANCED RESEARCH COMPLETE                                    ║');
@@ -802,6 +1019,20 @@ export async function conductEnhancedResearch(
     });
   }
 
+  console.log('\n📍 LOCATION OPPORTUNITIES:');
+  console.log('  ├─ Locations Identified:', locationOpportunities.length);
+  locationOpportunities.slice(0, 5).forEach((loc, idx) => {
+    console.log(`  │   ${idx + 1}. ${loc.location} [${loc.priority}] - ${loc.estimatedVolume}`);
+  });
+
+  console.log('\n📝 CONTENT OPPORTUNITIES:');
+  console.log('  ├─ Content Ideas:', contentOpportunities.length);
+  console.log('  ├─ From PAA Questions:', keywordAnalysis.reduce((sum, kw) => sum + (kw.peopleAlsoAsk?.length || 0), 0));
+  console.log('  └─ From Related Searches:', keywordAnalysis.reduce((sum, kw) => sum + (kw.relatedSearches?.length || 0), 0));
+  contentOpportunities.slice(0, 5).forEach((content, idx) => {
+    console.log(`  │   ${idx + 1}. ${content.question.substring(0, 60)}...`);
+  });
+
   console.log('\n═══════════════════════════════════════════════════════════════');
   console.log('✅ Research data ready for Claude analysis\n');
 
@@ -812,6 +1043,8 @@ export async function conductEnhancedResearch(
     keywordAnalysis,
     competitors,
     marketIntelligence,
+    locationOpportunities,
+    contentOpportunities,
     rawResearchData: {
       perplexityInsights: [],
       serpData: [],

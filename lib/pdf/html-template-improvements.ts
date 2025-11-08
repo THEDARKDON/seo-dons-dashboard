@@ -595,3 +595,242 @@ export function renderEnhancedProjections(
 }
 
 // Individual enhancement functions are exported above for use in html-template.tsx
+
+/**
+ * NEW: Keyword Ranking Analysis Table
+ * Shows actual Google rankings for each keyword with opportunities
+ */
+export function renderKeywordRankingAnalysis(
+  keywordAnalysis: ProposalContent['keywordRankingAnalysis'] | undefined,
+  companyName: string,
+  pageNumber: number
+): string {
+  if (!keywordAnalysis || !keywordAnalysis.rankings || keywordAnalysis.rankings.length === 0) {
+    return '';
+  }
+
+  return `
+    <div class="page content-page">
+      ${renderPageHeader(companyName)}
+      <h1>Your Current Keyword Rankings</h1>
+
+      <p style="margin-bottom: 5mm;">${escapeHTML(keywordAnalysis.overview)}</p>
+
+      <table class="metrics-table">
+        <thead>
+          <tr>
+            <th>Keyword</th>
+            <th>Current Position</th>
+            <th>Search Volume</th>
+            <th>Opportunity</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${keywordAnalysis.rankings.map(kw => {
+            const positionColor =
+              kw.position && kw.position <= 3 ? '#d4edda' :
+              kw.position && kw.position <= 10 ? '#fff3cd' :
+              '#f8d7da';
+            const positionTextColor =
+              kw.position && kw.position <= 3 ? '#155724' :
+              kw.position && kw.position <= 10 ? '#856404' :
+              '#721c24';
+
+            return `
+              <tr>
+                <td><strong>${escapeHTML(kw.keyword)}</strong></td>
+                <td style="background: ${positionColor}; color: ${positionTextColor}; font-weight: bold;">
+                  ${kw.position ? `#${kw.position}` : 'Not ranking'}
+                </td>
+                <td>${kw.searchVolume}/month</td>
+                <td>${escapeHTML(kw.opportunity)}</td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+
+      <div style="margin-top: 8mm; background: #f0f8ff; border-left: 4px solid #00CED1; padding: 4mm;">
+        <h3>Color Key:</h3>
+        <p style="margin: 2mm 0;"><span style="background: #d4edda; padding: 1mm 2mm; color: #155724; font-weight: bold;">#1-3</span> Excellent - Maintain and expand</p>
+        <p style="margin: 2mm 0;"><span style="background: #fff3cd; padding: 1mm 2mm; color: #856404; font-weight: bold;">#4-10</span> Good - Opportunity to reach top 3</p>
+        <p style="margin: 2mm 0;"><span style="background: #f8d7da; padding: 1mm 2mm; color: #721c24; font-weight: bold;">#10+</span> Improvement needed - Target first page</p>
+      </div>
+
+      ${renderPageFooter(pageNumber)}
+    </div>
+  `;
+}
+
+/**
+ * NEW: Location Opportunities Section
+ * Shows geographic expansion opportunities based on keyword rankings
+ */
+export function renderLocationOpportunities(
+  locationOpp: ProposalContent['locationOpportunities'] | undefined,
+  companyName: string,
+  pageNumber: number
+): string {
+  if (!locationOpp) {
+    return '';
+  }
+
+  return `
+    <div class="page content-page">
+      ${renderPageHeader(companyName)}
+      <h1>Geographic Expansion Opportunities</h1>
+
+      <p style="margin-bottom: 5mm;">${escapeHTML(locationOpp.overview)}</p>
+
+      ${locationOpp.currentStrength && locationOpp.currentStrength.length > 0 ? `
+        <h2>Your Current Geographic Performance</h2>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 4mm; margin-bottom: 8mm;">
+          ${locationOpp.currentStrength.map(loc => `
+            <div style="border: 2px solid #28a745; border-radius: 8px; padding: 4mm; background: #d4edda;">
+              <h3 style="color: #28a745; margin-bottom: 2mm;">${escapeHTML(loc.location)}</h3>
+              <p style="margin: 1mm 0;"><strong>Performance:</strong> ${escapeHTML(loc.performance)}</p>
+              <p style="margin: 1mm 0;"><strong>Strategy:</strong> ${escapeHTML(loc.strategy)}</p>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+
+      ${locationOpp.expansionOpportunities && locationOpp.expansionOpportunities.length > 0 ? `
+        <h2>Recommended Location Page Strategy</h2>
+        <table class="metrics-table">
+          <thead>
+            <tr>
+              <th>Location</th>
+              <th>Priority</th>
+              <th>Est. Search Volume</th>
+              <th>Competition</th>
+              <th>Recommended Strategy</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${locationOpp.expansionOpportunities.map(exp => {
+              const priorityColor =
+                exp.priority === 'High' ? '#28a745' :
+                exp.priority === 'Medium' ? '#ffc107' :
+                '#6c757d';
+
+              return `
+                <tr>
+                  <td><strong>${escapeHTML(exp.location)}</strong></td>
+                  <td style="color: ${priorityColor}; font-weight: bold;">${exp.priority}</td>
+                  <td>${escapeHTML(exp.estimatedVolume)}</td>
+                  <td>${escapeHTML(exp.competition)}</td>
+                  <td style="font-size: 12px;">${escapeHTML(exp.strategy)}</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      ` : ''}
+
+      <div style="margin-top: 8mm; background: #fff3cd; border-left: 4px solid #ffc107; padding: 4mm;">
+        <h3>Location SEO Impact:</h3>
+        <p>Creating dedicated location pages for high-priority cities can:</p>
+        <ul style="margin-left: 5mm;">
+          <li>Capture "near me" and city-specific searches</li>
+          <li>Improve local pack rankings in target areas</li>
+          <li>Build topical authority for geographic terms</li>
+          <li>Provide better user experience for local customers</li>
+        </ul>
+      </div>
+
+      ${renderPageFooter(pageNumber)}
+    </div>
+  `;
+}
+
+/**
+ * NEW: Content Opportunities from PAA Questions and Related Searches
+ * Shows real questions people are asking on Google
+ */
+export function renderContentOpportunities(
+  contentOpp: ProposalContent['contentOpportunities'] | undefined,
+  companyName: string,
+  pageNumber: number
+): string {
+  if (!contentOpp) {
+    return '';
+  }
+
+  return `
+    <div class="page content-page">
+      ${renderPageHeader(companyName)}
+      <h1>Content Strategy - Target Questions</h1>
+
+      <p style="margin-bottom: 5mm;">${escapeHTML(contentOpp.overview)}</p>
+
+      ${contentOpp.paaQuestions && contentOpp.paaQuestions.length > 0 ? `
+        <h2>Questions Your Customers Are Asking (From Real Google Data)</h2>
+        <p style="font-size: 13px; color: #666; margin-bottom: 4mm;">These are actual "People Also Ask" questions from Google search results:</p>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; margin-bottom: 8mm;">
+          ${contentOpp.paaQuestions.slice(0, 8).map(paa => {
+            const priorityColor =
+              paa.priority === 'High' ? '#28a745' :
+              paa.priority === 'Medium' ? '#ffc107' :
+              '#6c757d';
+
+            return `
+              <div style="border: 1px solid #ddd; border-radius: 8px; padding: 4mm; background: white;">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 2mm;">
+                  <span style="background: ${priorityColor}; color: white; padding: 1mm 2mm; font-size: 10px; font-weight: bold; border-radius: 4px;">
+                    ${paa.priority}
+                  </span>
+                  <span style="font-size: 10px; color: #999;">${escapeHTML(paa.searchIntent)}</span>
+                </div>
+                <p style="font-weight: bold; margin: 2mm 0; font-size: 13px; color: #333;">
+                  ${escapeHTML(paa.question)}
+                </p>
+                <p style="font-size: 12px; color: #00CED1; margin: 2mm 0;">
+                  → ${escapeHTML(paa.contentIdea)}
+                </p>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      ` : ''}
+
+      ${contentOpp.relatedKeywords && contentOpp.relatedKeywords.length > 0 ? `
+        <h2>Related Keyword Opportunities</h2>
+        <p style="font-size: 13px; color: #666; margin-bottom: 4mm;">Additional keywords to target for comprehensive coverage:</p>
+
+        <table class="metrics-table">
+          <thead>
+            <tr>
+              <th>Keyword</th>
+              <th>Search Volume</th>
+              <th>Content Strategy</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${contentOpp.relatedKeywords.slice(0, 10).map(rk => `
+              <tr>
+                <td><strong>${escapeHTML(rk.keyword)}</strong></td>
+                <td>${rk.searchVolume ? `${rk.searchVolume}/month` : 'Data pending'}</td>
+                <td style="font-size: 12px;">${escapeHTML(rk.contentIdea)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      ` : ''}
+
+      <div style="margin-top: 8mm; background: #e8f9f9; border-left: 4px solid #00CED1; padding: 4mm;">
+        <h3>Why This Matters:</h3>
+        <p>By answering these exact questions your customers are searching for:</p>
+        <ul style="margin-left: 5mm;">
+          <li>You'll appear in Google's "People Also Ask" boxes (prime visibility)</li>
+          <li>You'll capture long-tail, high-intent traffic</li>
+          <li>You'll establish authority and trust with detailed answers</li>
+          <li>You'll outrank competitors who aren't answering these questions</li>
+        </ul>
+      </div>
+
+      ${renderPageFooter(pageNumber)}
+    </div>
+  `;
+}

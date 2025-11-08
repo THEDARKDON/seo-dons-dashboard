@@ -12,7 +12,10 @@ import type { ProposalContent } from '@/lib/claude/content-generator';
 import {
   renderEnhancedCompetitorComparison,
   renderEnhancedPackageOptions,
-  renderEnhancedProjections
+  renderEnhancedProjections,
+  renderKeywordRankingAnalysis,
+  renderLocationOpportunities,
+  renderContentOpportunities
 } from './html-template-improvements';
 
 /**
@@ -43,10 +46,13 @@ export function generateProposalHTML(content: ProposalContent, research?: any): 
   ${renderCoverPage(content.coverPage)}
   ${renderExecutiveSummary(content.executiveSummary, content.brutalTruthCallouts, content.marketOpportunity, content.statisticsCards, companyName, ++pageNumber)}
   ${renderCurrentSituation(content.currentSituation, content.statisticsCards, companyName, ++pageNumber)}
+  ${content.keywordRankingAnalysis ? renderKeywordRankingAnalysis(content.keywordRankingAnalysis, companyName, ++pageNumber) : ''}
   ${renderStrategy(content.recommendedStrategy, companyName, ++pageNumber)}
   ${renderTechnicalSEO(content.technicalSEO, companyName, ++pageNumber)}
   ${renderContentStrategy(content.contentStrategy, companyName, ++pageNumber)}
+  ${content.contentOpportunities ? renderContentOpportunities(content.contentOpportunities, companyName, ++pageNumber) : ''}
   ${content.localSEO ? renderLocalSEO(content.localSEO, companyName, ++pageNumber) : ''}
+  ${content.locationOpportunities ? renderLocationOpportunities(content.locationOpportunities, companyName, ++pageNumber) : ''}
   ${renderLinkBuilding(content.linkBuilding, companyName, ++pageNumber)}
   ${research ?
     renderEnhancedCompetitorComparison(content.competitorComparison, research, companyName, ++pageNumber) :
