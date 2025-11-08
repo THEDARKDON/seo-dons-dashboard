@@ -524,14 +524,14 @@ export function renderEnhancedProjections(
             <td><strong>Month 6</strong></td>
             <td>${projections.month6.traffic.toLocaleString()}</td>
             <td>${projections.month6.leads}</td>
-            <td>£${Math.round(projections.month6.revenue / 12).toLocaleString()}</td>
+            <td>£${(projections.month6.traffic * 0.03 * 5000).toLocaleString()}</td>
             <td style="color: #28a745;">+${Math.round(((projections.month6.traffic / currentTraffic) - 1) * 100)}%</td>
           </tr>
           <tr>
             <td><strong>Month 12</strong></td>
             <td>${projections.month12.traffic.toLocaleString()}</td>
             <td>${projections.month12.leads}</td>
-            <td>£${Math.round(projections.month12.revenue / 12).toLocaleString()}</td>
+            <td>£${(projections.month12.traffic * 0.03 * 5000).toLocaleString()}</td>
             <td style="color: #28a745;">+${Math.round(((projections.month12.traffic / currentTraffic) - 1) * 100)}%</td>
           </tr>
         </tbody>
