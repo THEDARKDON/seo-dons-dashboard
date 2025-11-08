@@ -10,7 +10,9 @@
 
 import puppeteer, { Browser, Page } from 'puppeteer';
 import type { ProposalContent } from '@/lib/claude/content-generator';
+import type { ConciseProposalContent } from '@/lib/claude/concise-content-generator';
 import { generateProposalHTML } from './html-template';
+import { generateConciseProposalHTML } from './concise-html-template';
 import { generateProposalPDF as generateReactPDF } from './generate';
 
 // ============================================================================
@@ -57,7 +59,7 @@ const PUPPETEER_CONFIG = {
  * @returns PDF as Buffer
  */
 export async function generateProposalPDFWithPuppeteer(
-  content: ProposalContent,
+  content: ProposalContent | ConciseProposalContent,
   fallbackEnabled: boolean = true
 ): Promise<{ buffer: Buffer; method: 'puppeteer' | 'react-pdf' }> {
   let browser: Browser | null = null;
@@ -66,8 +68,11 @@ export async function generateProposalPDFWithPuppeteer(
     console.log('[Puppeteer] Starting PDF generation...');
     const startTime = Date.now();
 
-    // Generate HTML content
-    const html = generateProposalHTML(content);
+    // Detect content type and generate appropriate HTML
+    const isConcise = 'competition' in content; // Concise has competition, detailed has overview
+    const html = isConcise
+      ? generateConciseProposalHTML(content as ConciseProposalContent, content.coverPage.preparedFor)
+      : generateProposalHTML(content as ProposalContent);
 
     // Launch browser
     browser = await puppeteer.launch({
