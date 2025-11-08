@@ -411,7 +411,9 @@ async function checkRealRankings(
 async function findRealCompetitors(
   keywords: string[],
   location: string = 'United Kingdom',
-  limit: number = 5
+  limit: number = 5,
+  customerDomain?: string,
+  customerWebTraffic: string = 'Unknown'
 ): Promise<RealCompetitor[]> {
   if (!SERPAPI_KEY) {
     throw new Error('SerpAPI key not configured');
@@ -426,6 +428,20 @@ async function findRealCompetitors(
   console.log('Location:', location, '→', normalizedLocation);
   console.log('Limit:', limit, 'competitors');
   console.log('========================================\n');
+
+  // Domains to exclude (directories, comparison sites, huge national brands)
+  const excludedDomains = [
+    // Comparison/directory sites
+    'checkatrade.com', 'trustatrader.com', 'yell.com', 'thomsonlocal.com',
+    'bark.com', 'mybuilder.com', 'ratedpeople.com', 'houzz.com', 'homeadvisor.com',
+    'trustpilot.com', 'reviews.co.uk', 'feefo.com', 'google.com', 'facebook.com',
+    // Major national brands (energy, telecoms, retail)
+    'octopus.energy', 'octopusenergy.com', 'britishgas.co.uk', 'eon.co.uk',
+    'scottishpower.co.uk', 'edfenergy.com', 'bulb.co.uk', 'shell.co.uk',
+    // Generic platforms
+    'amazon.co.uk', 'ebay.co.uk', 'gumtree.com', 'indeed.com', 'linkedin.com',
+    'wikipedia.org', 'youtube.com', 'bbc.co.uk', 'gov.uk',
+  ];
 
   const competitorMap = new Map<string, {
     name: string;
@@ -453,6 +469,19 @@ async function findRealCompetitors(
 
       results.organic_results?.forEach((result: any, idx: number) => {
         const domain = extractDomain(result.link);
+
+        // Filter out excluded domains
+        if (excludedDomains.includes(domain)) {
+          console.log(`  │   SKIP: ${domain} (excluded list)`);
+          return;
+        }
+
+        // Filter out customer's own domain
+        if (customerDomain && domain === customerDomain) {
+          console.log(`  │   SKIP: ${domain} (customer's own site)`);
+          return;
+        }
+
         if (!competitorMap.has(domain)) {
           competitorMap.set(domain, {
             name: result.title ? result.title.split('|')[0].split('-')[0].trim() : domain,
@@ -478,10 +507,10 @@ async function findRealCompetitors(
     }
   }
 
-  // Sort by appearances and get top competitors
+  // Sort by appearances and get more than needed (for filtering later)
   const topCompetitors = Array.from(competitorMap.values())
     .sort((a, b) => b.appearances - a.appearances)
-    .slice(0, limit);
+    .slice(0, limit * 3); // Get 3x to allow for size filtering
 
   console.log('\n📊 TOP COMPETITORS (by appearances):');
   topCompetitors.forEach((comp, idx) => {
@@ -490,32 +519,57 @@ async function findRealCompetitors(
   });
   console.log('========================================\n');
 
-  // Enhance with Perplexity research
+  // Enhance with Perplexity research and filter by size
   const enhancedCompetitors: RealCompetitor[] = [];
+  const customerTraffic = parseTrafficValue(customerWebTraffic || 'Unknown');
+
   for (const competitor of topCompetitors) {
     try {
       const research = await researchWithPerplexity(
         `Analyze ${competitor.domain} as a competitor. Provide: 1) Estimated monthly traffic, 2) Main strengths, 3) Domain authority if known. Be concise.`
       );
 
+      const trafficEstimate = extractTrafficEstimate(research);
+      const competitorTraffic = parseTrafficValue(trafficEstimate);
+
+      // Filter out competitors that are significantly larger (10x or more traffic)
+      // Only apply if we have customer traffic data
+      if (customerTraffic > 0 && competitorTraffic > customerTraffic * 10) {
+        console.log(`  ⚠️  SKIP: ${competitor.domain} too large (${trafficEstimate} vs customer's ${customerWebTraffic})`);
+        continue;
+      }
+
+      // Also filter out very high-traffic sites (1M+) that are likely national/enterprise
+      if (competitorTraffic > 1000000) {
+        console.log(`  ⚠️  SKIP: ${competitor.domain} too large (${trafficEstimate}) - likely national brand`);
+        continue;
+      }
+
       enhancedCompetitors.push({
         name: competitor.name,
         domain: competitor.domain,
-        estimatedTraffic: extractTrafficEstimate(research),
+        estimatedTraffic: trafficEstimate,
         strengths: extractStrengths(research),
         rankings: competitor.rankings,
         domainAuthority: extractDomainAuthority(research),
       });
+
+      // Stop when we have enough filtered competitors
+      if (enhancedCompetitors.length >= limit) {
+        break;
+      }
     } catch (error) {
       console.error(`Error researching competitor ${competitor.domain}:`, error);
-      // Add without enhancement
-      enhancedCompetitors.push({
-        name: competitor.name,
-        domain: competitor.domain,
-        estimatedTraffic: 'Unknown',
-        strengths: ['Consistent organic visibility'],
-        rankings: competitor.rankings,
-      });
+      // Add without enhancement (if we still need more)
+      if (enhancedCompetitors.length < limit) {
+        enhancedCompetitors.push({
+          name: competitor.name,
+          domain: competitor.domain,
+          estimatedTraffic: 'Unknown',
+          strengths: ['Consistent organic visibility'],
+          rankings: competitor.rankings,
+        });
+      }
     }
   }
 
@@ -693,6 +747,32 @@ function extractDomain(url: string): string {
 function extractTrafficEstimate(text: string): string {
   const match = text.match(/(\d+[,\d]*)\s*(visitors?|traffic)/i);
   return match ? match[1] + ' monthly visitors' : 'Traffic data unavailable';
+}
+
+function parseTrafficValue(traffic: string): number {
+  // Parse traffic values like "5,000 monthly visitors" or "10K visitors" to numbers
+  if (!traffic || traffic === 'Unknown' || traffic.includes('unavailable')) {
+    return 0;
+  }
+
+  // Handle K (thousands) and M (millions) notation
+  const kMatch = traffic.match(/([\d.]+)K/i);
+  if (kMatch) {
+    return parseFloat(kMatch[1]) * 1000;
+  }
+
+  const mMatch = traffic.match(/([\d.]+)M/i);
+  if (mMatch) {
+    return parseFloat(mMatch[1]) * 1000000;
+  }
+
+  // Handle comma-separated numbers
+  const numMatch = traffic.match(/[\d,]+/);
+  if (numMatch) {
+    return parseInt(numMatch[0].replace(/,/g, ''), 10);
+  }
+
+  return 0;
 }
 
 function extractStrengths(text: string): string[] {
