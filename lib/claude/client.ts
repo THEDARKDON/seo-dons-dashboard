@@ -74,8 +74,8 @@ export function calculateCost(
   model?: string
 ): number {
   // Determine pricing based on model
-  let inputCostPerM = CLAUDE_PRICING.OPUS_INPUT_COST_PER_M;
-  let outputCostPerM = CLAUDE_PRICING.OPUS_OUTPUT_COST_PER_M;
+  let inputCostPerM: number = CLAUDE_PRICING.OPUS_INPUT_COST_PER_M;
+  let outputCostPerM: number = CLAUDE_PRICING.OPUS_OUTPUT_COST_PER_M;
 
   if (model?.includes('sonnet')) {
     inputCostPerM = CLAUDE_PRICING.SONNET_INPUT_COST_PER_M;
