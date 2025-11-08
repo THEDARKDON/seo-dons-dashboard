@@ -292,7 +292,7 @@ function extractGoals(research: any): string {
 
   // Try to extract from research notes
   const notes = research.notes || '';
-  const goalsMatch = notes.match(/GOALS?:(.*?)(?=\n\n|CURRENT|DECISION|$)/is);
+  const goalsMatch = notes.match(/GOALS?:([\s\S]*?)(?=\n\n|CURRENT|DECISION|$)/i);
 
   if (goalsMatch) {
     return goalsMatch[1].trim().replace(/^-\s*/gm, '').replace(/\n/g, ' ');
