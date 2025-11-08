@@ -184,14 +184,14 @@ export async function POST(request: NextRequest) {
           await sendProgress('Generating HTML', 92, 'Creating HTML document...');
 
           // Generate appropriate HTML based on proposal mode
-          // Check if content has 'competition' property which exists only in concise proposals
-          const isConiseContent = 'competition' in result.content;
+          // Use explicit mode check for reliable detection
+          const isConciseContent = body.proposalMode === 'concise';
 
           // Only validate detailed content (concise content has different structure)
-          if (!isConiseContent) {
+          if (!isConciseContent) {
             validateProposalContent(result.content as any);
           }
-          const htmlContent = isConiseContent
+          const htmlContent = isConciseContent
             ? generateConciseProposalHTML(result.content as any, companyName)
             : generateProposalHTML(result.content as any, result.research);
 
