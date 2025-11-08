@@ -64,12 +64,14 @@ export async function generateProposalPDFWithPuppeteer(
 ): Promise<{ buffer: Buffer; method: 'puppeteer' | 'react-pdf' }> {
   let browser: Browser | null = null;
 
+  // Detect content type (needs to be accessible in catch block for fallback)
+  const isConcise = 'competition' in content; // Concise has competition, detailed has overview
+
   try {
     console.log('[Puppeteer] Starting PDF generation...');
     const startTime = Date.now();
 
-    // Detect content type and generate appropriate HTML
-    const isConcise = 'competition' in content; // Concise has competition, detailed has overview
+    // Generate appropriate HTML based on content type
     const html = isConcise
       ? generateConciseProposalHTML(content as ConciseProposalContent, content.coverPage.preparedFor)
       : generateProposalHTML(content as ProposalContent);
@@ -126,11 +128,11 @@ export async function generateProposalPDFWithPuppeteer(
       }
     }
 
-    // Fallback to React-PDF if enabled
-    if (fallbackEnabled) {
+    // Fallback to React-PDF if enabled (only works for detailed proposals)
+    if (fallbackEnabled && !isConcise) {
       console.log('[Puppeteer] Falling back to React-PDF renderer...');
       try {
-        const reactPdfBuffer = await generateReactPDF(content);
+        const reactPdfBuffer = await generateReactPDF(content as ProposalContent);
         console.log('[Puppeteer] Fallback successful - PDF generated with React-PDF');
         return {
           buffer: reactPdfBuffer,
