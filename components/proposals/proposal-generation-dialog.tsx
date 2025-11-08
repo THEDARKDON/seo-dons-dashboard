@@ -36,6 +36,7 @@ interface ProposalGenerationDialogProps {
 
 type PackageTier = 'local' | 'regional' | 'national';
 type ProposalMode = 'concise' | 'detailed';
+type TemplateStyle = 'classic' | 'modern';
 
 const packages = {
   local: {
@@ -71,6 +72,7 @@ export function ProposalGenerationDialog({
   const router = useRouter();
   const [selectedTier, setSelectedTier] = useState<PackageTier>('local');
   const [proposalMode, setProposalMode] = useState<ProposalMode>('detailed');
+  const [templateStyle, setTemplateStyle] = useState<TemplateStyle>('classic');
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
   const [currentStage, setCurrentStage] = useState('');
@@ -96,6 +98,7 @@ export function ProposalGenerationDialog({
           customerId,
           packageTier: selectedTier,
           proposalMode: proposalMode,
+          templateStyle: templateStyle,
         }),
       });
 
@@ -162,6 +165,7 @@ export function ProposalGenerationDialog({
       setTimeout(() => {
         setSelectedTier('local');
         setProposalMode('detailed');
+        setTemplateStyle('classic');
         setProgress(0);
         setCurrentStage('');
         setResult(null);
@@ -268,10 +272,96 @@ export function ProposalGenerationDialog({
               </RadioGroup>
             </div>
 
+            {/* Template Style Selection */}
+            <div>
+              <h3 className="font-semibold mb-3">Template Style</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Classic Template */}
+                <label
+                  className={`relative flex flex-col p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                    templateStyle === 'classic'
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="templateStyle"
+                    value="classic"
+                    checked={templateStyle === 'classic'}
+                    onChange={() => setTemplateStyle('classic')}
+                    className="sr-only"
+                  />
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-semibold">Classic Template</span>
+                    {templateStyle === 'classic' && (
+                      <CheckCircle2 className="h-5 w-5 text-blue-500" />
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-600 mb-3">
+                    Traditional PDF-style layout. Perfect for formal proposals and attachments.
+                  </p>
+                  <ul className="text-xs text-gray-500 space-y-1">
+                    <li>• Professional PDF appearance</li>
+                    <li>• Detailed technical sections</li>
+                    <li>• Printable format</li>
+                  </ul>
+                </label>
+
+                {/* Modern Template */}
+                <label
+                  className={`relative flex flex-col p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                    templateStyle === 'modern'
+                      ? 'border-teal-500 bg-teal-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="templateStyle"
+                    value="modern"
+                    checked={templateStyle === 'modern'}
+                    onChange={() => setTemplateStyle('modern')}
+                    className="sr-only"
+                  />
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-semibold">Modern Template</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs bg-teal-500 text-white px-2 py-0.5 rounded-full font-medium">
+                        NEW
+                      </span>
+                      {templateStyle === 'modern' && (
+                        <CheckCircle2 className="h-5 w-5 text-teal-500" />
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-3">
+                    Beautiful web-first design with video testimonials.
+                  </p>
+                  <ul className="text-xs text-gray-500 space-y-1">
+                    <li>• Mobile-responsive layout</li>
+                    <li>• 5 embedded video testimonials</li>
+                    <li>• Perfect for presentations</li>
+                  </ul>
+                </label>
+              </div>
+
+              {/* Modern Template Info */}
+              {templateStyle === 'modern' && (
+                <Alert className="mt-4 bg-teal-50 border-teal-200">
+                  <AlertDescription className="text-sm text-teal-800">
+                    ✨ Modern template features beautiful Tailwind CSS styling, embedded video
+                    testimonials, and mobile-responsive design perfect for client presentations
+                    and screen sharing during sales calls.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
+
             {/* Selected Package Summary */}
             <Alert>
               <AlertDescription>
-                <strong>Selected:</strong> {packages[selectedTier].name} • {proposalMode === 'concise' ? 'Concise' : 'Detailed'} Format
+                <strong>Selected:</strong> {packages[selectedTier].name} • {proposalMode === 'concise' ? 'Concise' : 'Detailed'} Format • {templateStyle === 'classic' ? 'Classic' : 'Modern'} Template
                 <br />
                 <strong>Estimated generation time:</strong> {packages[selectedTier].estimatedTime}
                 <br />
