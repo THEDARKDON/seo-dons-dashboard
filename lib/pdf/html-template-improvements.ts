@@ -53,11 +53,10 @@ export function calculateProjections(
 
   const multiplier = trafficMultipliers[packageName] || 1.5;
 
-  // Calculate projected traffic with safety cap
-  // Never project more than 3x current traffic to avoid absurd numbers
-  let projectedTraffic = Math.round(currentTraffic * multiplier);
-  const hardCap = currentTraffic * 3;
-  projectedTraffic = Math.min(projectedTraffic, hardCap);
+  // Calculate projected traffic
+  // Multipliers ARE the cap - they're designed to be realistic growth targets
+  // Local: 2x (conservative), Regional: 3x (moderate), National: 4x (aggressive)
+  const projectedTraffic = Math.round(currentTraffic * multiplier);
 
   // Calculate conversion funnel
   const monthlyLeads = Math.round(projectedTraffic * conversionRates.visitorToLead);
@@ -255,7 +254,7 @@ export function renderCompetitorFrequency(
  */
 export function renderEnhancedCompetitorComparison(
   comparison: ProposalContent['competitorComparison'] | undefined,
-  research: any, // Research data from Claude containing real competitor names
+  research: any, // Research data from SerpAPI containing real competitor names
   companyName: string,
   pageNumber: number
 ): string {
@@ -263,18 +262,17 @@ export function renderEnhancedCompetitorComparison(
     return '';
   }
 
-  // Extract real competitor names from research data
-  const competitors = research?.competitorAnalysis?.topCompetitors || [];
-  const competitor1 = competitors[0]?.name || 'Leading Competitor';
-  const competitor2 = competitors[1]?.name || 'Major Competitor';
+  // Extract real competitor names from SerpAPI enhanced research
+  const competitors = research?.enhancedResearch?.competitors || [];
+  const competitor1 = competitors[0]?.name || competitors[0]?.domain || 'Leading Competitor';
+  const competitor2 = competitors[1]?.name || competitors[1]?.domain || 'Major Competitor';
 
-  // Find market leader (usually the one with highest traffic)
-  const marketLeader = competitors.find((c: any) =>
-    c.estimatedMetrics?.monthlyTraffic?.includes('10000') ||
-    c.estimatedMetrics?.monthlyTraffic?.includes('15000') ||
-    c.estimatedMetrics?.monthlyTraffic?.includes('20000') ||
-    c.estimatedMetrics?.monthlyTraffic?.includes('30000')
-  )?.name || competitors[2]?.name || 'Market Leader';
+  // Find market leader (most appearances in rankings = most visibility)
+  // Sort by number of ranking appearances to find the true market leader
+  const sortedByVisibility = [...competitors].sort((a, b) =>
+    (b.rankings?.length || 0) - (a.rankings?.length || 0)
+  );
+  const marketLeader = sortedByVisibility[0]?.name || sortedByVisibility[0]?.domain || 'Market Leader';
 
   return `
     <div class="page content-page">
@@ -310,11 +308,12 @@ export function renderEnhancedCompetitorComparison(
         <h2 style="margin-top: 8mm;">Competitor Insights</h2>
         ${competitors.slice(0, 3).map((comp: any) => `
           <div style="background: #f8f8f8; border-left: 3px solid #00CED1; padding: 4mm; margin: 5mm 0;">
-            <h3 style="color: #00CED1; margin-bottom: 3mm;">${escapeHTML(comp.name)}</h3>
-            <p style="font-size: 13px; margin: 2mm 0;"><strong>Strengths:</strong> ${comp.strengths?.join(', ') || 'N/A'}</p>
-            <p style="font-size: 13px; margin: 2mm 0;"><strong>Weaknesses:</strong> ${comp.weaknesses?.join(', ') || 'N/A'}</p>
-            <p style="font-size: 13px; margin: 2mm 0;"><strong>Estimated Traffic:</strong> ${comp.estimatedMetrics?.monthlyTraffic || 'N/A'}</p>
-            <p style="font-size: 13px; margin: 2mm 0;"><strong>Domain Authority:</strong> ${comp.estimatedMetrics?.domainAuthority || 'N/A'}</p>
+            <h3 style="color: #00CED1; margin-bottom: 3mm;">${escapeHTML(comp.name || comp.domain)}</h3>
+            <p style="font-size: 13px; margin: 2mm 0;"><strong>Domain:</strong> ${escapeHTML(comp.domain)}</p>
+            <p style="font-size: 13px; margin: 2mm 0;"><strong>Ranking Keywords:</strong> ${comp.rankings?.length || 0} keywords in top 10</p>
+            <p style="font-size: 13px; margin: 2mm 0;"><strong>Estimated Traffic:</strong> ${comp.estimatedTraffic || 'N/A'}</p>
+            ${comp.strengths && comp.strengths.length > 0 ? `<p style="font-size: 13px; margin: 2mm 0;"><strong>Strengths:</strong> ${comp.strengths.join(', ')}</p>` : ''}
+            ${comp.domainAuthority ? `<p style="font-size: 13px; margin: 2mm 0;"><strong>Domain Authority:</strong> ${comp.domainAuthority}</p>` : ''}
           </div>
         `).join('')}
       ` : ''}
