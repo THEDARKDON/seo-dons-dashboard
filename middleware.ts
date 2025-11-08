@@ -3,6 +3,7 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 // Define public routes that don't require authentication
 const isPublicRoute = createRouteMatcher([
   '/present(.*)', // Presentation mode - allow clients to view proposals without login
+  '/api/proposals/(.*)/view-inline', // API endpoint for serving proposal HTML in presentation mode
 ]);
 
 export default clerkMiddleware(async (auth, req) => {

@@ -17,31 +17,8 @@ export async function GET(
   try {
     const { id } = await params;
 
-    // Check if request is from presentation mode (public access)
-    const referer = request.headers.get('referer') || '';
-    const isFromPresentationMode = referer.includes('/present/');
-
-    // Authentication - skip for presentation mode
-    if (!isFromPresentationMode) {
-      const { userId: clerkUserId } = await auth();
-      if (!clerkUserId) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-      }
-
-      const supabase = await createClient();
-
-      // Get user
-      const { data: user } = await supabase
-        .from('users')
-        .select('id')
-        .eq('clerk_id', clerkUserId)
-        .single();
-
-      if (!user) {
-        return NextResponse.json({ error: 'User not found' }, { status: 404 });
-      }
-    }
-
+    // No authentication required - middleware handles public access for this route
+    // This endpoint is publicly accessible for presentation mode (/present/*)
     const supabase = await createClient();
 
     // Get proposal
