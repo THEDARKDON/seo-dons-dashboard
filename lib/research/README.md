@@ -177,22 +177,22 @@ Proposal Content Generation
 
 ### Per Proposal:
 
-**Perplexity AI** (Sonar Pro model):
+**Perplexity AI** (Sonar model):
 - ~4-6 queries per proposal
 - ~4,000 tokens per query
-- Cost: ~$0.04 - $0.06 per proposal
+- Cost: ~$0.01 - $0.02 per proposal (using 'sonar' model)
 
 **SerpAPI**:
 - ~5-10 searches per proposal (depends on keywords)
 - Cost: ~$0.025 - $0.05 per proposal
 
-**Total Additional Cost**: ~$0.065 - $0.11 per proposal
+**Total Additional Cost**: ~$0.035 - $0.07 per proposal
 
 ### Monthly Estimates:
 
-- 50 proposals/month: ~$3.25 - $5.50
-- 100 proposals/month: ~$6.50 - $11.00
-- 200 proposals/month: ~$13.00 - $22.00
+- 50 proposals/month: ~$1.75 - $3.50
+- 100 proposals/month: ~$3.50 - $7.00
+- 200 proposals/month: ~$7.00 - $14.00
 
 **ROI**: Proposals with real data have significantly higher close rates, making this investment worthwhile.
 
