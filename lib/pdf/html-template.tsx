@@ -11,11 +11,13 @@ import type { ProposalContent } from '@/lib/claude/content-generator';
 // Import enhanced rendering functions
 import {
   renderEnhancedCompetitorComparison,
+  renderCompetitorFrequency,
   renderEnhancedPackageOptions,
   renderEnhancedProjections,
   renderKeywordRankingAnalysis,
   renderLocationOpportunities,
-  renderContentOpportunities
+  renderContentOpportunities,
+  calculateProjections
 } from './html-template-improvements';
 
 /**
@@ -33,6 +35,27 @@ export function generateProposalHTML(content: ProposalContent, research?: any): 
   const styles = getEmbeddedStyles();
   const companyName = content.coverPage.companyName;
   let pageNumber = 1;
+
+  // ============================================================================
+  // CALCULATE PROJECTIONS ONCE - SINGLE SOURCE OF TRUTH
+  // ============================================================================
+  // Extract base metrics from research or content
+  const currentTraffic = research?.competitorAnalysis?.clientCurrentMetrics?.monthlyTraffic
+    ? parseInt(research.competitorAnalysis.clientCurrentMetrics.monthlyTraffic.replace(/[^\d]/g, ''))
+    : 200; // Fallback default
+
+  const avgDealValue = research?.roiProjection?.averageDealValue || 5000;
+
+  // Calculate projections for all three packages ONCE
+  const localProjection = calculateProjections(currentTraffic, 'Local Dominance', avgDealValue);
+  const regionalProjection = calculateProjections(currentTraffic, 'Regional Authority', avgDealValue);
+  const nationalProjection = calculateProjections(currentTraffic, 'National Leader', avgDealValue);
+
+  console.log('\n🎯 PROPOSAL GENERATION: Projections calculated - using throughout proposal');
+  console.log(`   Current Traffic: ${currentTraffic.toLocaleString()}`);
+  console.log(`   Local Projection: ${localProjection.projectedTraffic.toLocaleString()} → £${localProjection.annualRevenue.toLocaleString()}`);
+  console.log(`   Regional Projection: ${regionalProjection.projectedTraffic.toLocaleString()} → £${regionalProjection.annualRevenue.toLocaleString()}`);
+  console.log(`   National Projection: ${nationalProjection.projectedTraffic.toLocaleString()} → £${nationalProjection.annualRevenue.toLocaleString()}\n`);
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -57,11 +80,13 @@ export function generateProposalHTML(content: ProposalContent, research?: any): 
   ${research ?
     renderEnhancedCompetitorComparison(content.competitorComparison, research, companyName, ++pageNumber) :
     renderCompetitorComparison(content.competitorComparison, companyName, ++pageNumber)}
+  ${research && research.enhancedResearch?.competitors?.length > 0 ?
+    renderCompetitorFrequency(research, companyName, ++pageNumber) : ''}
   ${research ?
-    renderEnhancedPackageOptions(content.packageOptions, research, companyName, ++pageNumber) :
+    renderEnhancedPackageOptions(content.packageOptions, localProjection, regionalProjection, nationalProjection, companyName, ++pageNumber) :
     renderPackageOptions(content.packageOptions, companyName, ++pageNumber)}
   ${research ?
-    renderEnhancedProjections(content.projections, content.simpleMathBreakdown, research, companyName, ++pageNumber) :
+    renderEnhancedProjections(nationalProjection, companyName, ++pageNumber) :
     renderProjections(content.projections, content.simpleMathBreakdown, companyName, ++pageNumber)}
   ${renderNextSteps(content.nextSteps, companyName, ++pageNumber)}
 </body>

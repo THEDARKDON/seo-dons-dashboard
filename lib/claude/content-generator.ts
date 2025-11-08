@@ -100,7 +100,9 @@ export interface ProposalContent {
   }>;
 
   // Projections & ROI
-  projections: {
+  // NOTE: This is now OPTIONAL - projections are calculated in rendering code
+  // for consistency. Claude no longer needs to generate these.
+  projections?: {
     month6: {
       traffic: number;
       leads: number;
@@ -409,10 +411,10 @@ The following fields are NOT optional. They are MANDATORY. Your proposal will be
    - Study the reference HTML to see how these are formatted
    - Example: currentNumber: "174", currentLabel: "monthly visitors", targetNumber: "2,000+", targetLabel: "competitor average"
 
-3. **simpleMathBreakdown** (MANDATORY - Complete ROI object)
-   - MUST have steps array with Month 3, Month 6, Month 12
-   - MUST calculate totalInvestment, totalReturn, roi
-   - Use industry conversion rates: 3-5% leads, 20-30% close rate
+3. **simpleMathBreakdown** (OPTIONAL - now calculated in rendering code)
+   - You do NOT need to generate this field anymore
+   - Revenue projections are calculated automatically using real current traffic data
+   - Skip this field to avoid inconsistent calculations
    - See reference HTML for the table format
 
 4. **competitorComparison** (MANDATORY - Comparison table)
@@ -498,35 +500,35 @@ ${researchData.enhancedResearch ? `
 
 ### Keyword Ranking Analysis (Actual SerpAPI Data)
 This is REAL ranking data from Google - every keyword below was actually searched and ranked:
-${JSON.stringify(researchData.enhancedResearch.keywordAnalysis.map(kw => ({
+${JSON.stringify(sanitizeResearchData(researchData.enhancedResearch.keywordAnalysis.map(kw => ({
   keyword: kw.keyword,
-  currentPosition: kw.position || 'Not in top 100',
+  currentPosition: kw.position !== undefined ? kw.position : 'Not in top 100',
   searchVolume: kw.searchVolume,
   difficulty: kw.difficulty,
   intent: kw.intent,
   topCompetitors: kw.topRankers.slice(0, 3).map(r => r.domain),
   peopleAlsoAsk: kw.peopleAlsoAsk || [],
   relatedSearches: kw.relatedSearches || []
-})), null, 2)}
+}))), null, 2)}
 
 ### Location Opportunities (Extracted from Rankings)
 Geographic opportunities identified from keyword analysis and competitor domains:
-${JSON.stringify(researchData.enhancedResearch.locationOpportunities, null, 2)}
+${JSON.stringify(sanitizeResearchData(researchData.enhancedResearch.locationOpportunities), null, 2)}
 
 ### Content Opportunities (PAA Questions + Related Searches)
 Real questions people are asking on Google + related keyword opportunities:
-${JSON.stringify(researchData.enhancedResearch.contentOpportunities, null, 2)}
+${JSON.stringify(sanitizeResearchData(researchData.enhancedResearch.contentOpportunities), null, 2)}
 
 ### Real Competitors (From Top 10 Rankings)
 These competitors actually appear in the top 10 for your target keywords:
-${JSON.stringify(researchData.enhancedResearch.competitors.map(comp => ({
+${JSON.stringify(sanitizeResearchData(researchData.enhancedResearch.competitors.map(comp => ({
   domain: comp.domain,
   name: comp.name,
   appearsInTopTenFor: comp.rankings.length + ' keywords',
   rankings: comp.rankings,
   estimatedTraffic: comp.estimatedTraffic,
   strengths: comp.strengths
-})), null, 2)}
+}))), null, 2)}
 
 **INSTRUCTIONS FOR USING THIS DATA:**
 1. Use the keywordAnalysis array to populate "keywordRankingAnalysis" section in your JSON response
@@ -633,23 +635,9 @@ Generate ALL proposal content following this exact structure:
     ${generatePackageOptionsJSON(packageTier, notes)}
   ],
 
-  "projections": {
-    "month6": {
-      "traffic": [realistic number based on research],
-      "leads": [realistic number],
-      "revenue": [realistic number]
-    },
-    "month12": {
-      "traffic": [realistic number, should be 2-3x month 6],
-      "leads": [realistic number],
-      "revenue": [realistic number]
-    },
-    "roi": {
-      "percentage": [calculate ROI percentage],
-      "paybackPeriod": "[e.g., '4-5 months']",
-      "lifetimeValue": [calculate 12-month total value]
-    }
-  },
+  // SKIP "projections" - This is now calculated automatically in rendering code
+  // DO NOT include this field in your response
+  // Projections are calculated from real current traffic data for consistency
 
   "nextSteps": {
     "immediate": [
@@ -698,34 +686,8 @@ Generate ALL proposal content following this exact structure:
     }
   ],
 
-  "simpleMathBreakdown": {
-    "steps": [
-      {
-        "month": "Month 3",
-        "traffic": 500,
-        "leads": 18,
-        "customers": 5,
-        "revenue": 15000
-      },
-      {
-        "month": "Month 6",
-        "traffic": 1200,
-        "leads": 42,
-        "customers": 11,
-        "revenue": 35000
-      },
-      {
-        "month": "Month 12",
-        "traffic": 2000,
-        "leads": 70,
-        "customers": 18,
-        "revenue": 100000
-      }
-    ],
-    "totalInvestment": 36000,
-    "totalReturn": 1200000,
-    "roi": 3233
-  },
+  // SKIP "simpleMathBreakdown" - This is now calculated automatically
+  // DO NOT include this field in your response
 
   "competitorComparison": {
     "metrics": [
@@ -997,6 +959,30 @@ function generatePackageOptionsJSON(recommendedTier: string, sdrNotes?: string):
 
   // Otherwise return all packages
   return allPackages.map(pkg => JSON.stringify(pkg)).join(',\n    ');
+}
+
+/**
+ * Sanitizes research data to remove undefined values that would break JSON.stringify
+ * Converts undefined to null and filters out optional fields with undefined values
+ */
+function sanitizeResearchData(data: any): any {
+  if (data === undefined) return null;
+  if (data === null) return null;
+  if (typeof data !== 'object') return data;
+
+  if (Array.isArray(data)) {
+    return data.map(item => sanitizeResearchData(item));
+  }
+
+  const sanitized: any = {};
+  for (const [key, value] of Object.entries(data)) {
+    if (value === undefined) {
+      // Skip undefined values entirely (don't include in output)
+      continue;
+    }
+    sanitized[key] = sanitizeResearchData(value);
+  }
+  return sanitized;
 }
 
 function extractAndParseJSON<T>(content: string): T {

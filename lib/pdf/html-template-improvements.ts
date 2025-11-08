@@ -5,6 +5,141 @@
 
 import { ProposalContent } from '@/lib/claude/content-generator';
 
+// ============================================================================
+// PROJECTION CALCULATION - SINGLE SOURCE OF TRUTH
+// ============================================================================
+
+export interface ProjectionCalculation {
+  currentTraffic: number;
+  projectedTraffic: number;
+  multiplier: number;
+  monthlyLeads: number;
+  monthlyCustomers: number;
+  monthlyRevenue: number;
+  annualLeads: number;
+  annualRevenue: number;
+  conversionRates: {
+    visitorToLead: number;      // 3% of visitors become leads
+    leadToCustomer: number;      // 30% of leads become customers
+    visitorToCustomer: number;   // 0.9% combined
+  };
+  avgDealValue: number;
+  packageName: string;
+}
+
+/**
+ * Calculate projections for a package - SINGLE SOURCE OF TRUTH
+ * All revenue calculations throughout the proposal MUST use this function
+ */
+export function calculateProjections(
+  currentTraffic: number,
+  packageName: string,
+  avgDealValue: number = 5000
+): ProjectionCalculation {
+  // Realistic traffic multipliers based on industry benchmarks
+  // 50% = conservative, 100% = moderate, 150% = aggressive
+  const trafficMultipliers: Record<string, number> = {
+    'Local Dominance': 1.5,      // 50% growth (conservative, local focus)
+    'Regional Authority': 2.0,    // 100% growth (moderate, regional expansion)
+    'National Leader': 2.5        // 150% growth (aggressive, national reach)
+  };
+
+  // Conversion rates - industry standard for high-ticket services
+  const conversionRates = {
+    visitorToLead: 0.03,      // 3% of visitors become leads (form submissions)
+    leadToCustomer: 0.30,     // 30% of leads become customers (sales conversion)
+    visitorToCustomer: 0.009  // 0.9% combined (3% × 30% = 0.9%)
+  };
+
+  const multiplier = trafficMultipliers[packageName] || 1.5;
+
+  // Calculate projected traffic with safety cap
+  // Never project more than 3x current traffic to avoid absurd numbers
+  let projectedTraffic = Math.round(currentTraffic * multiplier);
+  const hardCap = currentTraffic * 3;
+  projectedTraffic = Math.min(projectedTraffic, hardCap);
+
+  // Calculate conversion funnel
+  const monthlyLeads = Math.round(projectedTraffic * conversionRates.visitorToLead);
+  const monthlyCustomers = Math.round(monthlyLeads * conversionRates.leadToCustomer);
+  const monthlyRevenue = monthlyCustomers * avgDealValue;
+
+  // Annual calculations
+  const annualLeads = monthlyLeads * 12;
+  const annualRevenue = monthlyRevenue * 12;
+
+  // Comprehensive logging for debugging
+  console.log('\n╔══════════════════════════════════════════════════════════╗');
+  console.log(`║  PROJECTION CALCULATION: ${packageName.padEnd(35)} ║`);
+  console.log('╚══════════════════════════════════════════════════════════╝');
+  console.log(`📊 Current Traffic:        ${currentTraffic.toLocaleString()} visitors/month`);
+  console.log(`📈 Growth Multiplier:      ${multiplier}x (${((multiplier - 1) * 100).toFixed(0)}% increase)`);
+  console.log(`🎯 Projected Traffic:      ${projectedTraffic.toLocaleString()} visitors/month`);
+  console.log(`\n🔄 Conversion Funnel:`);
+  console.log(`   Visitors → Leads:       ${(conversionRates.visitorToLead * 100).toFixed(1)}% = ${monthlyLeads.toLocaleString()} leads/month`);
+  console.log(`   Leads → Customers:      ${(conversionRates.leadToCustomer * 100).toFixed(1)}% = ${monthlyCustomers.toLocaleString()} customers/month`);
+  console.log(`   Combined Conversion:    ${(conversionRates.visitorToCustomer * 100).toFixed(2)}%`);
+  console.log(`\n💰 Revenue Calculations:`);
+  console.log(`   Average Deal Value:     £${avgDealValue.toLocaleString()}`);
+  console.log(`   Monthly Revenue:        £${monthlyRevenue.toLocaleString()}`);
+  console.log(`   Annual Revenue:         £${annualRevenue.toLocaleString()}`);
+  console.log(`   Annual Leads:           ${annualLeads.toLocaleString()}`);
+  console.log('═══════════════════════════════════════════════════════════\n');
+
+  return {
+    currentTraffic,
+    projectedTraffic,
+    multiplier,
+    monthlyLeads,
+    monthlyCustomers,
+    monthlyRevenue,
+    annualLeads,
+    annualRevenue,
+    conversionRates,
+    avgDealValue,
+    packageName
+  };
+}
+
+/**
+ * Calculate month-by-month progression for timeline visualization
+ */
+export function calculateMonthlyProgression(
+  currentTraffic: number,
+  finalMultiplier: number,
+  conversionRate: number = 0.03,
+  avgDealValue: number = 5000
+): Array<{month: number; traffic: number; leads: number; customers: number; revenue: number}> {
+  const progression = [];
+
+  // Calculate gradual growth curve (not linear, more realistic)
+  const months = [0, 1, 2, 3, 6, 9, 12];
+
+  for (const month of months) {
+    let growthFactor: number;
+    if (month === 0) {
+      growthFactor = 1.0; // Current state
+    } else if (month <= 3) {
+      growthFactor = 1.0 + (finalMultiplier - 1.0) * 0.3; // 30% of total growth by month 3
+    } else if (month <= 6) {
+      growthFactor = 1.0 + (finalMultiplier - 1.0) * 0.6; // 60% of total growth by month 6
+    } else if (month <= 9) {
+      growthFactor = 1.0 + (finalMultiplier - 1.0) * 0.85; // 85% of total growth by month 9
+    } else {
+      growthFactor = finalMultiplier; // 100% of total growth by month 12
+    }
+
+    const traffic = Math.round(currentTraffic * growthFactor);
+    const leads = Math.round(traffic * conversionRate);
+    const customers = Math.round(leads * 0.30);
+    const revenue = customers * avgDealValue;
+
+    progression.push({ month, traffic, leads, customers, revenue });
+  }
+
+  return progression;
+}
+
 // Helper to escape HTML special characters
 function escapeHTML(str: string | null | undefined): string {
   if (!str) return '';
@@ -35,6 +170,82 @@ function renderPageFooter(pageNumber: number): string {
     <div class="page-footer">
       <div>Page ${pageNumber}</div>
       <div>seodons.co.uk</div>
+    </div>
+  `;
+}
+
+/**
+ * NEW: Competitor Frequency Visualization
+ * Shows which competitors appear most often in top 10 rankings
+ */
+export function renderCompetitorFrequency(
+  research: any,
+  companyName: string,
+  pageNumber: number
+): string {
+  // Extract competitor appearance data from enhanced research
+  const competitors = research?.enhancedResearch?.competitors || [];
+
+  if (competitors.length === 0) {
+    return '';
+  }
+
+  // Sort by number of appearances (rankings array length)
+  const sortedCompetitors = [...competitors]
+    .sort((a, b) => (b.rankings?.length || 0) - (a.rankings?.length || 0))
+    .slice(0, 10); // Top 10
+
+  const maxAppearances = sortedCompetitors[0]?.rankings?.length || 1;
+
+  return `
+    <div class="page content-page">
+      ${renderPageHeader(companyName)}
+      <h1>Competitive Landscape Analysis</h1>
+
+      <p style="margin-bottom: 5mm;">This chart shows how frequently each competitor appears in the top 10 search results across your target keywords. The more times they appear, the more visibility they're getting.</p>
+
+      <h2>Competitor Visibility Frequency</h2>
+      <div style="margin: 8mm 0;">
+        ${sortedCompetitors.map((comp, index) => {
+          const appearances = comp.rankings?.length || 0;
+          const percentage = (appearances / maxAppearances) * 100;
+
+          // Color code by threat level
+          let barColor = '#28a745'; // Green (low threat)
+          if (appearances >= maxAppearances * 0.7) {
+            barColor = '#dc3545'; // Red (high threat)
+          } else if (appearances >= maxAppearances * 0.4) {
+            barColor = '#ffc107'; // Yellow (medium threat)
+          }
+
+          return `
+            <div style="margin-bottom: 4mm;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 1mm;">
+                <div style="font-weight: bold; font-size: 13px;">${index + 1}. ${escapeHTML(comp.domain)}</div>
+                <div style="font-size: 13px; color: #666;">${appearances} ${appearances === 1 ? 'appearance' : 'appearances'}</div>
+              </div>
+              <div style="background: #f0f0f0; height: 12mm; border-radius: 4px; overflow: hidden; position: relative;">
+                <div style="background: ${barColor}; height: 100%; width: ${percentage}%; display: flex; align-items: center; padding-left: 3mm; color: white; font-weight: bold; font-size: 12px;">
+                  ${percentage >= 20 ? `${Math.round(percentage)}%` : ''}
+                </div>
+                ${percentage < 20 ? `<div style="position: absolute; right: 3mm; top: 50%; transform: translateY(-50%); color: #666; font-size: 12px;">${Math.round(percentage)}%</div>` : ''}
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+
+      <div style="background: #f0f8ff; border-left: 4px solid #00CED1; padding: 4mm; margin-top: 8mm;">
+        <h3>What This Means:</h3>
+        <ul style="margin-left: 5mm;">
+          <li><strong style="color: #dc3545;">Red bars (70-100%)</strong>: Major competitors dominating your keywords</li>
+          <li><strong style="color: #ffc107;">Yellow bars (40-69%)</strong>: Significant competitors you need to outrank</li>
+          <li><strong style="color: #28a745;">Green bars (0-39%)</strong>: Niche players with limited visibility</li>
+        </ul>
+        <p style="margin-top: 3mm;">Your goal is to appear more frequently than these competitors across all target keywords through consistent, strategic SEO efforts.</p>
+      </div>
+
+      ${renderPageFooter(pageNumber)}
     </div>
   `;
 }
@@ -115,76 +326,43 @@ export function renderEnhancedCompetitorComparison(
 
 /**
  * Enhanced Package Options with Expected Results Table
+ * NOTE: Now uses calculateProjections() for consistency across all pages
  */
 export function renderEnhancedPackageOptions(
   packages: ProposalContent['packageOptions'],
-  research: any,
+  localProjection: ProjectionCalculation,
+  regionalProjection: ProjectionCalculation,
+  nationalProjection: ProjectionCalculation,
   companyName: string,
   pageNumber: number
 ): string {
-  // Helper to calculate expected results for each package
-  const calculateResults = (pkg: any) => {
-    // Get base metrics from research
-    const currentTraffic = parseInt(research?.competitorAnalysis?.clientCurrentMetrics?.monthlyTraffic?.replace(/[^\d]/g, '') || '200') || 200;
-    const conversionRate = research?.roiProjection?.conversionRate || 0.03; // 3% default
-    const avgDealValue = research?.roiProjection?.averageDealValue || 5000;
+  // Map projections to packages
+  const projectionMap: Record<string, ProjectionCalculation> = {
+    'Local Dominance': localProjection,
+    'Regional Authority': regionalProjection,
+    'National Leader': nationalProjection
+  };
 
-    // Package-specific multipliers based on investment tier
-    // IMPORTANT: These are realistic, achievable growth targets for 12-month campaigns
-    // Industry benchmarks: 50-150% growth is good, 200-250% is exceptional
-    const trafficMultipliers: Record<string, number> = {
-      'Local Dominance': 1.5,      // 50% growth (conservative, local focus)
-      'Regional Authority': 2.0,    // 100% growth (moderate, regional expansion)
-      'National Leader': 2.5        // 150% growth (aggressive, national reach)
-    };
-
-    // Calculate package-specific projections with realistic caps
-    const mult = trafficMultipliers[pkg.name] || 1.5;
-    let projectedMonthlyTraffic = Math.round(currentTraffic * mult);
-
-    // Safety cap: Never project more than 3x current traffic (even for National)
-    // This prevents absurd projections like 40,000 visitors from 4,000
-    const hardCap = currentTraffic * 3;
-    projectedMonthlyTraffic = Math.min(projectedMonthlyTraffic, hardCap);
-
-    const projectedMonthlyLeads = Math.round(projectedMonthlyTraffic * conversionRate);
-
-    // Annual calculations
-    const annualTraffic = projectedMonthlyTraffic * 12;
-    const annualLeads = projectedMonthlyLeads * 12;
-    const annualRevenue = annualLeads * avgDealValue;
+  // Helper to get projection and calculate ROI metrics for a package
+  const getPackageMetrics = (pkg: any) => {
+    const projection = projectionMap[pkg.name] || localProjection;
     const annualInvestment = pkg.monthlyInvestment * 12;
 
-    // ROI and breakeven calculations
-    const roi = annualRevenue > annualInvestment
-      ? Math.round(((annualRevenue - annualInvestment) / annualInvestment) * 100)
+    // ROI calculation
+    const roi = projection.annualRevenue > annualInvestment
+      ? Math.round(((projection.annualRevenue - annualInvestment) / annualInvestment) * 100)
       : 0;
-    const monthlyRevenue = annualRevenue / 12;
-    const breakeven = monthlyRevenue > 0
-      ? Math.max(1, Math.ceil(annualInvestment / monthlyRevenue))
+
+    // Breakeven calculation
+    const breakeven = projection.monthlyRevenue > 0
+      ? Math.max(1, Math.ceil(annualInvestment / projection.monthlyRevenue))
       : 12;
 
-    // Comprehensive logging for debugging
-    console.log(`\n=== PROJECTION CALCULATION: ${pkg.name} ===`);
-    console.log(`Current Traffic: ${currentTraffic.toLocaleString()} visitors/month`);
-    console.log(`Growth Multiplier: ${mult}x`);
-    console.log(`Projected Traffic: ${projectedMonthlyTraffic.toLocaleString()} visitors/month`);
-    console.log(`Conversion Rate: ${(conversionRate * 100).toFixed(1)}%`);
-    console.log(`Monthly Leads: ${projectedMonthlyLeads.toLocaleString()}`);
-    console.log(`Average Deal Value: £${avgDealValue.toLocaleString()}`);
-    console.log(`Monthly Investment: £${pkg.monthlyInvestment.toLocaleString()}`);
-    console.log(`Annual Revenue: £${annualRevenue.toLocaleString()}`);
-    console.log(`Annual Investment: £${annualInvestment.toLocaleString()}`);
-    console.log(`ROI: ${roi.toLocaleString()}%`);
-    console.log(`Breakeven: ${breakeven} months`);
-    console.log(`==========================================\n`);
-
     return {
-      traffic: projectedMonthlyTraffic,
-      leads: projectedMonthlyLeads,
-      revenue: annualRevenue,
-      roi: roi,
-      breakeven: breakeven
+      projection,
+      roi,
+      breakeven,
+      annualInvestment
     };
   };
 
@@ -246,50 +424,50 @@ export function renderEnhancedPackageOptions(
           <tr>
             <td class="metric-name">Expected Monthly Traffic</td>
             ${packages.map(pkg => {
-              const results = calculateResults(pkg);
+              const metrics = getPackageMetrics(pkg);
               const isRecommended = pkg.name === 'National Leader';
               return `<td class="${isRecommended ? 'recommended' : ''}">
-                ${results.traffic.toLocaleString()} visitors
+                ${metrics.projection.projectedTraffic.toLocaleString()} visitors
               </td>`;
             }).join('')}
           </tr>
           <tr>
             <td class="metric-name">Expected Monthly Leads</td>
             ${packages.map(pkg => {
-              const results = calculateResults(pkg);
+              const metrics = getPackageMetrics(pkg);
               const isRecommended = pkg.name === 'National Leader';
               return `<td class="${isRecommended ? 'recommended' : ''}">
-                ${results.leads} leads
+                ${metrics.projection.monthlyLeads.toLocaleString()} leads
               </td>`;
             }).join('')}
           </tr>
           <tr>
             <td class="metric-name">Projected Annual Revenue</td>
             ${packages.map(pkg => {
-              const results = calculateResults(pkg);
+              const metrics = getPackageMetrics(pkg);
               const isRecommended = pkg.name === 'National Leader';
               return `<td class="${isRecommended ? 'recommended' : ''}">
-                <strong>£${results.revenue.toLocaleString()}</strong>
+                <strong>£${metrics.projection.annualRevenue.toLocaleString()}</strong>
               </td>`;
             }).join('')}
           </tr>
           <tr>
             <td class="metric-name">Expected ROI</td>
             ${packages.map(pkg => {
-              const results = calculateResults(pkg);
+              const metrics = getPackageMetrics(pkg);
               const isRecommended = pkg.name === 'National Leader';
               return `<td class="${isRecommended ? 'recommended' : ''}">
-                <strong>${results.roi}%</strong>
+                <strong>${metrics.roi.toLocaleString()}%</strong>
               </td>`;
             }).join('')}
           </tr>
           <tr>
             <td class="metric-name">Time to Break-Even</td>
             ${packages.map(pkg => {
-              const results = calculateResults(pkg);
+              const metrics = getPackageMetrics(pkg);
               const isRecommended = pkg.name === 'National Leader';
               return `<td class="${isRecommended ? 'recommended' : ''}">
-                ${results.breakeven} months
+                ${metrics.breakeven} months
               </td>`;
             }).join('')}
           </tr>
@@ -379,18 +557,18 @@ export function renderEnhancedPackageOptions(
         <div class="bar-chart-wrapper">
           <div class="bar-chart">
             ${packages.map((pkg, index) => {
-              const results = calculateResults(pkg);
+              const metrics = getPackageMetrics(pkg);
               // Dynamic scaling based on actual values
-              const allRevenues = packages.map(p => calculateResults(p).revenue);
+              const allRevenues = packages.map(p => getPackageMetrics(p).projection.annualRevenue);
               const maxRevenue = Math.max(...allRevenues) * 1.2; // Add 20% padding
-              const barHeight = Math.max(5, (results.revenue / maxRevenue) * 100); // Min 5% height for visibility
+              const barHeight = Math.max(5, (metrics.projection.annualRevenue / maxRevenue) * 100); // Min 5% height for visibility
               const isRecommended = pkg.name === 'National Leader';
 
               return `
                 <div class="bar-group">
                   <div class="bar-container">
                     <div class="bar" style="height: ${barHeight}%; background: ${isRecommended ? '#00CED1' : '#20B2AA'};">
-                      <div class="bar-value">£${(results.revenue / 1000).toFixed(0)}k</div>
+                      <div class="bar-value">£${(metrics.projection.annualRevenue / 1000).toFixed(0)}k</div>
                     </div>
                   </div>
                   <div class="bar-label">${escapeHTML(pkg.name)}</div>
@@ -423,16 +601,36 @@ export function renderEnhancedPackageOptions(
 
 /**
  * Enhanced Growth Projections with Visual Timeline
+ * NOTE: Now uses calculateMonthlyProgression() for consistent projections
  */
 export function renderEnhancedProjections(
-  projections: ProposalContent['projections'],
-  simpleMath: ProposalContent['simpleMathBreakdown'] | undefined,
-  research: any,
+  nationalProjection: ProjectionCalculation,
   companyName: string,
   pageNumber: number
 ): string {
-  // Create progression data points
-  const currentTraffic = parseInt(research?.competitorAnalysis?.clientCurrentMetrics?.monthlyTraffic?.replace(/[^\d]/g, '') || '200') || 200;
+  // Calculate month-by-month progression using the National package multiplier
+  const progression = calculateMonthlyProgression(
+    nationalProjection.currentTraffic,
+    nationalProjection.multiplier,
+    nationalProjection.conversionRates.visitorToLead,
+    nationalProjection.avgDealValue
+  );
+
+  // Extract key milestones for easy reference
+  const current = progression[0];  // Month 0
+  const month3 = progression[3];   // Month 3
+  const month6 = progression[4];   // Month 6
+  const month12 = progression[6];  // Month 12
+
+  // Calculate ROI metrics
+  const annualInvestment = 5000 * 12; // National package
+  const roi = month12.revenue > annualInvestment
+    ? Math.round(((month12.revenue * 12 - annualInvestment) / annualInvestment) * 100)
+    : 0;
+  const paybackPeriod = nationalProjection.monthlyRevenue > 0
+    ? `${Math.max(1, Math.ceil(annualInvestment / nationalProjection.monthlyRevenue))} months`
+    : '12+ months';
+  const lifetimeValue = nationalProjection.annualRevenue * 3; // 3-year projection
 
   return `
     <div class="page content-page">
@@ -482,31 +680,31 @@ export function renderEnhancedProjections(
           <div class="comparison-header">Current Performance</div>
           <div class="comparison-metric">
             <span>Monthly Traffic</span>
-            <strong>${currentTraffic.toLocaleString()}</strong>
+            <strong>${current.traffic.toLocaleString()}</strong>
           </div>
           <div class="comparison-metric">
             <span>Monthly Leads</span>
-            <strong>${Math.round(currentTraffic * 0.03)}</strong>
+            <strong>${current.leads.toLocaleString()}</strong>
           </div>
           <div class="comparison-metric">
             <span>Annual Revenue</span>
-            <strong>£${(currentTraffic * 0.03 * 5000 * 12).toLocaleString()}</strong>
+            <strong>£${(current.revenue * 12).toLocaleString()}</strong>
           </div>
         </div>
 
         <div class="comparison-card projected">
-          <div class="comparison-header">Year 1 Target</div>
+          <div class="comparison-header">Year 1 Target (National Leader)</div>
           <div class="comparison-metric">
             <span>Monthly Traffic</span>
-            <strong>${projections.month12.traffic.toLocaleString()}</strong>
+            <strong>${month12.traffic.toLocaleString()}</strong>
           </div>
           <div class="comparison-metric">
             <span>Monthly Leads</span>
-            <strong>${projections.month12.leads}</strong>
+            <strong>${month12.leads.toLocaleString()}</strong>
           </div>
           <div class="comparison-metric">
             <span>Annual Revenue</span>
-            <strong>£${projections.month12.revenue.toLocaleString()}</strong>
+            <strong>£${(month12.revenue * 12).toLocaleString()}</strong>
           </div>
         </div>
       </div>
@@ -526,68 +724,93 @@ export function renderEnhancedProjections(
         <tbody>
           <tr>
             <td><strong>Current</strong></td>
-            <td>${currentTraffic.toLocaleString()}</td>
-            <td>${Math.round(currentTraffic * 0.03)}</td>
-            <td>£${(currentTraffic * 0.03 * 5000).toLocaleString()}</td>
+            <td>${current.traffic.toLocaleString()}</td>
+            <td>${current.leads.toLocaleString()}</td>
+            <td>£${current.revenue.toLocaleString()}</td>
             <td>-</td>
           </tr>
           <tr>
             <td><strong>Month 3</strong></td>
-            <td>${Math.round(currentTraffic * 2).toLocaleString()}</td>
-            <td>${Math.round(currentTraffic * 2 * 0.03)}</td>
-            <td>£${(currentTraffic * 2 * 0.03 * 5000).toLocaleString()}</td>
-            <td style="color: #28a745;">+100%</td>
+            <td>${month3.traffic.toLocaleString()}</td>
+            <td>${month3.leads.toLocaleString()}</td>
+            <td>£${month3.revenue.toLocaleString()}</td>
+            <td style="color: #28a745;">+${Math.round(((month3.traffic / current.traffic) - 1) * 100)}%</td>
           </tr>
           <tr>
             <td><strong>Month 6</strong></td>
-            <td>${projections.month6.traffic.toLocaleString()}</td>
-            <td>${projections.month6.leads}</td>
-            <td>£${(projections.month6.traffic * 0.03 * 5000).toLocaleString()}</td>
-            <td style="color: #28a745;">+${Math.round(((projections.month6.traffic / currentTraffic) - 1) * 100)}%</td>
+            <td>${month6.traffic.toLocaleString()}</td>
+            <td>${month6.leads.toLocaleString()}</td>
+            <td>£${month6.revenue.toLocaleString()}</td>
+            <td style="color: #28a745;">+${Math.round(((month6.traffic / current.traffic) - 1) * 100)}%</td>
           </tr>
           <tr>
             <td><strong>Month 12</strong></td>
-            <td>${projections.month12.traffic.toLocaleString()}</td>
-            <td>${projections.month12.leads}</td>
-            <td>£${(projections.month12.traffic * 0.03 * 5000).toLocaleString()}</td>
-            <td style="color: #28a745;">+${Math.round(((projections.month12.traffic / currentTraffic) - 1) * 100)}%</td>
+            <td>${month12.traffic.toLocaleString()}</td>
+            <td>${month12.leads.toLocaleString()}</td>
+            <td>£${month12.revenue.toLocaleString()}</td>
+            <td style="color: #28a745;">+${Math.round(((month12.traffic / current.traffic) - 1) * 100)}%</td>
           </tr>
         </tbody>
       </table>
 
-      ${simpleMath ? `
-        <div style="background: #f0f8ff; border: 2px solid #00CED1; border-radius: 8px; padding: 5mm; margin: 8mm 0;">
-          <h3 style="text-align: center; color: #00CED1;">The Simple Math</h3>
-          ${simpleMath.steps.map((step: any) => `
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 3mm 0; border-bottom: 1px solid #ddd;">
-              <div>
-                <strong>Month ${step.month || ''}</strong>
-                <div style="font-size: 12px; color: #666;">
-                  ${step.traffic || 0} visitors → ${step.leads || 0} leads → ${step.customers || 0} customers
-                </div>
-              </div>
-              <div style="font-size: 20px; font-weight: bold; color: #00CED1;">
-                £${(step.revenue || 0).toLocaleString()}
-              </div>
+      <div style="background: #f0f8ff; border: 2px solid #00CED1; border-radius: 8px; padding: 5mm; margin: 8mm 0;">
+        <h3 style="text-align: center; color: #00CED1;">The Simple Math</h3>
+        <p style="text-align: center; color: #666; font-size: 13px; margin-bottom: 4mm;">
+          With a ${(nationalProjection.conversionRates.visitorToLead * 100).toFixed(1)}% visitor-to-lead rate and ${(nationalProjection.conversionRates.leadToCustomer * 100).toFixed(0)}% lead-to-customer rate:
+        </p>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 3mm 0; border-bottom: 1px solid #ddd;">
+          <div>
+            <strong>Month 3</strong>
+            <div style="font-size: 12px; color: #666;">
+              ${month3.traffic.toLocaleString()} visitors → ${month3.leads} leads → ${month3.customers} customers
             </div>
-          `).join('')}
-          <div style="background: #00CED1; color: white; padding: 4mm; margin-top: 4mm; border-radius: 8px; text-align: center;">
-            <div>Total Return on Investment</div>
-            <div style="font-size: 28px; font-weight: bold; margin: 2mm 0;">
-              ${projections.roi.percentage}% ROI
-            </div>
-            <div style="font-size: 14px;">Payback Period: ${projections.roi.paybackPeriod}</div>
+          </div>
+          <div style="font-size: 20px; font-weight: bold; color: #00CED1;">
+            £${month3.revenue.toLocaleString()}
           </div>
         </div>
-      ` : ''}
+
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 3mm 0; border-bottom: 1px solid #ddd;">
+          <div>
+            <strong>Month 6</strong>
+            <div style="font-size: 12px; color: #666;">
+              ${month6.traffic.toLocaleString()} visitors → ${month6.leads} leads → ${month6.customers} customers
+            </div>
+          </div>
+          <div style="font-size: 20px; font-weight: bold; color: #00CED1;">
+            £${month6.revenue.toLocaleString()}
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 3mm 0; border-bottom: 1px solid #ddd;">
+          <div>
+            <strong>Month 12</strong>
+            <div style="font-size: 12px; color: #666;">
+              ${month12.traffic.toLocaleString()} visitors → ${month12.leads} leads → ${month12.customers} customers
+            </div>
+          </div>
+          <div style="font-size: 20px; font-weight: bold; color: #00CED1;">
+            £${month12.revenue.toLocaleString()}
+          </div>
+        </div>
+
+        <div style="background: #00CED1; color: white; padding: 4mm; margin-top: 4mm; border-radius: 8px; text-align: center;">
+          <div>Total Return on Investment</div>
+          <div style="font-size: 28px; font-weight: bold; margin: 2mm 0;">
+            ${roi.toLocaleString()}% ROI
+          </div>
+          <div style="font-size: 14px;">Payback Period: ${paybackPeriod}</div>
+        </div>
+      </div>
 
       <h2>Return on Investment Summary</h2>
-      <p><strong>Total Investment (Year 1):</strong> £60,000 (£5,000/month × 12 months)</p>
-      <p><strong>Total Revenue (Year 1):</strong> £${projections.month12.revenue.toLocaleString()}</p>
-      <p><strong>Net Profit:</strong> £${(projections.month12.revenue - 60000).toLocaleString()}</p>
-      <p><strong>ROI:</strong> ${projections.roi.percentage}%</p>
-      <p><strong>Payback Period:</strong> ${projections.roi.paybackPeriod}</p>
-      <p><strong>Lifetime Value:</strong> £${projections.roi.lifetimeValue.toLocaleString()}</p>
+      <p><strong>Total Investment (Year 1):</strong> £${annualInvestment.toLocaleString()} (£5,000/month × 12 months)</p>
+      <p><strong>Total Revenue (Year 1):</strong> £${(month12.revenue * 12).toLocaleString()}</p>
+      <p><strong>Net Profit:</strong> £${((month12.revenue * 12) - annualInvestment).toLocaleString()}</p>
+      <p><strong>ROI:</strong> ${roi.toLocaleString()}%</p>
+      <p><strong>Payback Period:</strong> ${paybackPeriod}</p>
+      <p><strong>Lifetime Value (3 Years):</strong> £${lifetimeValue.toLocaleString()}</p>
 
       ${renderPageFooter(pageNumber)}
     </div>
@@ -769,7 +992,7 @@ export function renderContentOpportunities(
         <p style="font-size: 13px; color: #666; margin-bottom: 4mm;">These are actual "People Also Ask" questions from Google search results:</p>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; margin-bottom: 8mm;">
-          ${contentOpp.paaQuestions.slice(0, 8).map(paa => {
+          ${contentOpp.paaQuestions.slice(0, 12).map(paa => {
             const priorityColor =
               paa.priority === 'High' ? '#28a745' :
               paa.priority === 'Medium' ? '#ffc107' :
@@ -808,7 +1031,7 @@ export function renderContentOpportunities(
             </tr>
           </thead>
           <tbody>
-            ${contentOpp.relatedKeywords.slice(0, 10).map(rk => `
+            ${contentOpp.relatedKeywords.slice(0, 12).map(rk => `
               <tr>
                 <td><strong>${escapeHTML(rk.keyword)}</strong></td>
                 <td>${rk.searchVolume ? `${rk.searchVolume}/month` : 'Data pending'}</td>
