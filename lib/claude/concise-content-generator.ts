@@ -204,9 +204,10 @@ ${JSON.stringify(sanitizeResearchData(researchData.enhancedResearch.competitors.
 ### Top Location Opportunities
 ${JSON.stringify(sanitizeResearchData(researchData.enhancedResearch.locationOpportunities.slice(0, 3).map(loc => ({
   location: loc.location,
-  searchVolume: loc.searchVolume,
+  estimatedVolume: loc.estimatedVolume,
   currentRanking: loc.currentRanking !== undefined ? loc.currentRanking : 'Not ranking',
-  competitorCount: loc.competitorCount
+  competition: loc.competition,
+  competitorCount: loc.competitorDomains.length
 }))), null, 2)}
 
 ### Content Opportunities (Top PAA Questions)
