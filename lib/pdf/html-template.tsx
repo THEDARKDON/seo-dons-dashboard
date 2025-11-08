@@ -44,6 +44,7 @@ export function generateProposalHTML(content: ProposalContent, research?: any): 
     ? parseInt(research.competitorAnalysis.clientCurrentMetrics.monthlyTraffic.replace(/[^\d]/g, ''))
     : 200; // Fallback default
 
+  // Get average deal value from research ROI projection (includes customer's actual deal size)
   const avgDealValue = research?.roiProjection?.averageDealValue || 5000;
 
   // Calculate projections for all three packages ONCE

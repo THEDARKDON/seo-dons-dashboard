@@ -199,6 +199,9 @@ export interface ROIProjection {
     netReturn: string; // "£1,164,000-1,524,000"
     roiPercentage: string; // "3,233%-4,233%"
   };
+
+  // Business metrics for accurate projections
+  averageDealValue: number; // Customer's actual average deal size
 }
 
 export interface ResearchResult {
@@ -934,8 +937,14 @@ CRITICAL INSTRUCTIONS:
   const response = await callClaudeForResearch(systemPrompt, userPrompt);
   const data = extractJSON<ROIProjection>(response.content);
 
+  // Add the actual average deal value from customer data (or use default)
+  const enrichedData: ROIProjection = {
+    ...data,
+    averageDealValue: request.averageDealSize || 5000
+  };
+
   return {
-    data,
+    data: enrichedData,
     usage: response.usage,
     cost: response.cost,
   };

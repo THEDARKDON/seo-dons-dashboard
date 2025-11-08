@@ -37,18 +37,18 @@ export function calculateProjections(
   avgDealValue: number = 5000
 ): ProjectionCalculation {
   // Realistic traffic multipliers based on industry benchmarks
-  // 50% = conservative, 100% = moderate, 150% = aggressive
+  // 100% = conservative, 200% = moderate, 300% = aggressive
   const trafficMultipliers: Record<string, number> = {
-    'Local Dominance': 1.5,      // 50% growth (conservative, local focus)
-    'Regional Authority': 2.0,    // 100% growth (moderate, regional expansion)
-    'National Leader': 2.5        // 150% growth (aggressive, national reach)
+    'Local Dominance': 2.0,      // 100% growth (2x traffic, conservative local focus)
+    'Regional Authority': 3.0,    // 200% growth (3x traffic, moderate regional expansion)
+    'National Leader': 4.0        // 300% growth (4x traffic, aggressive national reach)
   };
 
   // Conversion rates - industry standard for high-ticket services
   const conversionRates = {
-    visitorToLead: 0.03,      // 3% of visitors become leads (form submissions)
-    leadToCustomer: 0.30,     // 30% of leads become customers (sales conversion)
-    visitorToCustomer: 0.009  // 0.9% combined (3% × 30% = 0.9%)
+    visitorToLead: 0.06,      // 6% of visitors become leads (form submissions)
+    leadToCustomer: 0.35,     // 35% of leads become customers (sales conversion)
+    visitorToCustomer: 0.021  // 2.1% combined (6% × 35% = 2.1%)
   };
 
   const multiplier = trafficMultipliers[packageName] || 1.5;
@@ -107,7 +107,7 @@ export function calculateProjections(
 export function calculateMonthlyProgression(
   currentTraffic: number,
   finalMultiplier: number,
-  conversionRate: number = 0.03,
+  conversionRate: number = 0.06,  // Updated to 6% visitor-to-lead
   avgDealValue: number = 5000
 ): Array<{month: number; traffic: number; leads: number; customers: number; revenue: number}> {
   const progression = [];
@@ -131,7 +131,7 @@ export function calculateMonthlyProgression(
 
     const traffic = Math.round(currentTraffic * growthFactor);
     const leads = Math.round(traffic * conversionRate);
-    const customers = Math.round(leads * 0.30);
+    const customers = Math.round(leads * 0.35);  // Updated to 35% lead-to-customer
     const revenue = customers * avgDealValue;
 
     progression.push({ month, traffic, leads, customers, revenue });
