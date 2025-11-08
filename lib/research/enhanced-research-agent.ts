@@ -143,6 +143,8 @@ async function researchWithPerplexity(query: string): Promise<string> {
         ],
         max_tokens: 4000,
         temperature: 0.2,
+        return_citations: true,
+        search_recency_filter: 'month',
       }),
     });
 
