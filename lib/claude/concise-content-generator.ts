@@ -211,10 +211,11 @@ ${JSON.stringify(sanitizeResearchData(researchData.enhancedResearch.locationOppo
 }))), null, 2)}
 
 ### Content Opportunities (Top PAA Questions)
-${JSON.stringify(sanitizeResearchData(researchData.enhancedResearch.contentOpportunities.paaQuestions.slice(0, 6).map(paa => ({
+${JSON.stringify(sanitizeResearchData(researchData.enhancedResearch.contentOpportunities.slice(0, 6).map(paa => ({
   question: paa.question,
   priority: paa.priority,
-  searchIntent: paa.searchIntent
+  searchIntent: paa.searchIntent,
+  keyword: paa.keyword
 }))), null, 2)}
 
 **CRITICAL**: Use these EXACT numbers and competitor names in your proposal. Do NOT make up data.
