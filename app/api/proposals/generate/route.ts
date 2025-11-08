@@ -14,6 +14,7 @@ import { generateCompleteProposal, validateProposalRequest } from '@/lib/claude/
 import { generateProposalPDF, getProposalFilename, validateProposalContent } from '@/lib/pdf/generate';
 import { generateProposalHTML } from '@/lib/pdf/html-template';
 import { generateConciseProposalHTML } from '@/lib/pdf/concise-html-template';
+import { generateProposalWithTemplate, isValidTemplateStyle, getDefaultTemplateStyle, type TemplateStyle } from '@/lib/pdf/template-selector';
 
 // Vercel serverless function timeout (10 minutes for research + content + PDF generation)
 export const maxDuration = 600;
@@ -28,6 +29,7 @@ interface GenerateProposalRequest {
   contactName?: string;
   customInstructions?: string;
   proposalMode?: 'concise' | 'detailed';
+  templateStyle?: TemplateStyle; // NEW: 'classic' or 'modern'
 }
 
 export async function POST(request: NextRequest) {
@@ -122,6 +124,12 @@ export async function POST(request: NextRequest) {
     // 5. CREATE PROPOSAL RECORD (STATUS: GENERATING)
     // ========================================================================
     const companyName = customer.company || `${customer.first_name} ${customer.last_name}`;
+
+    // Validate and set template style
+    const templateStyle = body.templateStyle && isValidTemplateStyle(body.templateStyle)
+      ? body.templateStyle
+      : getDefaultTemplateStyle();
+
     const { data: proposal, error: proposalError } = await supabaseServer
       .from('proposals')
       .insert({
@@ -134,6 +142,7 @@ export async function POST(request: NextRequest) {
         company_industry: customer.industry,
         selected_package: body.packageTier,
         proposal_mode: body.proposalMode || 'detailed',
+        template_style: templateStyle, // NEW: Save template style choice
       })
       .select()
       .single();
@@ -179,21 +188,25 @@ export async function POST(request: NextRequest) {
           );
 
           // ================================================================
-          // 8. GENERATE HTML ONLY (PDF conversion done separately)
+          // 8. GENERATE HTML USING SELECTED TEMPLATE
           // ================================================================
-          await sendProgress('Generating HTML', 92, 'Creating HTML document...');
+          await sendProgress('Generating HTML', 92, `Creating ${templateStyle} template...`);
 
-          // Generate appropriate HTML based on proposal mode
-          // Use explicit mode check for reliable detection
+          // Generate appropriate HTML based on proposal mode and template style
           const isConciseContent = body.proposalMode === 'concise';
 
           // Only validate detailed content (concise content has different structure)
           if (!isConciseContent) {
             validateProposalContent(result.content as any);
           }
-          const htmlContent = isConciseContent
-            ? generateConciseProposalHTML(result.content as any, companyName)
-            : generateProposalHTML(result.content as any, result.research);
+
+          // Use template selector to generate HTML with chosen template
+          const htmlContent = generateProposalWithTemplate(
+            result.content as any,
+            templateStyle,
+            companyName,
+            result.research
+          );
 
           // ================================================================
           // 9. UPLOAD HTML TO STORAGE
