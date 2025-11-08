@@ -482,18 +482,18 @@ ${averageDealSize || profitPerDeal || conversionRate ? `## BUSINESS METRICS (CRI
 ## RESEARCH DATA
 
 ### Company Analysis
-${JSON.stringify(researchData.companyAnalysis, null, 2)}
+${JSON.stringify(sanitizeResearchData(researchData.companyAnalysis), null, 2)}
 
 ### Market Intelligence
-${JSON.stringify(researchData.marketIntelligence, null, 2)}
+${JSON.stringify(sanitizeResearchData(researchData.marketIntelligence), null, 2)}
 
 ### Competitor Analysis
-${JSON.stringify(researchData.competitorAnalysis, null, 2)}
+${JSON.stringify(sanitizeResearchData(researchData.competitorAnalysis), null, 2)}
 
 ### Keyword Research
-${JSON.stringify(researchData.keywordResearch, null, 2)}
+${JSON.stringify(sanitizeResearchData(researchData.keywordResearch), null, 2)}
 
-${researchData.locationStrategy ? `### Location Strategy\n${JSON.stringify(researchData.locationStrategy, null, 2)}` : ''}
+${researchData.locationStrategy ? `### Location Strategy\n${JSON.stringify(sanitizeResearchData(researchData.locationStrategy), null, 2)}` : ''}
 
 ${researchData.enhancedResearch ? `
 ## ENHANCED REAL-WORLD RESEARCH DATA (CRITICAL - USE THIS DATA TO POPULATE NEW SECTIONS)
