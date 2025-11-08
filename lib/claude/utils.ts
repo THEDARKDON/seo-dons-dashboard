@@ -259,7 +259,8 @@ export async function callClaudeForResearch(
       cost: calculateCost(
         inputTokens,
         outputTokens,
-        Math.max(0, thinkingTokens)
+        Math.max(0, thinkingTokens),
+        modelName
       ),
       model: modelName,
     };
@@ -405,7 +406,8 @@ export async function callClaudeForContent(
       cost: calculateCost(
         inputTokens,
         outputTokens,
-        0
+        0,
+        modelName
       ),
       model: modelName,
     };

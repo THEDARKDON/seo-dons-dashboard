@@ -738,7 +738,7 @@ Generate ALL proposal content following this exact structure:
     "rankings": [
       {
         "keyword": "[Exact keyword from enhancedResearch.keywordAnalysis]",
-        "position": 1, // Use actual position from data, or undefined if not ranking
+        "position": 1, // Use actual position from data, or null if not ranking (NEVER use undefined)
         "searchVolume": 300, // Use actual search volume from data
         "opportunity": "Maintain and expand", // For #1-3: "Maintain and expand", #4-10: "Move to top 3", 10+: "Target first page"
         "competitorAtTop": "[domain of #1 competitor if client isn't #1]"
@@ -840,10 +840,15 @@ IMPORTANT:
   // Extract and parse JSON from response
   const rawContent = extractAndParseJSON<ProposalContent>(response.content);
 
+  // CRITICAL: Remove any undefined values from Claude's response
+  // Claude sometimes generates undefined despite our prompt instructions
+  console.log('[Content Generator] Sanitizing undefined values from Claude response...');
+  const undefinedFreeContent = sanitizeResearchData(rawContent);
+
   // CRITICAL: Sanitize content to fix UTF-8 encoding corruption
   // This must happen BEFORE storing in database
-  console.log('[Content Generator] Checking for UTF-8 corruption...');
-  const corruptionStats = getCorruptionStats(JSON.stringify(rawContent));
+  console.log('[Content Generator] Checking for UTF-8 encoding corruption...');
+  const corruptionStats = getCorruptionStats(JSON.stringify(undefinedFreeContent));
   if (corruptionStats.hasCorruption) {
     console.warn(
       `[Content Generator] Found ${corruptionStats.corruptedChars} corrupted characters. Examples:`,
@@ -851,7 +856,7 @@ IMPORTANT:
     );
   }
 
-  const sanitizedContent = sanitizeObjectEncoding(rawContent);
+  const sanitizedContent = sanitizeObjectEncoding(undefinedFreeContent);
   console.log('[Content Generator] Content sanitization complete');
 
   return sanitizedContent;
