@@ -154,7 +154,14 @@ async function researchWithPerplexity(query: string): Promise<string> {
     }
 
     const data = await response.json();
-    return data.choices[0]?.message?.content || '';
+    const content = data.choices?.[0]?.message?.content;
+
+    if (!content || typeof content !== 'string') {
+      console.warn('Perplexity returned empty or invalid content:', data);
+      return 'No data available';
+    }
+
+    return content;
   } catch (error) {
     console.error('Perplexity research error:', error);
     throw error;
@@ -344,7 +351,7 @@ async function findRealCompetitors(
         const domain = extractDomain(result.link);
         if (!competitorMap.has(domain)) {
           competitorMap.set(domain, {
-            name: result.title.split('|')[0].split('-')[0].trim(),
+            name: result.title ? result.title.split('|')[0].split('-')[0].trim() : domain,
             domain,
             rankings: [],
             appearances: 0,
@@ -442,13 +449,15 @@ function detectIntent(keyword: string): string {
 // ============================================================================
 
 function extractServices(text: string): string[] {
+  if (!text) return ['Service information not found'];
+
   const services: string[] = [];
   const lines = text.split('\n');
 
   for (const line of lines) {
-    if (line.toLowerCase().includes('service') || line.toLowerCase().includes('offer')) {
+    if (line?.toLowerCase().includes('service') || line?.toLowerCase().includes('offer')) {
       const match = line.match(/[-•]\s*(.+)/);
-      if (match) services.push(match[1].trim());
+      if (match && match[1]) services.push(match[1].trim());
     }
   }
 
@@ -456,34 +465,48 @@ function extractServices(text: string): string[] {
 }
 
 function extractTargetAudience(text: string): string {
+  if (!text) return 'General business audience';
   const match = text.match(/target audience[:\s]+([^.\n]+)/i);
-  return match ? match[1].trim() : 'General business audience';
+  return match && match[1] ? match[1].trim() : 'General business audience';
 }
 
 function extractUniqueValue(text: string): string {
+  if (!text) return 'Professional service delivery';
   const match = text.match(/unique value|value proposition[:\s]+([^.\n]+)/i);
-  return match ? match[1].trim() : 'Professional service delivery';
+  return match && match[1] ? match[1].trim() : 'Professional service delivery';
 }
 
 function extractTechnicalQuality(text: string): string {
-  if (text.toLowerCase().includes('modern') && text.toLowerCase().includes('fast')) return 'Good';
-  if (text.toLowerCase().includes('slow') || text.toLowerCase().includes('outdated')) return 'Needs Improvement';
+  if (!text) return 'Average';
+  const lower = text.toLowerCase();
+  if (lower.includes('modern') && lower.includes('fast')) return 'Good';
+  if (lower.includes('slow') || lower.includes('outdated')) return 'Needs Improvement';
   return 'Average';
 }
 
 function extractContentQuality(text: string): string {
-  if (text.toLowerCase().includes('comprehensive') || text.toLowerCase().includes('detailed')) return 'Good';
-  if (text.toLowerCase().includes('thin') || text.toLowerCase().includes('limited')) return 'Needs Improvement';
+  if (!text) return 'Average';
+  const lower = text.toLowerCase();
+  if (lower.includes('comprehensive') || lower.includes('detailed')) return 'Good';
+  if (lower.includes('thin') || lower.includes('limited')) return 'Needs Improvement';
   return 'Average';
 }
 
 function extractPageCount(text: string): number {
+  if (!text) return 20;
   const match = text.match(/(\d+)\s*pages?/i);
-  return match ? parseInt(match[1]) : 20; // Default estimate
+  return match && match[1] ? parseInt(match[1]) : 20; // Default estimate
 }
 
 function parseSocialMediaResponse(text: string): SocialMediaPresence {
   const platforms = [];
+  if (!text) {
+    return {
+      platforms: [],
+      overallPresence: 'minimal',
+      insights: ['No social media data available'],
+    };
+  }
   const lines = text.toLowerCase().split('\n');
 
   // Simple parsing - in production you'd want more robust parsing
@@ -508,6 +531,17 @@ function parseSocialMediaResponse(text: string): SocialMediaPresence {
 }
 
 function parseCompanyIntelligence(text: string): CompanyIntelligence {
+  if (!text) {
+    return {
+      companySize: 'small',
+      estimatedEmployees: 'Unknown',
+      foundedYear: undefined,
+      businessModel: 'Mixed',
+      strengths: ['Established presence'],
+      weaknesses: ['Limited online visibility'],
+    };
+  }
+
   const employeeMatch = text.match(/(\d+[-\s]*\d*)\s*employees?/i);
   const foundedMatch = text.match(/founded\s+in\s+(\d{4})/i);
 
