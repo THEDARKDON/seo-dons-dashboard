@@ -409,73 +409,79 @@ export function ProposalTemplate({ content }: ProposalTemplateProps) {
             />
           )}
 
-          <Text style={styles.h2}>6-Month Projections</Text>
-          <View style={styles.statRow}>
-            <View style={styles.statCard}>
-              <Text style={styles.statNumber}>
-                {content.projections.month6.traffic.toLocaleString()}
-              </Text>
-              <Text style={styles.statLabel}>Monthly Traffic</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statNumber}>
-                {content.projections.month6.leads.toLocaleString()}
-              </Text>
-              <Text style={styles.statLabel}>Monthly Leads</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statNumber}>
-                £{content.projections.month6.revenue.toLocaleString()}
-              </Text>
-              <Text style={styles.statLabel}>Monthly Revenue</Text>
-            </View>
-          </View>
+          {content.projections && (
+            <>
+              <Text style={styles.h2}>6-Month Projections</Text>
+              <View style={styles.statRow}>
+                <View style={styles.statCard}>
+                  <Text style={styles.statNumber}>
+                    {content.projections.month6.traffic.toLocaleString()}
+                  </Text>
+                  <Text style={styles.statLabel}>Monthly Traffic</Text>
+                </View>
+                <View style={styles.statCard}>
+                  <Text style={styles.statNumber}>
+                    {content.projections.month6.leads.toLocaleString()}
+                  </Text>
+                  <Text style={styles.statLabel}>Monthly Leads</Text>
+                </View>
+                <View style={styles.statCard}>
+                  <Text style={styles.statNumber}>
+                    £{content.projections.month6.revenue.toLocaleString()}
+                  </Text>
+                  <Text style={styles.statLabel}>Monthly Revenue</Text>
+                </View>
+              </View>
 
-          <Text style={styles.h2}>12-Month Projections</Text>
-          <View style={styles.statRow}>
-            <View style={styles.statCard}>
-              <Text style={styles.statNumber}>
-                {content.projections.month12.traffic.toLocaleString()}
-              </Text>
-              <Text style={styles.statLabel}>Monthly Traffic</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statNumber}>
-                {content.projections.month12.leads.toLocaleString()}
-              </Text>
-              <Text style={styles.statLabel}>Monthly Leads</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statNumber}>
-                £{content.projections.month12.revenue.toLocaleString()}
-              </Text>
-              <Text style={styles.statLabel}>Monthly Revenue</Text>
-            </View>
-          </View>
+              <Text style={styles.h2}>12-Month Projections</Text>
+              <View style={styles.statRow}>
+                <View style={styles.statCard}>
+                  <Text style={styles.statNumber}>
+                    {content.projections.month12.traffic.toLocaleString()}
+                  </Text>
+                  <Text style={styles.statLabel}>Monthly Traffic</Text>
+                </View>
+                <View style={styles.statCard}>
+                  <Text style={styles.statNumber}>
+                    {content.projections.month12.leads.toLocaleString()}
+                  </Text>
+                  <Text style={styles.statLabel}>Monthly Leads</Text>
+                </View>
+                <View style={styles.statCard}>
+                  <Text style={styles.statNumber}>
+                    £{content.projections.month12.revenue.toLocaleString()}
+                  </Text>
+                  <Text style={styles.statLabel}>Monthly Revenue</Text>
+                </View>
+              </View>
 
-          <View style={styles.roiCard}>
-            <Text style={styles.roiTitle}>Return on Investment</Text>
-            <View style={styles.roiGrid}>
-              <View style={styles.roiMetric}>
-                <Text style={styles.roiValue}>
-                  {content.projections.roi.percentage}%
-                </Text>
-                <Text style={styles.roiLabel}>ROI</Text>
-              </View>
-              <View style={styles.roiMetric}>
-                <Text style={styles.roiValue}>
-                  {content.projections.roi.paybackPeriod}
-                </Text>
-                <Text style={styles.roiLabel}>Payback Period</Text>
-              </View>
-              <View style={styles.roiMetric}>
-                <Text style={styles.roiValue}>
-                  £{content.projections.roi.lifetimeValue.toLocaleString()}
-                </Text>
-                <Text style={styles.roiLabel}>12-Month Value</Text>
-              </View>
-            </View>
-          </View>
+              {content.projections.roi && (
+                <View style={styles.roiCard}>
+                  <Text style={styles.roiTitle}>Return on Investment</Text>
+                  <View style={styles.roiGrid}>
+                    <View style={styles.roiMetric}>
+                      <Text style={styles.roiValue}>
+                        {content.projections.roi.percentage}%
+                      </Text>
+                      <Text style={styles.roiLabel}>ROI</Text>
+                    </View>
+                    <View style={styles.roiMetric}>
+                      <Text style={styles.roiValue}>
+                        {content.projections.roi.paybackPeriod}
+                      </Text>
+                      <Text style={styles.roiLabel}>Payback Period</Text>
+                    </View>
+                    <View style={styles.roiMetric}>
+                      <Text style={styles.roiValue}>
+                        £{content.projections.roi.lifetimeValue.toLocaleString()}
+                      </Text>
+                      <Text style={styles.roiLabel}>12-Month Value</Text>
+                    </View>
+                  </View>
+                </View>
+              )}
+            </>
+          )}
         </View>
         <PageFooter companyName={content.coverPage.companyName} />
       </Page>
