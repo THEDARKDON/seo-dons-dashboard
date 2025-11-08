@@ -154,16 +154,46 @@ async function researchWithPerplexity(query: string): Promise<string> {
     }
 
     const data = await response.json();
+
+    // LOG: Full Perplexity API response
+    console.log('\n========================================');
+    console.log('PERPLEXITY API RESPONSE');
+    console.log('========================================');
+    console.log('Query:', query.substring(0, 100) + '...');
+    console.log('Model:', data.model || 'sonar');
+    console.log('Response ID:', data.id || 'N/A');
+    console.log('Created:', data.created ? new Date(data.created * 1000).toISOString() : 'N/A');
+
     const content = data.choices?.[0]?.message?.content;
+    const citations = data.citations || [];
+
+    console.log('Content Length:', content?.length || 0, 'characters');
+    console.log('Citations Count:', citations.length);
+
+    if (citations.length > 0) {
+      console.log('Citations:');
+      citations.slice(0, 5).forEach((citation: any, idx: number) => {
+        console.log(`  ${idx + 1}. ${citation}`);
+      });
+      if (citations.length > 5) {
+        console.log(`  ... and ${citations.length - 5} more`);
+      }
+    }
+
+    if (content) {
+      console.log('Content Preview:', content.substring(0, 200) + '...');
+    }
+    console.log('========================================\n');
 
     if (!content || typeof content !== 'string') {
-      console.warn('Perplexity returned empty or invalid content:', data);
+      console.warn('⚠️  Perplexity returned empty or invalid content');
+      console.warn('Full response:', JSON.stringify(data, null, 2));
       return 'No data available';
     }
 
     return content;
   } catch (error) {
-    console.error('Perplexity research error:', error);
+    console.error('❌ Perplexity research error:', error);
     throw error;
   }
 }
@@ -272,8 +302,19 @@ async function checkRealRankings(
   const rankings: KeywordRanking[] = [];
   const normalizedLocation = normalizeSerpAPILocation(location);
 
+  console.log('\n========================================');
+  console.log('SERPAPI RANKINGS CHECK');
+  console.log('========================================');
+  console.log('Company:', companyName);
+  console.log('Domain:', domain);
+  console.log('Location:', location, '→', normalizedLocation);
+  console.log('Keywords to check:', keywords.join(', '));
+  console.log('========================================\n');
+
   for (const keyword of keywords) {
     try {
+      console.log(`\n🔍 Checking keyword: "${keyword}"`);
+
       const results = await getJson({
         api_key: SERPAPI_KEY,
         engine: 'google',
@@ -284,13 +325,35 @@ async function checkRealRankings(
         hl: 'en',
       });
 
+      // LOG: SerpAPI Response Summary
+      console.log('  ├─ Search Parameters:', results.search_parameters);
+      console.log('  ├─ Organic Results Count:', results.organic_results?.length || 0);
+      console.log('  ├─ Related Searches:', results.related_searches?.length || 0);
+      console.log('  ├─ People Also Ask:', results.related_questions?.length || 0);
+
       // Find client's position
       const position = results.organic_results?.findIndex((r: any) =>
         r.link?.includes(domain.replace('https://', '').replace('http://', '').split('/')[0])
       );
 
+      if (position >= 0) {
+        console.log(`  ├─ ✅ CLIENT FOUND at position ${position + 1}`);
+      } else {
+        console.log('  ├─ ❌ Client NOT in top 100 results');
+      }
+
+      // Log top 5 rankers
+      if (results.organic_results && results.organic_results.length > 0) {
+        console.log('  ├─ Top 5 Rankers:');
+        results.organic_results.slice(0, 5).forEach((r: any, idx: number) => {
+          const rankDomain = extractDomain(r.link);
+          console.log(`  │   ${idx + 1}. ${rankDomain} - ${r.title?.substring(0, 50)}...`);
+        });
+      }
+
       // Get search volume estimate from related searches or keywords
       const searchVolume = await estimateSearchVolume(keyword);
+      console.log(`  └─ Estimated Search Volume: ${searchVolume}/month\n`);
 
       rankings.push({
         keyword,
@@ -327,6 +390,14 @@ async function findRealCompetitors(
 
   const normalizedLocation = normalizeSerpAPILocation(location);
 
+  console.log('\n========================================');
+  console.log('SERPAPI COMPETITOR DISCOVERY');
+  console.log('========================================');
+  console.log('Keywords:', keywords.slice(0, 3).join(', '));
+  console.log('Location:', location, '→', normalizedLocation);
+  console.log('Limit:', limit, 'competitors');
+  console.log('========================================\n');
+
   const competitorMap = new Map<string, {
     name: string;
     domain: string;
@@ -337,6 +408,8 @@ async function findRealCompetitors(
   // Check top 10 for each keyword to find consistent competitors
   for (const keyword of keywords.slice(0, 3)) { // Limit to first 3 keywords to save API calls
     try {
+      console.log(`\n🔍 Finding competitors for: "${keyword}"`);
+
       const results = await getJson({
         api_key: SERPAPI_KEY,
         engine: 'google',
@@ -347,6 +420,8 @@ async function findRealCompetitors(
         hl: 'en',
       });
 
+      console.log(`  ├─ Results found: ${results.organic_results?.length || 0}`);
+
       results.organic_results?.forEach((result: any, idx: number) => {
         const domain = extractDomain(result.link);
         if (!competitorMap.has(domain)) {
@@ -356,6 +431,9 @@ async function findRealCompetitors(
             rankings: [],
             appearances: 0,
           });
+          console.log(`  │   NEW: ${domain}`);
+        } else {
+          console.log(`  │   +1: ${domain}`);
         }
 
         const competitor = competitorMap.get(domain)!;
@@ -363,9 +441,11 @@ async function findRealCompetitors(
         competitor.appearances++;
       });
 
+      console.log(`  └─ Total unique competitors so far: ${competitorMap.size}\n`);
+
       await new Promise(resolve => setTimeout(resolve, 1000));
     } catch (error) {
-      console.error(`Error finding competitors for "${keyword}":`, error);
+      console.error(`❌ Error finding competitors for "${keyword}":`, error);
     }
   }
 
@@ -373,6 +453,13 @@ async function findRealCompetitors(
   const topCompetitors = Array.from(competitorMap.values())
     .sort((a, b) => b.appearances - a.appearances)
     .slice(0, limit);
+
+  console.log('\n📊 TOP COMPETITORS (by appearances):');
+  topCompetitors.forEach((comp, idx) => {
+    console.log(`  ${idx + 1}. ${comp.domain} (${comp.name})`);
+    console.log(`     └─ Appeared ${comp.appearances} times in top 10`);
+  });
+  console.log('========================================\n');
 
   // Enhance with Perplexity research
   const enhancedCompetitors: RealCompetitor[] = [];
@@ -607,12 +694,23 @@ export async function conductEnhancedResearch(
 ): Promise<EnhancedResearchResult> {
   const { companyName, website, industry, location, targetKeywords, notes } = request;
 
-  console.log(`Starting enhanced research for ${companyName}...`);
+  console.log('\n╔════════════════════════════════════════════════════════════════╗');
+  console.log(`║  ENHANCED RESEARCH STARTING: ${companyName.padEnd(39, ' ')}║`);
+  console.log('╚════════════════════════════════════════════════════════════════╝');
+  console.log('Company:', companyName);
+  console.log('Website:', website || 'Not provided');
+  console.log('Industry:', industry || 'Not specified');
+  console.log('Location:', location || 'Not specified');
+  console.log('Notes:', notes ? notes.substring(0, 100) + '...' : 'None');
+  console.log('═══════════════════════════════════════════════════════════════\n');
 
   // Generate intelligent keywords if not provided
   const keywords = targetKeywords && targetKeywords.length > 0
     ? targetKeywords
     : await generateTargetKeywords(companyName, industry, location);
+
+  console.log('🎯 Target Keywords:', keywords.join(', '));
+  console.log('\n🚀 Starting parallel research across 5 data sources...\n');
 
   // Parallel research execution
   const [
@@ -653,6 +751,59 @@ export async function conductEnhancedResearch(
     growthOpportunity: totalSearchVolume > 10000 ? 'Significant market opportunity' : 'Moderate opportunity',
     quickWins: identifyQuickWins(keywordAnalysis, competitors),
   };
+
+  // LOG: Final aggregated research results
+  console.log('\n╔════════════════════════════════════════════════════════════════╗');
+  console.log('║  ENHANCED RESEARCH COMPLETE                                    ║');
+  console.log('╚════════════════════════════════════════════════════════════════╝\n');
+
+  console.log('📊 RESEARCH SUMMARY:');
+  console.log('═══════════════════════════════════════════════════════════════');
+
+  console.log('\n🏢 COMPANY INTELLIGENCE:');
+  console.log('  ├─ Company Size:', companyIntelligence.companySize);
+  console.log('  ├─ Employees:', 'estimatedEmployees' in companyIntelligence ? companyIntelligence.estimatedEmployees : 'Unknown');
+  console.log('  ├─ Business Model:', companyIntelligence.businessModel);
+  console.log('  ├─ Strengths:', companyIntelligence.strengths?.slice(0, 2).join(', ') || 'None');
+  console.log('  └─ Weaknesses:', companyIntelligence.weaknesses?.slice(0, 2).join(', ') || 'None');
+
+  console.log('\n🌐 WEBSITE ANALYSIS:');
+  console.log('  ├─ Main Services:', websiteAnalysis.mainServices?.slice(0, 2).join(', ') || 'None');
+  console.log('  ├─ Target Audience:', websiteAnalysis.targetAudience);
+  console.log('  ├─ Technical Quality:', websiteAnalysis.technicalQuality);
+  console.log('  ├─ Content Quality:', websiteAnalysis.contentQuality);
+  console.log('  ├─ Has Live Chat:', websiteAnalysis.hasLiveChat ? 'Yes' : 'No');
+  console.log('  ├─ Has Blog:', websiteAnalysis.hasBlog ? 'Yes' : 'No');
+  console.log('  └─ Page Count:', websiteAnalysis.estimatedPageCount);
+
+  console.log('\n📱 SOCIAL MEDIA:');
+  console.log('  ├─ Platforms:', socialMedia.platforms.length);
+  console.log('  ├─ Overall Presence:', socialMedia.overallPresence);
+  console.log('  └─ Active On:', socialMedia.platforms.map(p => p.platform).join(', ') || 'None detected');
+
+  console.log('\n🔍 KEYWORD ANALYSIS:');
+  console.log('  ├─ Keywords Analyzed:', keywordAnalysis.length);
+  console.log('  ├─ Total Search Volume:', totalSearchVolume.toLocaleString(), '/month');
+  console.log('  ├─ High Difficulty:', avgDifficulty, 'keywords');
+  console.log('  └─ Competition Level:', marketIntelligence.competitionLevel);
+
+  console.log('\n🏆 COMPETITORS:');
+  console.log('  ├─ Competitors Found:', competitors.length);
+  competitors.forEach((comp, idx) => {
+    console.log(`  │   ${idx + 1}. ${comp.domain} (${comp.name})`);
+  });
+
+  console.log('\n💡 MARKET INTELLIGENCE:');
+  console.log('  ├─ Market Opportunity:', marketIntelligence.growthOpportunity);
+  console.log('  ├─ Quick Wins:', marketIntelligence.quickWins?.length || 0);
+  if (marketIntelligence.quickWins && marketIntelligence.quickWins.length > 0) {
+    marketIntelligence.quickWins.forEach((win, idx) => {
+      console.log(`  │   ${idx + 1}. ${win}`);
+    });
+  }
+
+  console.log('\n═══════════════════════════════════════════════════════════════');
+  console.log('✅ Research data ready for Claude analysis\n');
 
   return {
     companyIntelligence,
