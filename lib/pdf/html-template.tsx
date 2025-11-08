@@ -1058,6 +1058,18 @@ function renderProjections(
   companyName: string,
   pageNumber: number
 ): string {
+  // If no projections provided, return empty (shouldn't happen as this is fallback for non-research proposals)
+  if (!projections) {
+    return `
+      <div class="page content-page">
+        ${renderPageHeader(companyName)}
+        <h1>Growth Projections & ROI</h1>
+        <p>Projections will be calculated based on your specific business metrics.</p>
+        ${renderPageFooter(pageNumber)}
+      </div>
+    `;
+  }
+
   return `
     <div class="page content-page">
       ${renderPageHeader(companyName)}
@@ -1128,10 +1140,12 @@ function renderProjections(
           </div>
         ` : ''}
 
-        <h2>Return on Investment</h2>
-        <p><strong>ROI:</strong> ${projections.roi.percentage}%</p>
-        <p><strong>Payback Period:</strong> ${escapeHTML(projections.roi.paybackPeriod)}</p>
-        <p><strong>Lifetime Value:</strong> &pound;${projections.roi.lifetimeValue.toLocaleString()}</p>
+        ${projections.roi ? `
+          <h2>Return on Investment</h2>
+          <p><strong>ROI:</strong> ${projections.roi.percentage}%</p>
+          <p><strong>Payback Period:</strong> ${escapeHTML(projections.roi.paybackPeriod)}</p>
+          <p><strong>Lifetime Value:</strong> &pound;${projections.roi.lifetimeValue.toLocaleString()}</p>
+        ` : ''}
       ${renderPageFooter(pageNumber)}
     </div>
   `;
