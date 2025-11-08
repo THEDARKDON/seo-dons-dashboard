@@ -17,24 +17,32 @@ export async function GET(
   try {
     const { id } = await params;
 
-    // Authentication
-    const { userId: clerkUserId } = await auth();
-    if (!clerkUserId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Check if request is from presentation mode (public access)
+    const referer = request.headers.get('referer') || '';
+    const isFromPresentationMode = referer.includes('/present/');
+
+    // Authentication - skip for presentation mode
+    if (!isFromPresentationMode) {
+      const { userId: clerkUserId } = await auth();
+      if (!clerkUserId) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+
+      const supabase = await createClient();
+
+      // Get user
+      const { data: user } = await supabase
+        .from('users')
+        .select('id')
+        .eq('clerk_id', clerkUserId)
+        .single();
+
+      if (!user) {
+        return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      }
     }
 
     const supabase = await createClient();
-
-    // Get user
-    const { data: user } = await supabase
-      .from('users')
-      .select('id')
-      .eq('clerk_id', clerkUserId)
-      .single();
-
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
 
     // Get proposal
     const { data: proposal, error: proposalError } = await supabase
