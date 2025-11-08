@@ -130,15 +130,23 @@ export function renderEnhancedPackageOptions(
     const avgDealValue = research?.roiProjection?.averageDealValue || 5000;
 
     // Package-specific multipliers based on investment tier
+    // IMPORTANT: These are realistic, achievable growth targets for 12-month campaigns
+    // Industry benchmarks: 50-150% growth is good, 200-250% is exceptional
     const trafficMultipliers: Record<string, number> = {
-      'Local Dominance': 3,
-      'Regional Authority': 5,
-      'National Leader': 10
+      'Local Dominance': 1.5,      // 50% growth (conservative, local focus)
+      'Regional Authority': 2.0,    // 100% growth (moderate, regional expansion)
+      'National Leader': 2.5        // 150% growth (aggressive, national reach)
     };
 
-    // Calculate package-specific projections
-    const mult = trafficMultipliers[pkg.name] || 3;
-    const projectedMonthlyTraffic = Math.round(currentTraffic * mult);
+    // Calculate package-specific projections with realistic caps
+    const mult = trafficMultipliers[pkg.name] || 1.5;
+    let projectedMonthlyTraffic = Math.round(currentTraffic * mult);
+
+    // Safety cap: Never project more than 3x current traffic (even for National)
+    // This prevents absurd projections like 40,000 visitors from 4,000
+    const hardCap = currentTraffic * 3;
+    projectedMonthlyTraffic = Math.min(projectedMonthlyTraffic, hardCap);
+
     const projectedMonthlyLeads = Math.round(projectedMonthlyTraffic * conversionRate);
 
     // Annual calculations
@@ -156,10 +164,20 @@ export function renderEnhancedPackageOptions(
       ? Math.max(1, Math.ceil(annualInvestment / monthlyRevenue))
       : 12;
 
-    // Debug logging to identify the issue
-    console.log(`Package: ${pkg.name}, Monthly Investment: £${pkg.monthlyInvestment}`);
-    console.log(`Base Traffic: ${currentTraffic}, Multiplier: ${mult}, Projected: ${projectedMonthlyTraffic}`);
-    console.log(`Monthly Leads: ${projectedMonthlyLeads}, Annual Revenue: £${annualRevenue}`);
+    // Comprehensive logging for debugging
+    console.log(`\n=== PROJECTION CALCULATION: ${pkg.name} ===`);
+    console.log(`Current Traffic: ${currentTraffic.toLocaleString()} visitors/month`);
+    console.log(`Growth Multiplier: ${mult}x`);
+    console.log(`Projected Traffic: ${projectedMonthlyTraffic.toLocaleString()} visitors/month`);
+    console.log(`Conversion Rate: ${(conversionRate * 100).toFixed(1)}%`);
+    console.log(`Monthly Leads: ${projectedMonthlyLeads.toLocaleString()}`);
+    console.log(`Average Deal Value: £${avgDealValue.toLocaleString()}`);
+    console.log(`Monthly Investment: £${pkg.monthlyInvestment.toLocaleString()}`);
+    console.log(`Annual Revenue: £${annualRevenue.toLocaleString()}`);
+    console.log(`Annual Investment: £${annualInvestment.toLocaleString()}`);
+    console.log(`ROI: ${roi.toLocaleString()}%`);
+    console.log(`Breakeven: ${breakeven} months`);
+    console.log(`==========================================\n`);
 
     return {
       traffic: projectedMonthlyTraffic,
