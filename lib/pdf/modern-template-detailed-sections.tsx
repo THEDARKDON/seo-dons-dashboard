@@ -416,22 +416,56 @@ export function renderCurrentSituation(content: any): string {
 // ============================================================================
 
 export function renderKeywordRankingAnalysis(research: any): string {
-  if (!research?.enhancedResearch?.keywords || research.enhancedResearch.keywords.length === 0) {
+  if (!research?.enhancedResearch?.keywordAnalysis || research.enhancedResearch.keywordAnalysis.length === 0) {
     return '';
   }
 
-  const keywords = research.enhancedResearch.keywords
+  // Calculate opportunity for each keyword based on position, difficulty, and volume
+  const keywordsWithOpportunity = research.enhancedResearch.keywordAnalysis
     .filter((k: any) => k.keyword && k.searchVolume)
+    .map((k: any) => {
+      // Calculate opportunity score based on:
+      // - High volume + not ranking = High opportunity
+      // - High volume + low difficulty = High opportunity
+      // - Currently ranking 11-50 = Medium opportunity (easy to improve)
+      // - Low volume or very high difficulty = Low opportunity
+      const volume = k.searchVolume || 0;
+      const position = k.position || 999;
+      const difficulty = k.difficulty?.toLowerCase() || '';
+
+      let opportunity = 'Medium';
+      let opportunityScore = 50;
+
+      if (volume > 1000 && (position > 10 || !k.position)) {
+        // High volume, not ranking in top 10 = High opportunity
+        opportunity = 'High';
+        opportunityScore = 80;
+      } else if (volume > 500 && (difficulty === 'low' || difficulty === 'medium')) {
+        // Good volume + low difficulty = High opportunity
+        opportunity = 'High';
+        opportunityScore = 75;
+      } else if (position >= 11 && position <= 50) {
+        // Ranking but not in top 10 = Medium opportunity (can improve)
+        opportunity = 'Medium';
+        opportunityScore = 60;
+      } else if (volume < 100 || difficulty === 'very high') {
+        // Low volume or very hard = Low opportunity
+        opportunity = 'Low';
+        opportunityScore = 30;
+      }
+
+      return { ...k, opportunity, opportunityScore };
+    })
     .sort((a: any, b: any) => {
-      // Sort by opportunity (High > Medium > Low), then by search volume
-      const oppOrder = { 'High': 3, 'Medium': 2, 'Low': 1 };
-      const oppA = oppOrder[a.opportunity as keyof typeof oppOrder] || 0;
-      const oppB = oppOrder[b.opportunity as keyof typeof oppOrder] || 0;
-      if (oppA !== oppB) return oppB - oppA;
+      // Sort by opportunity score, then by search volume
+      if (a.opportunityScore !== b.opportunityScore) {
+        return b.opportunityScore - a.opportunityScore;
+      }
       return (b.searchVolume || 0) - (a.searchVolume || 0);
     })
     .slice(0, 20); // Top 20 keywords
 
+  const keywords = keywordsWithOpportunity;
   const highOpp = keywords.filter((k: any) => k.opportunity === 'High').length;
   const medOpp = keywords.filter((k: any) => k.opportunity === 'Medium').length;
   const lowOpp = keywords.filter((k: any) => k.opportunity === 'Low').length;
@@ -462,9 +496,13 @@ export function renderKeywordRankingAnalysis(research: any): string {
               <tbody class="text-xs sm:text-sm">
                 ${keywords.map((kw: any) => {
                   const position = kw.position ? `#${kw.position}` : 'Not Ranking';
-                  const difficulty = typeof kw.difficulty === 'number' ? kw.difficulty : 50;
-                  const difficultyColor = difficulty <= 30 ? 'rgb(34, 197, 94)' :
-                    difficulty <= 60 ? 'rgb(249, 115, 22)' : 'rgb(239, 68, 68)';
+                  // Handle difficulty as string (Low/Medium/High/Very High) or number
+                  const difficultyStr = typeof kw.difficulty === 'string' ? kw.difficulty.toLowerCase() : '';
+                  const difficultyLevel = difficultyStr.includes('low') && !difficultyStr.includes('very') ? 'Low' :
+                    difficultyStr.includes('medium') ? 'Medium' :
+                    difficultyStr.includes('high') || difficultyStr.includes('very') ? 'High' : 'Medium';
+                  const difficultyColor = difficultyLevel === 'Low' ? 'rgb(34, 197, 94)' :
+                    difficultyLevel === 'Medium' ? 'rgb(249, 115, 22)' : 'rgb(239, 68, 68)';
                   const oppColor = kw.opportunity === 'High' ? 'rgb(34, 197, 94)' :
                     kw.opportunity === 'Medium' ? 'rgb(59, 130, 246)' : 'rgb(107, 114, 128)';
 
@@ -475,7 +513,7 @@ export function renderKeywordRankingAnalysis(research: any): string {
                       <td class="py-3 px-2 sm:px-4 font-semibold">${(kw.searchVolume || 0).toLocaleString('en-GB')}</td>
                       <td class="py-3 px-2 sm:px-4">
                         <span class="badge text-xs" style="background-color: ${difficultyColor}15; color: ${difficultyColor};">
-                          ${difficulty <= 30 ? 'Low' : difficulty <= 60 ? 'Medium' : 'High'}
+                          ${difficultyLevel}
                         </span>
                       </td>
                       <td class="py-3 px-2 sm:px-4">
@@ -576,6 +614,16 @@ export function renderLocationOpportunities(research: any): string {
 
   const locations = research.enhancedResearch.locationOpportunities
     .filter((loc: any) => loc && loc.location)
+    .map((loc: any) => {
+      // Calculate opportunity score if not present (1-10 based on priority)
+      let opportunityScore = loc.opportunityScore || 5;
+      if (!loc.opportunityScore) {
+        if (loc.priority === 'High') opportunityScore = 8;
+        else if (loc.priority === 'Medium') opportunityScore = 5;
+        else opportunityScore = 3;
+      }
+      return { ...loc, opportunityScore };
+    })
     .sort((a: any, b: any) => (b.opportunityScore || 0) - (a.opportunityScore || 0))
     .slice(0, 10);
 
@@ -611,9 +659,9 @@ export function renderLocationOpportunities(research: any): string {
                   return `
                     <tr class="stagger-item" style="border-bottom: 1px solid var(--border);">
                       <td class="py-3 px-2 sm:px-4 font-medium">${escapeHTML(loc.location)}</td>
-                      <td class="py-3 px-2 sm:px-4 font-semibold">${(loc.estimatedVolume || 0).toLocaleString('en-GB')}</td>
+                      <td class="py-3 px-2 sm:px-4 font-semibold">${escapeHTML(loc.estimatedVolume || 'N/A')}</td>
                       <td class="py-3 px-2 sm:px-4" style="color: var(--muted-foreground);">
-                        ${loc.competitorDomains?.length || 0} domains
+                        ${escapeHTML(loc.competition || `${loc.competitorDomains?.length || 0} domains`)}
                       </td>
                       <td class="py-3 px-2 sm:px-4">
                         <span class="text-base" title="${score}/10">${stars}</span>
@@ -661,6 +709,13 @@ export function renderTechnicalSEO(content: any): string {
   }
 
   const priorities = technical.priorities && Array.isArray(technical.priorities) ? technical.priorities : [];
+
+  // Debug logging
+  if (priorities.length === 0) {
+    console.warn('[Modern Template] renderTechnicalSEO: No priorities found. technical object:', JSON.stringify(technical, null, 2));
+  } else {
+    console.log(`[Modern Template] renderTechnicalSEO: Found ${priorities.length} priorities`);
+  }
 
   return `
   <section class="py-10 sm:py-16" style="background-color: rgba(0, 0, 0, 0.02);">
@@ -740,6 +795,13 @@ export function renderContentStrategy(content: any): string {
   }
 
   const pillars = strategy.contentPillars && Array.isArray(strategy.contentPillars) ? strategy.contentPillars : [];
+
+  // Debug logging
+  if (pillars.length === 0) {
+    console.warn('[Modern Template] renderContentStrategy: No content pillars found. strategy object:', JSON.stringify(strategy, null, 2));
+  } else {
+    console.log(`[Modern Template] renderContentStrategy: Found ${pillars.length} content pillars`);
+  }
 
   return `
   <section class="py-10 sm:py-16">
@@ -926,6 +988,13 @@ export function renderLinkBuilding(content: any): string {
   }
 
   const tactics = links.tactics && Array.isArray(links.tactics) ? links.tactics : [];
+
+  // Debug logging
+  if (tactics.length === 0) {
+    console.warn('[Modern Template] renderLinkBuilding: No link building tactics found. links object:', JSON.stringify(links, null, 2));
+  } else {
+    console.log(`[Modern Template] renderLinkBuilding: Found ${tactics.length} link building tactics`);
+  }
 
   return `
   <section class="py-10 sm:py-16">
