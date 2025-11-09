@@ -234,7 +234,17 @@ function renderHero(coverPage: any): string {
  * Render introduction section
  */
 function renderIntroduction(content: any, research: any, isConcise: boolean): string {
-  const intro = content.introduction;
+  // Defensive null check
+  if (!content) {
+    console.warn('[Modern Template] renderIntroduction: content is null/undefined');
+    return '';
+  }
+
+  const intro = content?.introduction;
+  if (!intro) {
+    console.warn('[Modern Template] renderIntroduction: introduction is missing from content');
+    return '';
+  }
 
   // Extract goals from research notes if available
   const goals = extractGoals(research);
@@ -358,10 +368,16 @@ function calculateOpportunity(research: any, content: any): { description: strin
  * Render competition analysis
  */
 function renderCompetition(content: any, research: any, isConcise: boolean): string {
+  // Defensive null check
+  if (!content) {
+    console.warn('[Modern Template] renderCompetition: content is null/undefined');
+    return '';
+  }
+
   if (isConcise) {
-    return renderConciseCompetition(content.competition, research);
+    return renderConciseCompetition(content?.competition, research);
   } else {
-    return renderDetailedCompetition(content.competitorComparison, research);
+    return renderDetailedCompetition(content?.competitorComparison, research);
   }
 }
 
@@ -473,7 +489,17 @@ function renderMainOpportunity(opportunity: string): string {
  * Render strategy section
  */
 function renderStrategy(content: any, isConcise: boolean): string {
-  const strategy = content.strategy;
+  // Defensive null check
+  if (!content) {
+    console.warn('[Modern Template] renderStrategy: content is null/undefined');
+    return '';
+  }
+
+  const strategy = content?.strategy;
+  if (!strategy) {
+    console.warn('[Modern Template] renderStrategy: strategy is missing from content');
+    return '';
+  }
 
   return `
   <section class="py-10 sm:py-16" style="background-color: rgba(0, 0, 0, 0.02);">
@@ -484,7 +510,7 @@ function renderStrategy(content: any, isConcise: boolean): string {
         <div class="card mb-6 sm:mb-8 p-6 sm:p-8">
           <h3 class="text-lg sm:text-xl font-semibold mb-4">Our Approach</h3>
           <p class="text-sm sm:text-base leading-relaxed" style="color: var(--muted-foreground);">
-            ${escapeHTML(strategy.approach || strategy.overview)}
+            ${escapeHTML(strategy?.approach || strategy?.overview || 'Our comprehensive SEO strategy is tailored to your business goals.')}
           </p>
         </div>
 
