@@ -10,6 +10,15 @@
 
 import { ConciseProposalContent } from '@/lib/claude/concise-content-generator';
 import { ProposalContent } from '@/lib/claude/content-generator';
+import {
+  getAnimationCSS,
+  getScrollAnimationJS,
+  renderExecutiveSummary,
+  renderCurrentSituation,
+  renderKeywordRankingAnalysis,
+  renderContentOpportunities,
+  renderLocationOpportunities
+} from './modern-template-detailed-sections';
 
 // Utility function to escape HTML
 function escapeHTML(str: string): string {
@@ -55,18 +64,28 @@ export function generateModernProposalHTML(
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     ${getCustomCSS()}
+    ${getAnimationCSS()}
   </style>
 </head>
 <body class="min-h-screen">
   ${renderHeader()}
   ${renderHero(content.coverPage)}
+  ${!isConcise ? renderExecutiveSummary(content as any) : ''}
   ${renderIntroduction(content, research, isConcise)}
+  ${!isConcise ? renderCurrentSituation(content as any) : ''}
+  ${!isConcise && research ? renderKeywordRankingAnalysis(research) : ''}
   ${renderCompetition(content, research, isConcise)}
   ${renderStrategy(content, isConcise)}
+  ${!isConcise && research ? renderContentOpportunities(research) : ''}
+  ${!isConcise && research ? renderLocationOpportunities(research) : ''}
   ${renderInvestment(content, research, isConcise)}
   ${renderSummary(content, isConcise)}
   ${renderTestimonials()}
   ${renderFooter()}
+
+  <script>
+    ${getScrollAnimationJS()}
+  </script>
 </body>
 </html>`;
 }
