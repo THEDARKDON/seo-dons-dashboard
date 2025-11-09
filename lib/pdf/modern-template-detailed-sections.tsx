@@ -149,8 +149,22 @@ export function getScrollAnimationJS(): string {
 // ============================================================================
 
 export function renderExecutiveSummary(content: any): string {
+  // Defensive null check for content object itself
+  if (!content) {
+    console.warn('[Modern Template] renderExecutiveSummary: content is null/undefined');
+    return '';
+  }
+
   const exec = content?.executiveSummary;
-  if (!exec || !exec.overview) return '';
+  if (!exec) {
+    console.warn('[Modern Template] renderExecutiveSummary: executiveSummary is missing from content');
+    return '';
+  }
+
+  if (!exec.overview) {
+    console.warn('[Modern Template] renderExecutiveSummary: overview is missing from executiveSummary');
+    return '';
+  }
 
   return `
   <section class="py-10 sm:py-16" style="background-color: rgba(0, 0, 0, 0.02);">
@@ -253,8 +267,22 @@ export function renderExecutiveSummary(content: any): string {
 // ============================================================================
 
 export function renderCurrentSituation(content: any): string {
+  // Defensive null check for content object itself
+  if (!content) {
+    console.warn('[Modern Template] renderCurrentSituation: content is null/undefined');
+    return '';
+  }
+
   const situation = content?.currentSituation;
-  if (!situation || !situation.digitalPresence) return '';
+  if (!situation) {
+    console.warn('[Modern Template] renderCurrentSituation: currentSituation is missing from content');
+    return '';
+  }
+
+  if (!situation.digitalPresence) {
+    console.warn('[Modern Template] renderCurrentSituation: digitalPresence is missing from currentSituation');
+    return '';
+  }
 
   return `
   <section class="py-10 sm:py-16">

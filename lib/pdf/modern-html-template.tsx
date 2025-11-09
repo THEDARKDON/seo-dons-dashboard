@@ -55,6 +55,16 @@ export function generateModernProposalHTML(
 ): string {
   const isConcise = 'competition' in content;
 
+  // Debug logging to see content structure
+  console.log('[Modern Template] generateModernProposalHTML called:', {
+    isConcise,
+    hasContent: !!content,
+    hasExecutiveSummary: !!(content as any)?.executiveSummary,
+    hasCurrentSituation: !!(content as any)?.currentSituation,
+    contentKeys: content ? Object.keys(content) : [],
+    hasResearch: !!research,
+  });
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
