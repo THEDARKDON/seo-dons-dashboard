@@ -263,6 +263,7 @@ export async function performDeepResearch(
         industry: request.industry,
         location: request.location,
         notes: request.notes,
+        packageTier: request.packageTier, // NEW: Pass through package tier for intelligent keyword generation
       };
 
       enhancedResearch = await conductEnhancedResearch(enhancedRequest);

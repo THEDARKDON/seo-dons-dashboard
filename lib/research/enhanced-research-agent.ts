@@ -18,6 +18,7 @@ export interface EnhancedResearchRequest {
   location?: string;
   targetKeywords?: string[];
   notes?: string;
+  packageTier?: 'local' | 'regional' | 'national'; // NEW: For intelligent keyword generation
 }
 
 export interface WebsiteAnalysis {
@@ -283,30 +284,81 @@ Focus on factual, verifiable information.`;
 // ============================================================================
 
 /**
- * Normalize location for SerpAPI
- * SerpAPI is picky about location format - needs to be simple like "London, England" or "United Kingdom"
+ * Normalize location for SerpAPI - REDESIGNED
+ *
+ * CRITICAL FIX: Now uses specific city/county instead of defaulting to "United Kingdom"
+ *
+ * Strategy:
+ * - LOCAL packages: Use "City, County, UK" for hyper-local results
+ * - REGIONAL packages: Use "County, UK" for regional results
+ * - NATIONAL packages: Use "United Kingdom" for nationwide results
+ *
+ * Examples:
+ * - "Helston, Cornwall, UK" (local) -> "Helston, Cornwall, UK"
+ * - "Cornwall, UK" (regional) -> "Cornwall, UK"
+ * - National -> "United Kingdom"
+ *
+ * @param location - Raw location string from customer data
+ * @param packageTier - Package tier to determine location specificity
+ * @returns Formatted location string for SerpAPI
  */
-function normalizeSerpAPILocation(location?: string): string {
-  if (!location) return 'United Kingdom';
+async function normalizeSerpAPILocation(
+  location?: string,
+  packageTier: 'local' | 'regional' | 'national' = 'local'
+): Promise<string> {
+  // Import location parser
+  const { parseLocation } = await import('./keyword-templates');
 
-  // If location contains multiple parts, extract the most useful part
-  // "Baildon, Shipley, United Kingdom" -> "Shipley, England"
-  const parts = location.split(',').map(p => p.trim());
-
-  // If it's already simple, return as-is
-  if (parts.length === 1) return parts[0];
-
-  // If it ends with "United Kingdom", try to use the region before it
-  if (parts[parts.length - 1].toLowerCase().includes('united kingdom')) {
-    if (parts.length >= 2) {
-      // Return "City, England" format which SerpAPI tends to accept
-      const city = parts[parts.length - 2];
-      return `${city}, England`;
-    }
+  // National packages should search nationwide
+  if (packageTier === 'national') {
     return 'United Kingdom';
   }
 
-  // Default to United Kingdom for safety
+  if (!location) {
+    console.warn('[SerpAPI Location] No location provided, defaulting to United Kingdom');
+    return 'United Kingdom';
+  }
+
+  const locationParts = parseLocation(location);
+
+  // LOCAL: Use most specific location available (city > county > country)
+  if (packageTier === 'local') {
+    if (locationParts.city && locationParts.county) {
+      const serpLocation = `${locationParts.city}, ${locationParts.county}, UK`;
+      console.log(`[SerpAPI Location] LOCAL tier - Using: "${serpLocation}"`);
+      return serpLocation;
+    }
+
+    if (locationParts.city) {
+      const serpLocation = `${locationParts.city}, UK`;
+      console.log(`[SerpAPI Location] LOCAL tier - Using city: "${serpLocation}"`);
+      return serpLocation;
+    }
+
+    if (locationParts.county) {
+      const serpLocation = `${locationParts.county}, UK`;
+      console.log(`[SerpAPI Location] LOCAL tier - Using county: "${serpLocation}"`);
+      return serpLocation;
+    }
+  }
+
+  // REGIONAL: Use county-level location
+  if (packageTier === 'regional') {
+    if (locationParts.county) {
+      const serpLocation = `${locationParts.county}, UK`;
+      console.log(`[SerpAPI Location] REGIONAL tier - Using: "${serpLocation}"`);
+      return serpLocation;
+    }
+
+    if (locationParts.city) {
+      const serpLocation = `${locationParts.city}, UK`;
+      console.log(`[SerpAPI Location] REGIONAL tier - Using city fallback: "${serpLocation}"`);
+      return serpLocation;
+    }
+  }
+
+  // Fallback: Use whatever we have
+  console.warn('[SerpAPI Location] Could not parse specific location, using United Kingdom');
   return 'United Kingdom';
 }
 
@@ -314,14 +366,15 @@ async function checkRealRankings(
   companyName: string,
   domain: string,
   keywords: string[],
-  location: string = 'United Kingdom'
+  location: string = 'United Kingdom',
+  packageTier: 'local' | 'regional' | 'national' = 'local'
 ): Promise<KeywordRanking[]> {
   if (!SERPAPI_KEY) {
     throw new Error('SerpAPI key not configured');
   }
 
   const rankings: KeywordRanking[] = [];
-  const normalizedLocation = normalizeSerpAPILocation(location);
+  const normalizedLocation = await normalizeSerpAPILocation(location, packageTier);
 
   console.log('\n========================================');
   console.log('SERPAPI RANKINGS CHECK');
@@ -413,13 +466,14 @@ async function findRealCompetitors(
   location: string = 'United Kingdom',
   limit: number = 5,
   customerDomain?: string,
-  customerWebTraffic: string = 'Unknown'
+  customerWebTraffic: string = 'Unknown',
+  packageTier: 'local' | 'regional' | 'national' = 'local'
 ): Promise<RealCompetitor[]> {
   if (!SERPAPI_KEY) {
     throw new Error('SerpAPI key not configured');
   }
 
-  const normalizedLocation = normalizeSerpAPILocation(location);
+  const normalizedLocation = await normalizeSerpAPILocation(location, packageTier);
 
   console.log('\n========================================');
   console.log('SERPAPI COMPETITOR DISCOVERY');
@@ -996,7 +1050,7 @@ function determineQuestionIntent(question: string): string {
 export async function conductEnhancedResearch(
   request: EnhancedResearchRequest
 ): Promise<EnhancedResearchResult> {
-  const { companyName, website, industry, location, targetKeywords, notes } = request;
+  const { companyName, website, industry, location, targetKeywords, notes, packageTier } = request;
 
   console.log('\n╔════════════════════════════════════════════════════════════════╗');
   console.log(`║  ENHANCED RESEARCH STARTING: ${companyName.padEnd(39, ' ')}║`);
@@ -1005,13 +1059,14 @@ export async function conductEnhancedResearch(
   console.log('Website:', website || 'Not provided');
   console.log('Industry:', industry || 'Not specified');
   console.log('Location:', location || 'Not specified');
+  console.log('Package Tier:', packageTier || 'local (default)');
   console.log('Notes:', notes ? notes.substring(0, 100) + '...' : 'None');
   console.log('═══════════════════════════════════════════════════════════════\n');
 
   // Generate intelligent keywords if not provided
   const keywords = targetKeywords && targetKeywords.length > 0
     ? targetKeywords
-    : await generateTargetKeywords(companyName, industry, location);
+    : await generateTargetKeywords(companyName, industry, location, packageTier || 'local');
 
   console.log('🎯 Target Keywords:', keywords.join(', '));
   console.log('\n🚀 Starting parallel research across 5 data sources...\n');
@@ -1041,8 +1096,8 @@ export async function conductEnhancedResearch(
       estimatedPageCount: 0,
     }),
     researchSocialMedia(companyName, website),
-    website ? checkRealRankings(companyName, website, keywords, location) : Promise.resolve([]),
-    findRealCompetitors(keywords, location, 5),
+    website ? checkRealRankings(companyName, website, keywords, location, packageTier || 'local') : Promise.resolve([]),
+    findRealCompetitors(keywords, location, 5, website, 'Unknown', packageTier || 'local'),
   ]);
 
   // Market intelligence analysis
@@ -1143,26 +1198,167 @@ export async function conductEnhancedResearch(
   };
 }
 
+/**
+ * Generate Target Keywords - REDESIGNED
+ *
+ * CRITICAL FIX: No longer searches brand names (circular logic)
+ * Now generates service + location keywords based on package tier
+ *
+ * Strategy by Package Tier:
+ * - LOCAL: Hyper-local service keywords (e.g., "solar panel installers helston")
+ * - REGIONAL: Regional keywords + major towns (e.g., "solar installers cornwall")
+ * - NATIONAL: Mix of branded + national service keywords
+ *
+ * @param companyName - NOT used for keyword generation (only for logging)
+ * @param industry - Used to lookup service keywords from mapping
+ * @param location - Parsed into city/county for location-based keywords
+ * @param packageTier - Determines keyword strategy (local/regional/national)
+ */
 async function generateTargetKeywords(
   companyName: string,
   industry?: string,
-  location?: string
+  location?: string,
+  packageTier: 'local' | 'regional' | 'national' = 'local'
 ): Promise<string[]> {
-  const baseKeywords = [
-    companyName,
-    `${industry || 'services'}`,
-    `${industry || 'services'} ${location || 'UK'}`,
-  ];
+  // Import keyword templates (dynamic to avoid circular dependency)
+  const { getServicesForIndustry, parseLocation } = await import('./keyword-templates');
 
-  if (industry) {
-    baseKeywords.push(
-      `best ${industry} company`,
-      `${industry} near me`,
-      `${industry} services`
-    );
+  const keywords: string[] = [];
+
+  // Get service keywords for industry
+  const services = getServicesForIndustry(industry);
+  const locationParts = parseLocation(location);
+
+  console.log('[Keyword Generation] Configuration:', {
+    industry,
+    location,
+    packageTier,
+    city: locationParts.city,
+    county: locationParts.county,
+    primaryServicesCount: services.primaryServices.length,
+  });
+
+  // ============================================================================
+  // PACKAGE TIER STRATEGIES
+  // ============================================================================
+
+  if (packageTier === 'local') {
+    // ========================================================================
+    // LOCAL STRATEGY: Hyper-local service + location keywords
+    // Target: Customers in specific city/town searching for services nearby
+    // ========================================================================
+
+    // Primary: "service city" (e.g., "solar panel installers helston")
+    if (locationParts.city) {
+      services.primaryServices.forEach(service => {
+        keywords.push(`${service} ${locationParts.city}`);
+      });
+
+      // Secondary: "service near city"
+      services.primaryServices.slice(0, 2).forEach(service => {
+        keywords.push(`${service} near ${locationParts.city}`);
+      });
+    }
+
+    // County-level: "service county" (e.g., "solar installers cornwall")
+    if (locationParts.county) {
+      services.primaryServices.slice(0, 3).forEach(service => {
+        keywords.push(`${service} ${locationParts.county}`);
+      });
+    }
+
+    // Fallback: If no location, use country
+    if (!locationParts.city && !locationParts.county) {
+      services.primaryServices.slice(0, 2).forEach(service => {
+        keywords.push(`${service} ${locationParts.country || 'UK'}`);
+      });
+    }
+
+  } else if (packageTier === 'regional') {
+    // ========================================================================
+    // REGIONAL STRATEGY: Regional keywords + major area coverage
+    // Target: Customers across county/region searching for services
+    // ========================================================================
+
+    // Regional: "service county"
+    if (locationParts.county) {
+      services.primaryServices.forEach(service => {
+        keywords.push(`${service} ${locationParts.county}`);
+      });
+
+      // Best/top variations
+      services.primaryServices.slice(0, 2).forEach(service => {
+        keywords.push(`best ${service} ${locationParts.county}`);
+      });
+    }
+
+    // City-level for primary services
+    if (locationParts.city) {
+      services.primaryServices.slice(0, 3).forEach(service => {
+        keywords.push(`${service} ${locationParts.city}`);
+      });
+    }
+
+    // Secondary services (regional only)
+    if (locationParts.county) {
+      services.secondaryServices.slice(0, 3).forEach(service => {
+        keywords.push(`${service} ${locationParts.county}`);
+      });
+    }
+
+  } else if (packageTier === 'national') {
+    // ========================================================================
+    // NATIONAL STRATEGY: Mix of national + local brand building
+    // Target: Nationwide visibility + local presence
+    // ========================================================================
+
+    // National service keywords (no location)
+    services.primaryServices.slice(0, 3).forEach(service => {
+      keywords.push(service);
+      keywords.push(`best ${service}`);
+    });
+
+    // Country-level
+    services.primaryServices.slice(0, 2).forEach(service => {
+      keywords.push(`${service} ${locationParts.country || 'UK'}`);
+    });
+
+    // Local presence (if location provided)
+    if (locationParts.city) {
+      services.primaryServices.slice(0, 2).forEach(service => {
+        keywords.push(`${service} ${locationParts.city}`);
+      });
+    }
+
+    // Related terms for broader reach
+    services.relatedTerms.slice(0, 2).forEach(term => {
+      keywords.push(term);
+    });
   }
 
-  return baseKeywords.filter(Boolean);
+  // ============================================================================
+  // MONEY KEYWORDS: High-intent commercial searches
+  // Add for all package tiers (limited to avoid keyword bloat)
+  // ============================================================================
+  const locationStr = locationParts.city || locationParts.county || locationParts.country || 'UK';
+
+  // "near me" searches (high mobile intent)
+  if (packageTier === 'local' || packageTier === 'regional') {
+    services.primaryServices.slice(0, 2).forEach(service => {
+      keywords.push(`${service} near me`);
+    });
+  }
+
+  // Remove duplicates and empty strings
+  const uniqueKeywords = Array.from(new Set(keywords.filter(Boolean)));
+
+  console.log('[Keyword Generation] ✅ Generated keywords:', {
+    total: uniqueKeywords.length,
+    packageTier,
+    sampleKeywords: uniqueKeywords.slice(0, 5),
+  });
+
+  return uniqueKeywords;
 }
 
 function identifyQuickWins(
