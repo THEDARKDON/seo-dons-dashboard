@@ -589,3 +589,417 @@ export function renderLocationOpportunities(research: any): string {
     </div>
   </section>`;
 }
+
+// ============================================================================
+// TECHNICAL SEO SECTION
+// ============================================================================
+
+export function renderTechnicalSEO(content: any): string {
+  // Defensive null checks
+  if (!content) {
+    console.warn('[Modern Template] renderTechnicalSEO: content is null/undefined');
+    return '';
+  }
+
+  const technical = content?.technicalSEO;
+  if (!technical) {
+    console.warn('[Modern Template] renderTechnicalSEO: technicalSEO is missing from content');
+    return '';
+  }
+
+  if (!technical.overview) {
+    console.warn('[Modern Template] renderTechnicalSEO: overview is missing from technicalSEO');
+    return '';
+  }
+
+  const priorities = technical.priorities && Array.isArray(technical.priorities) ? technical.priorities : [];
+
+  return `
+  <section class="py-10 sm:py-16" style="background-color: rgba(0, 0, 0, 0.02);">
+    <div class="container mx-auto px-4 max-w-7xl">
+      <div class="max-w-5xl mx-auto">
+        <h2 class="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 animate-on-scroll">Technical SEO Foundation</h2>
+
+        <div class="card p-6 sm:p-8 mb-6 animate-on-scroll">
+          <p class="text-base leading-relaxed" style="color: var(--muted-foreground);">
+            ${escapeHTML(technical.overview)}
+          </p>
+        </div>
+
+        ${priorities.length > 0 ? `
+          <h3 class="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 animate-on-scroll">Priority Actions</h3>
+
+          <div class="grid gap-4 sm:gap-6">
+            ${priorities.filter((p: any) => p && p.title).map((priority: any, index: number) => {
+              // Color coding based on priority position
+              const colors = [
+                'rgba(239, 68, 68, 0.1)', // Red for critical
+                'rgba(251, 146, 60, 0.1)', // Orange for high
+                'rgba(234, 179, 8, 0.1)',  // Yellow for medium
+              ];
+              const borderColors = [
+                'rgb(239, 68, 68)',
+                'rgb(251, 146, 60)',
+                'rgb(234, 179, 8)',
+              ];
+              const backgroundColor = colors[Math.min(index, 2)];
+              const borderColor = borderColors[Math.min(index, 2)];
+
+              return `
+                <div class="card p-5 sm:p-6 stagger-item" style="background-color: ${backgroundColor}; border-left: 4px solid ${borderColor};">
+                  <h4 class="font-semibold text-base sm:text-lg mb-2">
+                    ${escapeHTML(priority.title)}
+                  </h4>
+                  <p class="text-sm sm:text-base mb-3 leading-relaxed" style="color: var(--muted-foreground);">
+                    ${escapeHTML(priority.description)}
+                  </p>
+                  <div class="flex items-center gap-2 text-xs sm:text-sm font-medium" style="color: ${borderColor};">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                    </svg>
+                    Impact: ${escapeHTML(priority.impact)}
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        ` : ''}
+      </div>
+    </div>
+  </section>`;
+}
+
+// ============================================================================
+// CONTENT STRATEGY SECTION
+// ============================================================================
+
+export function renderContentStrategy(content: any): string {
+  // Defensive null checks
+  if (!content) {
+    console.warn('[Modern Template] renderContentStrategy: content is null/undefined');
+    return '';
+  }
+
+  const strategy = content?.contentStrategy;
+  if (!strategy) {
+    console.warn('[Modern Template] renderContentStrategy: contentStrategy is missing from content');
+    return '';
+  }
+
+  if (!strategy.overview) {
+    console.warn('[Modern Template] renderContentStrategy: overview is missing from contentStrategy');
+    return '';
+  }
+
+  const pillars = strategy.contentPillars && Array.isArray(strategy.contentPillars) ? strategy.contentPillars : [];
+
+  return `
+  <section class="py-10 sm:py-16">
+    <div class="container mx-auto px-4 max-w-7xl">
+      <div class="max-w-5xl mx-auto">
+        <h2 class="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 animate-on-scroll">Content Strategy</h2>
+
+        <div class="card p-6 sm:p-8 mb-6 animate-on-scroll">
+          <p class="text-base leading-relaxed" style="color: var(--muted-foreground);">
+            ${escapeHTML(strategy.overview)}
+          </p>
+        </div>
+
+        ${pillars.length > 0 ? `
+          <h3 class="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 animate-on-scroll">Content Pillars</h3>
+
+          <div class="grid gap-4 sm:gap-6 mb-8">
+            ${pillars.filter((p: any) => p && p.pillar).map((pillar: any) => {
+              const topics = pillar.topics && Array.isArray(pillar.topics) ? pillar.topics : [];
+              const keywords = pillar.keywords && Array.isArray(pillar.keywords) ? pillar.keywords : [];
+
+              return `
+                <div class="card p-5 sm:p-6 stagger-item">
+                  <h4 class="font-semibold text-base sm:text-lg mb-3 flex items-center gap-2">
+                    <span class="inline-block w-2 h-2 rounded-full" style="background-color: var(--primary);"></span>
+                    ${escapeHTML(pillar.pillar)}
+                  </h4>
+
+                  ${topics.length > 0 ? `
+                    <div class="mb-3">
+                      <span class="text-xs font-semibold uppercase tracking-wide" style="color: var(--muted-foreground);">Topics:</span>
+                      <p class="text-sm sm:text-base mt-1">${topics.map((t: any) => escapeHTML(t)).join(', ')}</p>
+                    </div>
+                  ` : ''}
+
+                  ${keywords.length > 0 ? `
+                    <div>
+                      <span class="text-xs font-semibold uppercase tracking-wide" style="color: var(--muted-foreground);">Target Keywords:</span>
+                      <div class="flex flex-wrap gap-2 mt-2">
+                        ${keywords.map((keyword: any) => `
+                          <span class="inline-block px-3 py-1 rounded-full text-xs sm:text-sm font-medium" style="background-color: var(--accent); color: var(--accent-foreground);">
+                            ${escapeHTML(keyword)}
+                          </span>
+                        `).join('')}
+                      </div>
+                    </div>
+                  ` : ''}
+                </div>
+              `;
+            }).join('')}
+          </div>
+        ` : ''}
+
+        ${strategy.contentCalendar ? `
+          <div class="card p-6 sm:p-8 animate-on-scroll" style="background-color: var(--accent); color: var(--accent-foreground);">
+            <h3 class="font-semibold text-base sm:text-lg mb-3">Content Calendar</h3>
+            <p class="text-sm sm:text-base opacity-90 leading-relaxed">
+              ${escapeHTML(strategy.contentCalendar)}
+            </p>
+          </div>
+        ` : ''}
+      </div>
+    </div>
+  </section>`;
+}
+
+// ============================================================================
+// LOCAL SEO SECTION
+// ============================================================================
+
+export function renderLocalSEO(content: any): string {
+  // Defensive null checks
+  if (!content) {
+    console.warn('[Modern Template] renderLocalSEO: content is null/undefined');
+    return '';
+  }
+
+  const local = content?.localSEO;
+  if (!local) {
+    console.warn('[Modern Template] renderLocalSEO: localSEO is missing from content');
+    return '';
+  }
+
+  if (!local.overview) {
+    console.warn('[Modern Template] renderLocalSEO: overview is missing from localSEO');
+    return '';
+  }
+
+  const tactics = local.tactics && Array.isArray(local.tactics) ? local.tactics : [];
+  const locationPages = local.locationPages && Array.isArray(local.locationPages) ? local.locationPages : [];
+
+  return `
+  <section class="py-10 sm:py-16" style="background-color: rgba(0, 0, 0, 0.02);">
+    <div class="container mx-auto px-4 max-w-7xl">
+      <div class="max-w-5xl mx-auto">
+        <h2 class="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 animate-on-scroll">Local SEO Strategy</h2>
+
+        <div class="card p-6 sm:p-8 mb-6 animate-on-scroll">
+          <p class="text-base leading-relaxed" style="color: var(--muted-foreground);">
+            ${escapeHTML(local.overview)}
+          </p>
+        </div>
+
+        ${tactics.length > 0 ? `
+          <h3 class="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 animate-on-scroll">Key Tactics</h3>
+
+          <div class="grid gap-3 sm:gap-4 mb-8">
+            ${tactics.filter((t: any) => t).map((tactic: any) => `
+              <div class="card p-4 sm:p-5 stagger-item flex items-start gap-3">
+                <div class="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold" style="background-color: var(--primary);">
+                  ✓
+                </div>
+                <p class="text-sm sm:text-base flex-1 pt-0.5">${escapeHTML(tactic)}</p>
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+
+        ${locationPages.length > 0 ? `
+          <h3 class="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 animate-on-scroll">Location Pages</h3>
+
+          <div class="grid gap-4 sm:gap-6">
+            ${locationPages.filter((p: any) => p && p.location).map((page: any) => {
+              const keywords = page.keywords && Array.isArray(page.keywords) ? page.keywords : [];
+
+              return `
+                <div class="card p-5 sm:p-6 stagger-item">
+                  <h4 class="font-semibold text-base sm:text-lg mb-3 flex items-center gap-2">
+                    <svg class="w-5 h-5" style="color: var(--primary);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    ${escapeHTML(page.location)}
+                  </h4>
+
+                  ${keywords.length > 0 ? `
+                    <div class="mb-3">
+                      <span class="text-xs font-semibold uppercase tracking-wide" style="color: var(--muted-foreground);">Target Keywords:</span>
+                      <div class="flex flex-wrap gap-2 mt-2">
+                        ${keywords.map((keyword: any) => `
+                          <span class="inline-block px-3 py-1 rounded-full text-xs sm:text-sm font-medium" style="background-color: rgba(0, 0, 0, 0.05);">
+                            ${escapeHTML(keyword)}
+                          </span>
+                        `).join('')}
+                      </div>
+                    </div>
+                  ` : ''}
+
+                  ${page.contentStrategy ? `
+                    <p class="text-sm sm:text-base leading-relaxed" style="color: var(--muted-foreground);">
+                      ${escapeHTML(page.contentStrategy)}
+                    </p>
+                  ` : ''}
+                </div>
+              `;
+            }).join('')}
+          </div>
+        ` : ''}
+      </div>
+    </div>
+  </section>`;
+}
+
+// ============================================================================
+// LINK BUILDING SECTION
+// ============================================================================
+
+export function renderLinkBuilding(content: any): string {
+  // Defensive null checks
+  if (!content) {
+    console.warn('[Modern Template] renderLinkBuilding: content is null/undefined');
+    return '';
+  }
+
+  const links = content?.linkBuilding;
+  if (!links) {
+    console.warn('[Modern Template] renderLinkBuilding: linkBuilding is missing from content');
+    return '';
+  }
+
+  if (!links.overview) {
+    console.warn('[Modern Template] renderLinkBuilding: overview is missing from linkBuilding');
+    return '';
+  }
+
+  const tactics = links.tactics && Array.isArray(links.tactics) ? links.tactics : [];
+
+  return `
+  <section class="py-10 sm:py-16">
+    <div class="container mx-auto px-4 max-w-7xl">
+      <div class="max-w-5xl mx-auto">
+        <h2 class="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 animate-on-scroll">Link Building Strategy</h2>
+
+        <div class="card p-6 sm:p-8 mb-6 animate-on-scroll">
+          <p class="text-base leading-relaxed" style="color: var(--muted-foreground);">
+            ${escapeHTML(links.overview)}
+          </p>
+        </div>
+
+        ${links.strategy ? `
+          <div class="card p-6 sm:p-8 mb-6 animate-on-scroll" style="background-color: var(--accent); color: var(--accent-foreground);">
+            <h3 class="font-semibold text-base sm:text-lg mb-3">Strategic Approach</h3>
+            <p class="text-sm sm:text-base opacity-90 leading-relaxed">
+              ${escapeHTML(links.strategy)}
+            </p>
+          </div>
+        ` : ''}
+
+        ${tactics.length > 0 ? `
+          <h3 class="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 animate-on-scroll">Link Building Tactics</h3>
+
+          <div class="grid gap-3 sm:gap-4 mb-8">
+            ${tactics.filter((t: any) => t).map((tactic: any, index: number) => `
+              <div class="card p-4 sm:p-5 stagger-item flex items-start gap-3">
+                <div class="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold" style="background-color: var(--primary);">
+                  ${index + 1}
+                </div>
+                <p class="text-sm sm:text-base flex-1 pt-0.5">${escapeHTML(tactic)}</p>
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+
+        ${links.expectedAcquisition ? `
+          <div class="card p-6 sm:p-8 animate-on-scroll" style="border: 2px solid var(--primary);">
+            <h3 class="font-semibold text-base sm:text-lg mb-3" style="color: var(--primary);">Expected Link Acquisition</h3>
+            <p class="text-sm sm:text-base leading-relaxed" style="color: var(--muted-foreground);">
+              ${escapeHTML(links.expectedAcquisition)}
+            </p>
+          </div>
+        ` : ''}
+      </div>
+    </div>
+  </section>`;
+}
+
+// ============================================================================
+// NEXT STEPS SECTION
+// ============================================================================
+
+export function renderNextSteps(content: any): string {
+  // Defensive null checks
+  if (!content) {
+    console.warn('[Modern Template] renderNextSteps: content is null/undefined');
+    return '';
+  }
+
+  const steps = content?.nextSteps;
+  if (!steps) {
+    console.warn('[Modern Template] renderNextSteps: nextSteps is missing from content');
+    return '';
+  }
+
+  const immediate = steps.immediate && Array.isArray(steps.immediate) ? steps.immediate : [];
+  const onboarding = steps.onboarding && Array.isArray(steps.onboarding) ? steps.onboarding : [];
+
+  return `
+  <section class="py-10 sm:py-16" style="background: linear-gradient(135deg, var(--primary) 0%, rgba(0, 0, 0, 0.8) 100%); color: white;">
+    <div class="container mx-auto px-4 max-w-7xl">
+      <div class="max-w-5xl mx-auto">
+        <h2 class="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 animate-on-scroll">Next Steps</h2>
+
+        ${immediate.length > 0 ? `
+          <div class="mb-8">
+            <h3 class="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 animate-on-scroll">Immediate Actions</h3>
+
+            <div class="grid gap-3 sm:gap-4">
+              ${immediate.filter((s: any) => s).map((step: any, index: number) => `
+                <div class="card p-4 sm:p-5 stagger-item flex items-start gap-3" style="background-color: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2);">
+                  <div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm" style="background-color: white; color: var(--primary);">
+                    ${index + 1}
+                  </div>
+                  <p class="text-sm sm:text-base flex-1 pt-1 opacity-90">${escapeHTML(step)}</p>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+
+        ${onboarding.length > 0 ? `
+          <div class="mb-8">
+            <h3 class="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 animate-on-scroll">Onboarding Process</h3>
+
+            <div class="grid gap-3 sm:gap-4">
+              ${onboarding.filter((s: any) => s).map((step: any) => `
+                <div class="card p-4 sm:p-5 stagger-item flex items-start gap-3" style="background-color: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2);">
+                  <div class="flex-shrink-0 mt-0.5">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                  </div>
+                  <p class="text-sm sm:text-base flex-1 pt-0.5 opacity-90">${escapeHTML(step)}</p>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+
+        <div class="card p-6 sm:p-8 animate-on-scroll text-center" style="background-color: white; color: var(--foreground);">
+          <h3 class="font-bold text-lg sm:text-xl mb-3" style="color: var(--primary);">Ready to Get Started?</h3>
+          <p class="text-sm sm:text-base mb-4" style="color: var(--muted-foreground);">
+            Let's begin your journey to dominating search results and driving sustainable growth.
+          </p>
+          <p class="text-xs sm:text-sm font-medium opacity-70">
+            Contact us today to discuss your custom SEO strategy.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>`;
+}

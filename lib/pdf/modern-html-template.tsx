@@ -17,7 +17,12 @@ import {
   renderCurrentSituation,
   renderKeywordRankingAnalysis,
   renderContentOpportunities,
-  renderLocationOpportunities
+  renderLocationOpportunities,
+  renderTechnicalSEO,
+  renderContentStrategy,
+  renderLocalSEO,
+  renderLinkBuilding,
+  renderNextSteps as renderNextStepsSection
 } from './modern-template-detailed-sections';
 
 // Utility function to escape HTML
@@ -86,10 +91,15 @@ export function generateModernProposalHTML(
   ${!isConcise && research ? renderKeywordRankingAnalysis(research) : ''}
   ${renderCompetition(content, research, isConcise)}
   ${renderStrategy(content, isConcise)}
+  ${!isConcise ? renderTechnicalSEO(content as any) : ''}
+  ${!isConcise ? renderContentStrategy(content as any) : ''}
   ${!isConcise && research ? renderContentOpportunities(research) : ''}
+  ${!isConcise ? renderLocalSEO(content as any) : ''}
   ${!isConcise && research ? renderLocationOpportunities(research) : ''}
+  ${!isConcise ? renderLinkBuilding(content as any) : ''}
   ${renderInvestment(content, research, isConcise)}
   ${renderSummary(content, isConcise)}
+  ${!isConcise ? renderNextStepsSection(content as any) : ''}
   ${renderTestimonials()}
   ${renderFooter()}
 
