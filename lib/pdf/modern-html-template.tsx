@@ -664,7 +664,7 @@ function renderInvestment(content: any, research: any, isConcise: boolean): stri
 
         <div class="grid lg:grid-cols-2 gap-6 sm:gap-8 ${packageOptions.length > 1 ? 'mt-8' : ''}">
           ${renderPackageCard(recommendedPackage)}
-          ${renderProjectedResults(research)}
+          ${renderProjectedResults(content, research, recommendedPackage)}
         </div>
       </div>
     </div>
@@ -769,11 +769,36 @@ function renderPackageCard(pkg: any): string {
   </div>`;
 }
 
-function renderProjectedResults(research: any): string {
+function renderProjectedResults(content: any, research: any, recommendedPackage: any): string {
+  // Extract actual package data for accurate projections
+  const monthlyInvestment = recommendedPackage.pricing?.monthly || recommendedPackage.monthlyInvestment || recommendedPackage.price || 2000;
+  const packageTier = recommendedPackage.tier || 'local';
+
+  // Get current metrics from research
+  const currentTraffic = research?.companyAnalysis?.metrics?.monthlyVisitors || 4200;
+  const currentConversionRate = research?.roiProjection?.conversionRate || 0.06; // 6% visitor to lead
+  const leadToCustomerRate = research?.roiProjection?.leadToCustomerRate || 0.35; // 35% lead to customer
   const avgDealValue = research?.roiProjection?.averageDealValue || 5000;
-  const investment = 2000 * 6; // 6 months
-  const estimatedRevenue = avgDealValue * 10 * 6; // 10 customers/month for 6 months
-  const roi = Math.round((estimatedRevenue / investment) * 100);
+
+  // Calculate expected traffic growth based on package tier (matching basic template logic)
+  const trafficMultipliers: Record<string, number> = {
+    'local': 2.0,    // 2x traffic growth (4,200 → 8,400)
+    'regional': 3.0, // 3x traffic growth (4,200 → 12,600)
+    'national': 4.0  // 4x traffic growth (4,200 → 16,800)
+  };
+
+  const targetTraffic = Math.round(currentTraffic * (trafficMultipliers[packageTier] || 2.0));
+  const targetMonthlyLeads = Math.round(targetTraffic * currentConversionRate);
+  const targetMonthlyCustomers = Math.round(targetMonthlyLeads * leadToCustomerRate);
+  const targetMonthlyRevenue = targetMonthlyCustomers * avgDealValue;
+
+  // 12-month calculations (matching basic template)
+  const investment12Month = monthlyInvestment * 12;
+  const revenue12Month = targetMonthlyRevenue * 12;
+  const roi = Math.round((revenue12Month / investment12Month) * 100);
+
+  // Calculate break-even (how many months until revenue covers investment)
+  const breakEvenMonths = Math.ceil(monthlyInvestment / targetMonthlyRevenue);
 
   return `
   <div class="space-y-6">
@@ -811,23 +836,23 @@ function renderProjectedResults(research: any): string {
     </div>
 
     <div class="card p-5 sm:p-6" style="background-color: var(--accent); color: var(--accent-foreground);">
-      <h4 class="font-semibold mb-4 text-base sm:text-lg">Expected ROI in 6 Months</h4>
+      <h4 class="font-semibold mb-4 text-base sm:text-lg">Expected ROI in 12 Months</h4>
       <div class="grid grid-cols-3 gap-3 sm:gap-4 mb-4">
         <div>
           <div class="text-xs sm:text-sm opacity-75 mb-1">Investment</div>
-          <div class="text-lg sm:text-xl font-bold">£${investment.toLocaleString()}</div>
+          <div class="text-lg sm:text-xl font-bold">£${investment12Month.toLocaleString()}</div>
         </div>
         <div>
           <div class="text-xs sm:text-sm opacity-75 mb-1">Revenue</div>
-          <div class="text-lg sm:text-xl font-bold">£${estimatedRevenue.toLocaleString()}</div>
+          <div class="text-lg sm:text-xl font-bold">£${revenue12Month.toLocaleString()}</div>
         </div>
         <div>
           <div class="text-xs sm:text-sm opacity-75 mb-1">Break-even</div>
-          <div class="text-lg sm:text-xl font-bold">1.5 months</div>
+          <div class="text-lg sm:text-xl font-bold">${breakEvenMonths} month${breakEvenMonths === 1 ? '' : 's'}</div>
         </div>
       </div>
       <div class="text-center pt-4" style="border-top: 1px solid rgba(255, 255, 255, 0.2);">
-        <div class="text-4xl sm:text-5xl font-bold mb-1">${roi}%</div>
+        <div class="text-4xl sm:text-5xl font-bold mb-1">${roi.toLocaleString()}%</div>
         <div class="text-xs sm:text-sm opacity-75">Return on Investment</div>
       </div>
     </div>
