@@ -180,20 +180,55 @@ export function renderExecutiveSummary(content: any): string {
 
         ${content.statisticsCards && Array.isArray(content.statisticsCards) && content.statisticsCards.length > 0 ? `
           <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 sm:mb-8 animate-on-scroll">
-            ${content.statisticsCards.filter((card: any) => card && card.value && card.label).map((card: any) => `
+            ${content.statisticsCards.filter((card: any) => card && (card.currentNumber || card.value)).map((card: any) => `
               <div class="card p-4 sm:p-6 text-center stagger-item">
-                <div class="text-3xl sm:text-4xl font-bold mb-2 counter" data-target="${escapeHTML(card.value)}" style="color: var(--accent);">
-                  ${escapeHTML(card.value)}
-                </div>
-                <div class="text-xs sm:text-sm" style="color: var(--muted-foreground);">
-                  ${escapeHTML(card.label)}
+                <div class="flex flex-col gap-3">
+                  ${card.currentNumber ? `
+                    <div>
+                      <div class="text-2xl sm:text-3xl font-bold mb-1" style="color: rgba(239, 68, 68, 0.8);">
+                        ${escapeHTML(card.currentNumber)}
+                      </div>
+                      <div class="text-xs" style="color: var(--muted-foreground);">
+                        ${escapeHTML(card.currentLabel)}
+                      </div>
+                    </div>
+                    ${card.targetNumber ? `
+                      <div class="text-xs font-semibold" style="color: var(--accent);">↓</div>
+                      <div>
+                        <div class="text-2xl sm:text-3xl font-bold mb-1" style="color: var(--accent);">
+                          ${escapeHTML(card.targetNumber)}
+                        </div>
+                        <div class="text-xs" style="color: var(--muted-foreground);">
+                          ${escapeHTML(card.targetLabel)}
+                        </div>
+                      </div>
+                    ` : ''}
+                    ${card.context ? `
+                      <div class="text-xs font-medium mt-1" style="color: var(--foreground);">
+                        ${escapeHTML(card.context)}
+                      </div>
+                    ` : ''}
+                  ` : `
+                    <div class="text-3xl sm:text-4xl font-bold mb-2 counter" data-target="${escapeHTML(card.value)}" style="color: var(--accent);">
+                      ${escapeHTML(card.value)}
+                    </div>
+                    <div class="text-xs sm:text-sm" style="color: var(--muted-foreground);">
+                      ${escapeHTML(card.label)}
+                    </div>
+                  `}
                 </div>
               </div>
             `).join('')}
           </div>
         ` : ''}
 
-        ${content.brutalTruthCallouts && Array.isArray(content.brutalTruthCallouts) && content.brutalTruthCallouts.length > 0 ? content.brutalTruthCallouts.filter((callout: any) => callout).map((callout: any) => `
+        ${content.brutalTruthCallouts && Array.isArray(content.brutalTruthCallouts) && content.brutalTruthCallouts.length > 0 ? content.brutalTruthCallouts.filter((callout: any) => callout).map((callout: any) => {
+          // Handle both object format {title, content, type} and string format
+          const title = typeof callout === 'object' ? (callout.title || 'Brutal Truth') : 'Brutal Truth';
+          const content = typeof callout === 'object' ? callout.content : callout;
+          const isWarning = typeof callout === 'object' ? callout.type === 'warning' : true;
+
+          return `
           <div class="card p-5 sm:p-6 mb-4 animate-on-scroll" style="border-left: 4px solid rgba(239, 68, 68, 1); background-color: rgba(239, 68, 68, 0.05);">
             <div class="flex items-start gap-3">
               <svg class="icon mt-0.5 flex-shrink-0" style="color: rgb(239, 68, 68);">
@@ -202,14 +237,15 @@ export function renderExecutiveSummary(content: any): string {
                 <line x1="12" y1="16" x2="12.01" y2="16"></line>
               </svg>
               <div>
-                <h4 class="font-semibold mb-2" style="color: rgb(239, 68, 68);">Brutal Truth</h4>
+                <h4 class="font-semibold mb-2" style="color: rgb(239, 68, 68);">${escapeHTML(title)}</h4>
                 <p class="text-sm leading-relaxed" style="color: var(--muted-foreground);">
-                  ${escapeHTML(callout)}
+                  ${escapeHTML(content)}
                 </p>
               </div>
             </div>
           </div>
-        `).join('') : ''}
+        `;
+        }).join('') : ''}
 
         ${content.marketOpportunity ? `
           <div class="card p-6 sm:p-8 mb-6 sm:mb-8 animate-on-scroll" style="border-left: 4px solid rgba(34, 197, 94, 1); background-color: rgba(34, 197, 94, 0.05);">
@@ -218,10 +254,22 @@ export function renderExecutiveSummary(content: any): string {
                 <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
               </svg>
               <div>
-                <h4 class="font-semibold mb-2 text-lg" style="color: rgb(34, 197, 94);">Market Opportunity</h4>
-                <p class="text-sm sm:text-base leading-relaxed" style="color: var(--muted-foreground);">
-                  ${escapeHTML(content.marketOpportunity)}
+                <h4 class="font-semibold mb-2 text-lg" style="color: rgb(34, 197, 94);">
+                  ${escapeHTML(typeof content.marketOpportunity === 'object' ? content.marketOpportunity.title || 'Market Opportunity' : 'Market Opportunity')}
+                </h4>
+                <p class="text-sm sm:text-base leading-relaxed mb-3" style="color: var(--muted-foreground);">
+                  ${escapeHTML(typeof content.marketOpportunity === 'object' ? content.marketOpportunity.currentState : content.marketOpportunity)}
                 </p>
+                ${typeof content.marketOpportunity === 'object' && content.marketOpportunity.opportunitySize ? `
+                  <p class="text-sm sm:text-base leading-relaxed mb-3 font-medium" style="color: var(--foreground);">
+                    ${escapeHTML(content.marketOpportunity.opportunitySize)}
+                  </p>
+                ` : ''}
+                ${typeof content.marketOpportunity === 'object' && content.marketOpportunity.timeframe ? `
+                  <p class="text-sm sm:text-base leading-relaxed font-semibold" style="color: rgb(34, 197, 94);">
+                    ${escapeHTML(content.marketOpportunity.timeframe)}
+                  </p>
+                ` : ''}
               </div>
             </div>
           </div>
