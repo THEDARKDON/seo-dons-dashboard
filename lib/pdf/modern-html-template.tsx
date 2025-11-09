@@ -256,7 +256,7 @@ function renderIntroduction(content: any, research: any, isConcise: boolean): st
 }
 
 function renderCurrentLandscape(intro: any, research: any): string {
-  const currentSituation = intro.currentSituation || intro.paragraph ||
+  const currentSituation = intro?.currentSituation || intro?.paragraph ||
     'Your business has strong fundamentals but untapped digital potential.';
 
   return `
