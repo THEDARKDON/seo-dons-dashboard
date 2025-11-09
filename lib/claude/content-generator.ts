@@ -399,6 +399,14 @@ Study the A1 Mobility HTML reference and match its structure EXACTLY:
 
 The following fields are NOT optional. They are MANDATORY. Your proposal will be rejected if any are missing:
 
+0. **ALL ARRAYS MUST HAVE MULTIPLE ITEMS** (CRITICAL):
+   - technicalSEO.priorities: MINIMUM 4 items (ideally 5-6)
+   - contentStrategy.contentPillars: MINIMUM 4 items
+   - linkBuilding.tactics: MINIMUM 5 items (ideally 6-8)
+   - nextSteps.immediate: MINIMUM 3 items
+   - nextSteps.onboarding: MINIMUM 4 items
+   - **EMPTY ARRAYS ARE NOT ACCEPTABLE** - If an array is empty, the section will not render
+
 1. **brutalTruthCallouts** (MANDATORY - Array of 2-3 callouts)
    - MUST be provocative and use real numbers from research
    - MUST have shocking statistics
@@ -418,9 +426,11 @@ The following fields are NOT optional. They are MANDATORY. Your proposal will be
    - See reference HTML for the table format
 
 4. **competitorComparison** (MANDATORY - Comparison table)
-   - MUST have metrics array with at least 3-4 rows
+   - MUST have metrics array with at least 5 rows (Competitor Name, Traffic, Keywords, Domain Authority, Content Pages)
    - MUST include: Traffic, Keywords, Domain Authority comparisons
-   - Use real competitor names from research
+   - **FIRST ROW MUST BE "Competitor Name"** with actual domain names (e.g., "competitor1.com", NOT "Competitor 1")
+   - Use real competitor domains from research.enhancedResearch.competitors or research.competitorAnalysis
+   - Extract actual competitor domains from the research data provided
    - Match the table structure in reference HTML
 
 5. **marketOpportunity** (MANDATORY - Opportunity statement)
@@ -593,10 +603,26 @@ Generate ALL proposal content following this exact structure:
     "overview": "[2 paragraphs on importance of technical foundation]",
     "priorities": [
       {
-        "title": "[Priority area]",
+        "title": "[Priority area #1 - e.g., 'Site Speed Optimization']",
+        "description": "[What needs to be done - be specific]",
+        "impact": "[Expected impact on performance - quantify if possible]"
+      },
+      {
+        "title": "[Priority area #2 - e.g., 'Mobile Responsiveness']",
+        "description": "[What needs to be done - be specific]",
+        "impact": "[Expected impact on performance - quantify if possible]"
+      },
+      {
+        "title": "[Priority area #3 - e.g., 'Schema Markup Implementation']",
+        "description": "[What needs to be done - be specific]",
+        "impact": "[Expected impact on performance - quantify if possible]"
+      },
+      {
+        "title": "[Priority area #4]",
         "description": "[What needs to be done]",
-        "impact": "[Expected impact on performance]"
+        "impact": "[Expected impact]"
       }
+      // MINIMUM 4 priorities required, ideally 5-6
     ]
   },
 
@@ -604,10 +630,26 @@ Generate ALL proposal content following this exact structure:
     "overview": "[2-3 paragraphs on content approach]",
     "contentPillars": [
       {
-        "pillar": "[Main topic/theme]",
-        "topics": ["[3-5 specific topics]"],
-        "keywords": ["[Related keywords from research]"]
+        "pillar": "[Main topic/theme #1 - e.g., 'Product Guides']",
+        "topics": ["[Topic 1]", "[Topic 2]", "[Topic 3]", "[Topic 4]"],
+        "keywords": ["[keyword 1 from research]", "[keyword 2]", "[keyword 3]"]
+      },
+      {
+        "pillar": "[Main topic/theme #2 - e.g., 'Local Area Guides']",
+        "topics": ["[Topic 1]", "[Topic 2]", "[Topic 3]"],
+        "keywords": ["[keyword 1 from research]", "[keyword 2]", "[keyword 3]"]
+      },
+      {
+        "pillar": "[Main topic/theme #3 - e.g., 'Industry Expertise']",
+        "topics": ["[Topic 1]", "[Topic 2]", "[Topic 3]"],
+        "keywords": ["[keyword 1 from research]", "[keyword 2]"]
+      },
+      {
+        "pillar": "[Main topic/theme #4]",
+        "topics": ["[Topic 1]", "[Topic 2]"],
+        "keywords": ["[keyword 1]", "[keyword 2]"]
       }
+      // MINIMUM 4 content pillars required
     ],
     "contentCalendar": "[Overview of monthly content production]"
   },
@@ -627,7 +669,15 @@ Generate ALL proposal content following this exact structure:
   "linkBuilding": {
     "overview": "[2 paragraphs on link building approach]",
     "strategy": "[Detailed strategy based on industry and competitors]",
-    "tactics": ["[4-6 specific link building tactics]"],
+    "tactics": [
+      "[Tactic 1 - e.g., 'Local directory submissions and citations']",
+      "[Tactic 2 - e.g., 'Industry-specific guest posting']",
+      "[Tactic 3 - e.g., 'Supplier and partner link exchanges']",
+      "[Tactic 4 - e.g., 'Local PR and news coverage']",
+      "[Tactic 5 - e.g., 'Resource page link building']",
+      "[Tactic 6 - e.g., 'Broken link building']"
+      // MINIMUM 5 tactics required, ideally 6-8
+    ],
     "expectedAcquisition": "[Monthly link acquisition targets]"
   },
 
@@ -641,10 +691,18 @@ Generate ALL proposal content following this exact structure:
 
   "nextSteps": {
     "immediate": [
-      "[3-4 immediate action items for both parties]"
+      "[Action 1 - e.g., 'Review and approve this proposal']",
+      "[Action 2 - e.g., 'Schedule kickoff call']",
+      "[Action 3 - e.g., 'Provide website access and analytics']"
+      // MINIMUM 3 immediate actions required
     ],
     "onboarding": [
-      "[4-5 onboarding steps if they proceed]"
+      "[Step 1 - e.g., 'Initial audit and baseline metrics']",
+      "[Step 2 - e.g., 'Strategy refinement and goal setting']",
+      "[Step 3 - e.g., 'Technical SEO implementation begins']",
+      "[Step 4 - e.g., 'Content calendar creation']",
+      "[Step 5 - e.g., 'First month execution and reporting']"
+      // MINIMUM 4 onboarding steps required
     ],
     "kickoff": "[Description of the kickoff process and timeline]"
   },
@@ -691,6 +749,13 @@ Generate ALL proposal content following this exact structure:
 
   "competitorComparison": {
     "metrics": [
+      {
+        "metric": "Competitor Name",
+        "yourBusiness": "${companyName}",
+        "topCompetitorA": "[competitor1.com - USE ACTUAL DOMAIN FROM RESEARCH]",
+        "topCompetitorB": "[competitor2.com - USE ACTUAL DOMAIN FROM RESEARCH]",
+        "marketLeader": "[marketleader.com - USE ACTUAL DOMAIN FROM RESEARCH]"
+      },
       {
         "metric": "Monthly Organic Traffic",
         "yourBusiness": "174 visitors/month",

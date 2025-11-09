@@ -710,13 +710,6 @@ export function renderTechnicalSEO(content: any): string {
 
   const priorities = technical.priorities && Array.isArray(technical.priorities) ? technical.priorities : [];
 
-  // Debug logging
-  if (priorities.length === 0) {
-    console.warn('[Modern Template] renderTechnicalSEO: No priorities found. technical object:', JSON.stringify(technical, null, 2));
-  } else {
-    console.log(`[Modern Template] renderTechnicalSEO: Found ${priorities.length} priorities`);
-  }
-
   return `
   <section class="py-10 sm:py-16" style="background-color: rgba(0, 0, 0, 0.02);">
     <div class="container mx-auto px-4 max-w-7xl">
@@ -795,13 +788,6 @@ export function renderContentStrategy(content: any): string {
   }
 
   const pillars = strategy.contentPillars && Array.isArray(strategy.contentPillars) ? strategy.contentPillars : [];
-
-  // Debug logging
-  if (pillars.length === 0) {
-    console.warn('[Modern Template] renderContentStrategy: No content pillars found. strategy object:', JSON.stringify(strategy, null, 2));
-  } else {
-    console.log(`[Modern Template] renderContentStrategy: Found ${pillars.length} content pillars`);
-  }
 
   return `
   <section class="py-10 sm:py-16">
@@ -988,13 +974,6 @@ export function renderLinkBuilding(content: any): string {
   }
 
   const tactics = links.tactics && Array.isArray(links.tactics) ? links.tactics : [];
-
-  // Debug logging
-  if (tactics.length === 0) {
-    console.warn('[Modern Template] renderLinkBuilding: No link building tactics found. links object:', JSON.stringify(links, null, 2));
-  } else {
-    console.log(`[Modern Template] renderLinkBuilding: Found ${tactics.length} link building tactics`);
-  }
 
   return `
   <section class="py-10 sm:py-16">
