@@ -258,10 +258,10 @@ export async function POST(request: NextRequest) {
             isConcise: isConciseContent,
             companyName,
             hasResearch: !!result.research,
-            hasEnhancedResearch: !!result.research?.enhancedResearch,
-            keywordCount: result.research?.enhancedResearch?.keywords?.length || 0,
-            contentOpportunityCount: result.research?.enhancedResearch?.contentOpportunities?.length || 0,
-            locationOpportunityCount: result.research?.enhancedResearch?.locationOpportunities?.length || 0,
+            hasEnhancedResearch: !!(result.research as any)?.enhancedResearch,
+            keywordCount: (result.research as any)?.enhancedResearch?.keywords?.length || 0,
+            contentOpportunityCount: (result.research as any)?.enhancedResearch?.contentOpportunities?.length || 0,
+            locationOpportunityCount: (result.research as any)?.enhancedResearch?.locationOpportunities?.length || 0,
           });
 
           // Only validate detailed content (concise content has different structure)
