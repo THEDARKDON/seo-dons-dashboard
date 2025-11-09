@@ -33,18 +33,28 @@ interface GenerateProposalRequest {
 }
 
 export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+  console.log('[PROPOSAL API] ========================================');
+  console.log('[PROPOSAL API] NEW PROPOSAL GENERATION REQUEST');
+  console.log('[PROPOSAL API] Timestamp:', new Date().toISOString());
+  console.log('[PROPOSAL API] ========================================');
+
   try {
     // ========================================================================
     // 1. AUTHENTICATION & AUTHORIZATION
     // ========================================================================
+    console.log('[PROPOSAL API] STAGE 1: Authentication & Authorization');
     const { userId: clerkUserId } = await auth();
 
     if (!clerkUserId) {
+      console.error('[PROPOSAL API] ❌ Authentication failed: No Clerk user ID');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    console.log('[PROPOSAL API] ✅ Authenticated - Clerk User ID:', clerkUserId);
 
     // Get Supabase user from Clerk ID
     const supabaseServer = await createClient();
+    console.log('[PROPOSAL API] Fetching Supabase user...');
     const { data: user, error: userError } = await supabaseServer
       .from('users')
       .select('id')
@@ -52,24 +62,39 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (userError || !user) {
+      console.error('[PROPOSAL API] ❌ User lookup failed:', userError);
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
+    console.log('[PROPOSAL API] ✅ Supabase User ID:', user.id);
 
     // ========================================================================
     // 2. PARSE & VALIDATE REQUEST
     // ========================================================================
+    console.log('[PROPOSAL API] STAGE 2: Request Validation');
     const body: GenerateProposalRequest = await request.json();
+    console.log('[PROPOSAL API] Request body:', {
+      customerId: body.customerId,
+      packageTier: body.packageTier,
+      proposalMode: body.proposalMode || 'detailed',
+      templateStyle: body.templateStyle || 'classic',
+      hasCustomInstructions: !!body.customInstructions,
+      contactName: body.contactName,
+    });
 
     if (!body.customerId || !body.packageTier) {
+      console.error('[PROPOSAL API] ❌ Validation failed: Missing required fields');
       return NextResponse.json(
         { error: 'Missing required fields: customerId, packageTier' },
         { status: 400 }
       );
     }
+    console.log('[PROPOSAL API] ✅ Request validation passed');
 
     // ========================================================================
     // 3. FETCH CUSTOMER DATA (including reference images)
     // ========================================================================
+    console.log('[PROPOSAL API] STAGE 3: Customer Data Fetch');
+    console.log('[PROPOSAL API] Fetching customer ID:', body.customerId);
     const { data: customer, error: customerError} = await supabaseServer
       .from('customers')
       .select('*')
@@ -77,15 +102,25 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (customerError || !customer) {
+      console.error('[PROPOSAL API] ❌ Customer fetch failed:', customerError);
       return NextResponse.json(
         { error: 'Customer not found' },
         { status: 404 }
       );
     }
+    console.log('[PROPOSAL API] ✅ Customer loaded:', {
+      company: customer.company,
+      website: customer.website,
+      industry: customer.industry,
+      location: `${customer.city}, ${customer.state}, ${customer.country}`,
+      hasNotes: !!customer.notes,
+      hasReferenceImages: (customer.reference_images || []).length > 0,
+    });
 
     // ========================================================================
     // 4. VALIDATE PROPOSAL REQUEST
     // ========================================================================
+    console.log('[PROPOSAL API] STAGE 4: Proposal Request Validation');
     const proposalRequest = {
       companyName: customer.company || `${customer.first_name} ${customer.last_name}`,
       website: customer.website,
@@ -114,21 +149,29 @@ export async function POST(request: NextRequest) {
 
     const validation = validateProposalRequest(proposalRequest);
     if (!validation.valid) {
+      console.error('[PROPOSAL API] ❌ Proposal request validation failed:', validation.errors);
       return NextResponse.json(
         { error: 'Invalid proposal request', details: validation.errors },
         { status: 400 }
       );
     }
+    console.log('[PROPOSAL API] ✅ Proposal request validated');
 
     // ========================================================================
     // 5. CREATE PROPOSAL RECORD (STATUS: GENERATING)
     // ========================================================================
+    console.log('[PROPOSAL API] STAGE 5: Creating Proposal Record');
     const companyName = customer.company || `${customer.first_name} ${customer.last_name}`;
 
     // Validate and set template style
     const templateStyle = body.templateStyle && isValidTemplateStyle(body.templateStyle)
       ? body.templateStyle
       : getDefaultTemplateStyle();
+
+    console.log('[PROPOSAL API] Template configuration:', {
+      templateStyle,
+      proposalMode: body.proposalMode || 'detailed',
+    });
 
     const { data: proposal, error: proposalError } = await supabaseServer
       .from('proposals')
@@ -148,12 +191,17 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (proposalError || !proposal) {
-      console.error('[Proposal API] Error creating proposal:', proposalError);
+      console.error('[PROPOSAL API] ❌ Proposal creation failed:', proposalError);
       return NextResponse.json(
         { error: 'Failed to create proposal record' },
         { status: 500 }
       );
     }
+    console.log('[PROPOSAL API] ✅ Proposal record created:', {
+      id: proposal.id,
+      proposalNumber: proposal.proposal_number,
+      status: proposal.status,
+    });
 
     // Log activity
     await supabaseServer.from('proposal_activities').insert({
@@ -180,6 +228,7 @@ export async function POST(request: NextRequest) {
           // ================================================================
           // 7. GENERATE PROPOSAL (RESEARCH + CONTENT)
           // ================================================================
+          console.log('[PROPOSAL API] STAGE 7: Generating Research & Content');
           await sendProgress('Starting proposal generation', 0);
 
           const result = await generateCompleteProposal(
@@ -187,30 +236,71 @@ export async function POST(request: NextRequest) {
             sendProgress
           );
 
+          console.log('[PROPOSAL API] ✅ Research & Content generated:', {
+            hasResearch: !!result.research,
+            hasContent: !!result.content,
+            totalTokens: result.metadata.totalTokensUsed,
+            totalCost: result.metadata.totalCost,
+            durationSeconds: result.metadata.totalDurationSeconds,
+          });
+
           // ================================================================
           // 8. GENERATE HTML USING SELECTED TEMPLATE
           // ================================================================
+          console.log('[PROPOSAL API] STAGE 8: HTML Generation');
           await sendProgress('Generating HTML', 92, `Creating ${templateStyle} template...`);
 
           // Generate appropriate HTML based on proposal mode and template style
           const isConciseContent = body.proposalMode === 'concise';
 
+          console.log('[PROPOSAL API] HTML generation config:', {
+            templateStyle,
+            isConcise: isConciseContent,
+            companyName,
+            hasResearch: !!result.research,
+            hasEnhancedResearch: !!result.research?.enhancedResearch,
+            keywordCount: result.research?.enhancedResearch?.keywords?.length || 0,
+            contentOpportunityCount: result.research?.enhancedResearch?.contentOpportunities?.length || 0,
+            locationOpportunityCount: result.research?.enhancedResearch?.locationOpportunities?.length || 0,
+          });
+
           // Only validate detailed content (concise content has different structure)
           if (!isConciseContent) {
+            console.log('[PROPOSAL API] Validating detailed content structure...');
             validateProposalContent(result.content as any);
+            console.log('[PROPOSAL API] ✅ Content validation passed');
           }
 
           // Use template selector to generate HTML with chosen template
-          const htmlContent = generateProposalWithTemplate(
-            result.content as any,
-            templateStyle,
-            companyName,
-            result.research
-          );
+          console.log('[PROPOSAL API] Calling generateProposalWithTemplate...');
+          let htmlContent: string;
+          try {
+            htmlContent = generateProposalWithTemplate(
+              result.content as any,
+              templateStyle,
+              companyName,
+              result.research
+            );
+            console.log('[PROPOSAL API] ✅ HTML generated successfully:', {
+              htmlLength: htmlContent.length,
+              containsExecutiveSummary: htmlContent.includes('Executive Summary'),
+              containsKeywordRanking: htmlContent.includes('Keyword Ranking Analysis'),
+              containsContentOpportunities: htmlContent.includes('Content Opportunities'),
+              containsLocationOpportunities: htmlContent.includes('Location Opportunities'),
+            });
+          } catch (htmlError) {
+            console.error('[PROPOSAL API] ❌ HTML generation failed:', {
+              error: htmlError,
+              message: htmlError instanceof Error ? htmlError.message : 'Unknown error',
+              stack: htmlError instanceof Error ? htmlError.stack : undefined,
+            });
+            throw htmlError;
+          }
 
           // ================================================================
           // 9. UPLOAD HTML TO STORAGE
           // ================================================================
+          console.log('[PROPOSAL API] STAGE 9: HTML Upload');
           await sendProgress('Uploading HTML', 95, 'Saving to storage...');
 
           const baseFilename = getProposalFilename(
@@ -219,12 +309,19 @@ export async function POST(request: NextRequest) {
           );
 
           const htmlFilename = baseFilename.replace('.pdf', '.html');
+          console.log('[PROPOSAL API] HTML filename:', htmlFilename);
 
           // Upload HTML - Add UTF-8 BOM and convert to Buffer to ensure proper encoding
           // The BOM (Byte Order Mark) tells browsers/editors this is UTF-8
           const utf8Bom = '\uFEFF';
           const htmlWithBom = utf8Bom + htmlContent;
           const htmlBuffer = Buffer.from(htmlWithBom, 'utf-8');
+
+          console.log('[PROPOSAL API] Uploading to storage:', {
+            bucket: 'proposals',
+            path: `${proposal.id}/${htmlFilename}`,
+            sizeBytes: htmlBuffer.length,
+          });
 
           const { error: htmlUploadError } = await supabaseServer.storage
             .from('proposals')
@@ -235,6 +332,7 @@ export async function POST(request: NextRequest) {
             });
 
           if (htmlUploadError) {
+            console.error('[PROPOSAL API] ❌ HTML upload failed:', htmlUploadError);
             throw new Error(`Failed to upload HTML: ${htmlUploadError.message}`);
           }
 
@@ -244,10 +342,12 @@ export async function POST(request: NextRequest) {
             .getPublicUrl(`${proposal.id}/${htmlFilename}`);
 
           const htmlUrl = htmlUrlData.publicUrl;
+          console.log('[PROPOSAL API] ✅ HTML uploaded successfully:', htmlUrl);
 
           // ================================================================
           // 10. UPDATE PROPOSAL RECORD (STATUS: HTML_READY)
           // ================================================================
+          console.log('[PROPOSAL API] STAGE 10: Database Update');
           await sendProgress('Finalizing proposal', 99);
 
           const { error: updateError } = await supabaseServer
@@ -267,8 +367,10 @@ export async function POST(request: NextRequest) {
             .eq('id', proposal.id);
 
           if (updateError) {
+            console.error('[PROPOSAL API] ❌ Database update failed:', updateError);
             throw new Error(`Failed to update proposal: ${updateError.message}`);
           }
+          console.log('[PROPOSAL API] ✅ Proposal record updated to html_ready');
 
           // Log completion
           await supabaseServer.from('proposal_activities').insert({
@@ -281,6 +383,15 @@ export async function POST(request: NextRequest) {
           // ================================================================
           // 11. SEND COMPLETION EVENT
           // ================================================================
+          const totalDuration = ((Date.now() - startTime) / 1000).toFixed(2);
+          console.log('[PROPOSAL API] ========================================');
+          console.log('[PROPOSAL API] ✅ PROPOSAL GENERATION COMPLETE');
+          console.log('[PROPOSAL API] Total Duration:', totalDuration, 'seconds');
+          console.log('[PROPOSAL API] Proposal ID:', proposal.id);
+          console.log('[PROPOSAL API] Proposal Number:', proposal.proposal_number);
+          console.log('[PROPOSAL API] HTML URL:', htmlUrl);
+          console.log('[PROPOSAL API] ========================================');
+
           await sendProgress('Complete', 100, 'HTML proposal ready for review!');
 
           const completionData = JSON.stringify({

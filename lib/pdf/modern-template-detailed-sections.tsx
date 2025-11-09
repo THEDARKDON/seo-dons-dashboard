@@ -10,10 +10,17 @@
  * - Animations and interactions
  */
 
-// Utility function to escape HTML
-function escapeHTML(str: string): string {
-  if (!str) return '';
-  return str
+// Utility function to escape HTML - DEFENSIVE NULL CHECKS
+function escapeHTML(str: any): string {
+  // Handle null, undefined, numbers, booleans, etc.
+  if (str === null || str === undefined) return '';
+
+  // Convert to string if not already
+  const stringValue = typeof str === 'string' ? str : String(str);
+
+  if (!stringValue) return '';
+
+  return stringValue
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
@@ -142,8 +149,8 @@ export function getScrollAnimationJS(): string {
 // ============================================================================
 
 export function renderExecutiveSummary(content: any): string {
-  const exec = content.executiveSummary;
-  if (!exec) return '';
+  const exec = content?.executiveSummary;
+  if (!exec || !exec.overview) return '';
 
   return `
   <section class="py-10 sm:py-16" style="background-color: rgba(0, 0, 0, 0.02);">
@@ -157,12 +164,12 @@ export function renderExecutiveSummary(content: any): string {
           </p>
         </div>
 
-        ${content.statisticsCards && content.statisticsCards.length > 0 ? `
+        ${content.statisticsCards && Array.isArray(content.statisticsCards) && content.statisticsCards.length > 0 ? `
           <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 sm:mb-8 animate-on-scroll">
-            ${content.statisticsCards.map((card: any) => `
+            ${content.statisticsCards.filter((card: any) => card && card.value && card.label).map((card: any) => `
               <div class="card p-4 sm:p-6 text-center stagger-item">
-                <div class="text-3xl sm:text-4xl font-bold mb-2 counter" data-target="${card.value}" style="color: var(--accent);">
-                  ${card.value}
+                <div class="text-3xl sm:text-4xl font-bold mb-2 counter" data-target="${escapeHTML(card.value)}" style="color: var(--accent);">
+                  ${escapeHTML(card.value)}
                 </div>
                 <div class="text-xs sm:text-sm" style="color: var(--muted-foreground);">
                   ${escapeHTML(card.label)}
@@ -172,7 +179,7 @@ export function renderExecutiveSummary(content: any): string {
           </div>
         ` : ''}
 
-        ${content.brutalTruthCallouts && content.brutalTruthCallouts.length > 0 ? content.brutalTruthCallouts.map((callout: string) => `
+        ${content.brutalTruthCallouts && Array.isArray(content.brutalTruthCallouts) && content.brutalTruthCallouts.length > 0 ? content.brutalTruthCallouts.filter((callout: any) => callout).map((callout: any) => `
           <div class="card p-5 sm:p-6 mb-4 animate-on-scroll" style="border-left: 4px solid rgba(239, 68, 68, 1); background-color: rgba(239, 68, 68, 0.05);">
             <div class="flex items-start gap-3">
               <svg class="icon mt-0.5 flex-shrink-0" style="color: rgb(239, 68, 68);">
@@ -210,7 +217,7 @@ export function renderExecutiveSummary(content: any): string {
           <div class="card p-6 sm:p-8 animate-on-scroll">
             <h3 class="text-lg font-semibold mb-4">Key Findings</h3>
             <ul class="space-y-3">
-              ${exec.keyFindings.map((finding: string) => `
+              ${(exec.keyFindings && Array.isArray(exec.keyFindings) ? exec.keyFindings : []).filter((finding: any) => finding).map((finding: any) => `
                 <li class="flex items-start gap-2 stagger-item">
                   <svg class="icon mt-0.5 flex-shrink-0" style="color: rgb(34, 197, 94);">
                     <polyline points="20 6 9 17 4 12"></polyline>
@@ -224,7 +231,7 @@ export function renderExecutiveSummary(content: any): string {
           <div class="card p-6 sm:p-8 animate-on-scroll">
             <h3 class="text-lg font-semibold mb-4">Expected Outcomes</h3>
             <ul class="space-y-3">
-              ${exec.expectedOutcomes.map((outcome: string) => `
+              ${(exec.expectedOutcomes && Array.isArray(exec.expectedOutcomes) ? exec.expectedOutcomes : []).filter((outcome: any) => outcome).map((outcome: any) => `
                 <li class="flex items-start gap-2 stagger-item">
                   <svg class="icon mt-0.5 flex-shrink-0" style="color: var(--accent);">
                     <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -246,8 +253,8 @@ export function renderExecutiveSummary(content: any): string {
 // ============================================================================
 
 export function renderCurrentSituation(content: any): string {
-  const situation = content.currentSituation;
-  if (!situation) return '';
+  const situation = content?.currentSituation;
+  if (!situation || !situation.digitalPresence) return '';
 
   return `
   <section class="py-10 sm:py-16">
@@ -269,7 +276,7 @@ export function renderCurrentSituation(content: any): string {
               Strengths
             </h3>
             <ul class="space-y-2">
-              ${situation.strengths.map((item: string) => `
+              ${(situation.strengths && Array.isArray(situation.strengths) ? situation.strengths : []).filter((item: any) => item).map((item: any) => `
                 <li class="flex items-start gap-2 text-sm stagger-item">
                   <span style="color: rgb(34, 197, 94);" class="mt-1 flex-shrink-0">•</span>
                   <span style="color: var(--muted-foreground);">${escapeHTML(item)}</span>
@@ -284,7 +291,7 @@ export function renderCurrentSituation(content: any): string {
               Weaknesses
             </h3>
             <ul class="space-y-2">
-              ${situation.weaknesses.map((item: string) => `
+              ${(situation.weaknesses && Array.isArray(situation.weaknesses) ? situation.weaknesses : []).filter((item: any) => item).map((item: any) => `
                 <li class="flex items-start gap-2 text-sm stagger-item">
                   <span style="color: rgb(239, 68, 68);" class="mt-1 flex-shrink-0">•</span>
                   <span style="color: var(--muted-foreground);">${escapeHTML(item)}</span>
@@ -299,7 +306,7 @@ export function renderCurrentSituation(content: any): string {
               Opportunities
             </h3>
             <ul class="space-y-2">
-              ${situation.opportunities.map((item: string) => `
+              ${(situation.opportunities && Array.isArray(situation.opportunities) ? situation.opportunities : []).filter((item: any) => item).map((item: any) => `
                 <li class="flex items-start gap-2 text-sm stagger-item">
                   <span style="color: rgb(59, 130, 246);" class="mt-1 flex-shrink-0">•</span>
                   <span style="color: var(--muted-foreground);">${escapeHTML(item)}</span>
@@ -314,7 +321,7 @@ export function renderCurrentSituation(content: any): string {
               Threats
             </h3>
             <ul class="space-y-2">
-              ${situation.threats.map((item: string) => `
+              ${(situation.threats && Array.isArray(situation.threats) ? situation.threats : []).filter((item: any) => item).map((item: any) => `
                 <li class="flex items-start gap-2 text-sm stagger-item">
                   <span style="color: rgb(249, 115, 22);" class="mt-1 flex-shrink-0">•</span>
                   <span style="color: var(--muted-foreground);">${escapeHTML(item)}</span>
@@ -379,24 +386,25 @@ export function renderKeywordRankingAnalysis(research: any): string {
               <tbody class="text-xs sm:text-sm">
                 ${keywords.map((kw: any) => {
                   const position = kw.position ? `#${kw.position}` : 'Not Ranking';
-                  const difficultyColor = kw.difficulty <= 30 ? 'rgb(34, 197, 94)' :
-                    kw.difficulty <= 60 ? 'rgb(249, 115, 22)' : 'rgb(239, 68, 68)';
+                  const difficulty = typeof kw.difficulty === 'number' ? kw.difficulty : 50;
+                  const difficultyColor = difficulty <= 30 ? 'rgb(34, 197, 94)' :
+                    difficulty <= 60 ? 'rgb(249, 115, 22)' : 'rgb(239, 68, 68)';
                   const oppColor = kw.opportunity === 'High' ? 'rgb(34, 197, 94)' :
                     kw.opportunity === 'Medium' ? 'rgb(59, 130, 246)' : 'rgb(107, 114, 128)';
 
                   return `
                     <tr class="stagger-item" style="border-bottom: 1px solid var(--border);">
                       <td class="py-3 px-2 sm:px-4 font-medium">${escapeHTML(kw.keyword)}</td>
-                      <td class="py-3 px-2 sm:px-4" style="color: var(--muted-foreground);">${position}</td>
+                      <td class="py-3 px-2 sm:px-4" style="color: var(--muted-foreground);">${escapeHTML(position)}</td>
                       <td class="py-3 px-2 sm:px-4 font-semibold">${(kw.searchVolume || 0).toLocaleString('en-GB')}</td>
                       <td class="py-3 px-2 sm:px-4">
                         <span class="badge text-xs" style="background-color: ${difficultyColor}15; color: ${difficultyColor};">
-                          ${kw.difficulty <= 30 ? 'Low' : kw.difficulty <= 60 ? 'Medium' : 'High'}
+                          ${difficulty <= 30 ? 'Low' : difficulty <= 60 ? 'Medium' : 'High'}
                         </span>
                       </td>
                       <td class="py-3 px-2 sm:px-4">
                         <span class="badge text-xs" style="background-color: ${oppColor}15; color: ${oppColor};">
-                          ${kw.opportunity || 'Medium'}
+                          ${escapeHTML(kw.opportunity || 'Medium')}
                         </span>
                       </td>
                     </tr>
@@ -434,11 +442,13 @@ export function renderKeywordRankingAnalysis(research: any): string {
 // ============================================================================
 
 export function renderContentOpportunities(research: any): string {
-  if (!research?.enhancedResearch?.contentOpportunities || research.enhancedResearch.contentOpportunities.length === 0) {
+  if (!research?.enhancedResearch?.contentOpportunities || !Array.isArray(research.enhancedResearch.contentOpportunities) || research.enhancedResearch.contentOpportunities.length === 0) {
     return '';
   }
 
-  const paaQuestions = research.enhancedResearch.contentOpportunities.slice(0, 8);
+  const paaQuestions = research.enhancedResearch.contentOpportunities.filter((q: any) => q).slice(0, 8);
+
+  if (paaQuestions.length === 0) return '';
 
   return `
   <section class="py-10 sm:py-16">
@@ -454,7 +464,7 @@ export function renderContentOpportunities(research: any): string {
         </div>
 
         <div class="grid md:grid-cols-2 gap-4 sm:gap-6">
-          ${paaQuestions.map((question: string, index: number) => `
+          ${paaQuestions.map((question: any, index: number) => `
             <div class="card p-5 sm:p-6 animate-on-scroll stagger-item">
               <div class="flex items-start gap-3">
                 <div class="p-2 rounded-lg flex-shrink-0" style="background-color: rgba(0, 128, 128, 0.1);">
@@ -484,13 +494,16 @@ export function renderContentOpportunities(research: any): string {
 // ============================================================================
 
 export function renderLocationOpportunities(research: any): string {
-  if (!research?.enhancedResearch?.locationOpportunities || research.enhancedResearch.locationOpportunities.length === 0) {
+  if (!research?.enhancedResearch?.locationOpportunities || !Array.isArray(research.enhancedResearch.locationOpportunities) || research.enhancedResearch.locationOpportunities.length === 0) {
     return '';
   }
 
   const locations = research.enhancedResearch.locationOpportunities
+    .filter((loc: any) => loc && loc.location)
     .sort((a: any, b: any) => (b.opportunityScore || 0) - (a.opportunityScore || 0))
     .slice(0, 10);
+
+  if (locations.length === 0) return '';
 
   return `
   <section class="py-10 sm:py-16" style="background-color: rgba(0, 0, 0, 0.02);">
@@ -540,7 +553,7 @@ export function renderLocationOpportunities(research: any): string {
         <div class="card p-6 sm:p-8 animate-on-scroll" style="background-color: var(--accent); color: var(--accent-foreground);">
           <h3 class="font-semibold mb-4">Focus Strategy</h3>
           <p class="text-sm sm:text-base opacity-90">
-            We recommend prioritizing the top 5 locations (${locations.slice(0, 5).map((l: any) => l.location).join(', ')})
+            We recommend prioritizing the top ${Math.min(5, locations.length)} locations (${locations.slice(0, 5).map((l: any) => escapeHTML(l.location)).join(', ')})
             with dedicated landing pages and local SEO optimization for maximum ROI.
           </p>
         </div>
