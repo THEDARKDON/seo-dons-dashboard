@@ -800,6 +800,15 @@ function renderProjectedResults(content: any, research: any, recommendedPackage:
   const packageTier = recommendedPackage.tier || 'local';
   const avgDealValue = research?.roiProjection?.averageDealValue || 5000;
 
+  // Log package tier for debugging
+  console.log('[Modern Template] renderProjectedResults:', {
+    packageName: recommendedPackage.name,
+    packageTier,
+    monthlyInvestment,
+    avgDealValue,
+    hasRecommended: recommendedPackage.recommended
+  });
+
   // Package-specific monthly lead projections (matching basic template logic)
   const projectionsByTier: Record<string, { month1: string; month23: string; month36: string; customers1: number; customers23: number; customers36: number }> = {
     'local': {

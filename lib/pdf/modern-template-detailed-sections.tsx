@@ -710,6 +710,11 @@ export function renderTechnicalSEO(content: any): string {
 
   const priorities = technical.priorities && Array.isArray(technical.priorities) ? technical.priorities : [];
 
+  // Log if priorities array is empty for debugging
+  if (priorities.length === 0) {
+    console.warn('[Modern Template] renderTechnicalSEO: priorities array is empty');
+  }
+
   return `
   <section class="py-10 sm:py-16" style="background-color: rgba(0, 0, 0, 0.02);">
     <div class="container mx-auto px-4 max-w-7xl">
@@ -722,9 +727,9 @@ export function renderTechnicalSEO(content: any): string {
           </p>
         </div>
 
-        ${priorities.length > 0 ? `
-          <h3 class="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 animate-on-scroll">Priority Actions</h3>
+        <h3 class="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 animate-on-scroll">Priority Actions</h3>
 
+        ${priorities.length > 0 ? `
           <div class="grid gap-4 sm:gap-6">
             ${priorities.filter((p: any) => p && p.title).map((priority: any, index: number) => {
               // Color coding based on priority position
@@ -759,7 +764,13 @@ export function renderTechnicalSEO(content: any): string {
               `;
             }).join('')}
           </div>
-        ` : ''}
+        ` : `
+          <div class="card p-6 sm:p-8 animate-on-scroll">
+            <p class="text-sm" style="color: var(--muted-foreground);">
+              Priority actions will be identified during our technical audit of your website.
+            </p>
+          </div>
+        `}
       </div>
     </div>
   </section>`;
@@ -789,6 +800,11 @@ export function renderContentStrategy(content: any): string {
 
   const pillars = strategy.contentPillars && Array.isArray(strategy.contentPillars) ? strategy.contentPillars : [];
 
+  // Log if pillars array is empty for debugging
+  if (pillars.length === 0) {
+    console.warn('[Modern Template] renderContentStrategy: contentPillars array is empty');
+  }
+
   return `
   <section class="py-10 sm:py-16">
     <div class="container mx-auto px-4 max-w-7xl">
@@ -801,8 +817,9 @@ export function renderContentStrategy(content: any): string {
           </p>
         </div>
 
+        <h3 class="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 animate-on-scroll">Content Pillars</h3>
+
         ${pillars.length > 0 ? `
-          <h3 class="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 animate-on-scroll">Content Pillars</h3>
 
           <div class="grid gap-4 sm:gap-6 mb-8">
             ${pillars.filter((p: any) => p && p.pillar).map((pillar: any) => {
@@ -839,10 +856,16 @@ export function renderContentStrategy(content: any): string {
               `;
             }).join('')}
           </div>
-        ` : ''}
+        ` : `
+          <div class="card p-6 sm:p-8 animate-on-scroll">
+            <p class="text-sm" style="color: var(--muted-foreground);">
+              Content pillars and topics will be defined during strategy development.
+            </p>
+          </div>
+        `}
 
         ${strategy.contentCalendar ? `
-          <div class="card p-6 sm:p-8 animate-on-scroll" style="background-color: var(--accent); color: var(--accent-foreground);">
+          <div class="card p-6 sm:p-8 mt-6 animate-on-scroll" style="background-color: var(--accent); color: var(--accent-foreground);">
             <h3 class="font-semibold text-base sm:text-lg mb-3">Content Calendar</h3>
             <p class="text-sm sm:text-base opacity-90 leading-relaxed">
               ${escapeHTML(strategy.contentCalendar)}
@@ -975,6 +998,11 @@ export function renderLinkBuilding(content: any): string {
 
   const tactics = links.tactics && Array.isArray(links.tactics) ? links.tactics : [];
 
+  // Log if tactics array is empty for debugging
+  if (tactics.length === 0) {
+    console.warn('[Modern Template] renderLinkBuilding: tactics array is empty');
+  }
+
   return `
   <section class="py-10 sm:py-16">
     <div class="container mx-auto px-4 max-w-7xl">
@@ -996,8 +1024,9 @@ export function renderLinkBuilding(content: any): string {
           </div>
         ` : ''}
 
+        <h3 class="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 animate-on-scroll">Link Building Tactics</h3>
+
         ${tactics.length > 0 ? `
-          <h3 class="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 animate-on-scroll">Link Building Tactics</h3>
 
           <div class="grid gap-3 sm:gap-4 mb-8">
             ${tactics.filter((t: any) => t).map((tactic: any, index: number) => `
@@ -1009,10 +1038,16 @@ export function renderLinkBuilding(content: any): string {
               </div>
             `).join('')}
           </div>
-        ` : ''}
+        ` : `
+          <div class="card p-6 sm:p-8 animate-on-scroll">
+            <p class="text-sm" style="color: var(--muted-foreground);">
+              Specific link building tactics will be tailored to your industry and competitive landscape.
+            </p>
+          </div>
+        `}
 
         ${links.expectedAcquisition ? `
-          <div class="card p-6 sm:p-8 animate-on-scroll" style="border: 2px solid var(--primary);">
+          <div class="card p-6 sm:p-8 mt-6 animate-on-scroll" style="border: 2px solid var(--primary);">
             <h3 class="font-semibold text-base sm:text-lg mb-3" style="color: var(--primary);">Expected Link Acquisition</h3>
             <p class="text-sm sm:text-base leading-relaxed" style="color: var(--muted-foreground);">
               ${escapeHTML(links.expectedAcquisition)}
@@ -1044,16 +1079,24 @@ export function renderNextSteps(content: any): string {
   const immediate = steps.immediate && Array.isArray(steps.immediate) ? steps.immediate : [];
   const onboarding = steps.onboarding && Array.isArray(steps.onboarding) ? steps.onboarding : [];
 
+  // Log if arrays are empty for debugging
+  if (immediate.length === 0) {
+    console.warn('[Modern Template] renderNextSteps: immediate array is empty');
+  }
+  if (onboarding.length === 0) {
+    console.warn('[Modern Template] renderNextSteps: onboarding array is empty');
+  }
+
   return `
   <section class="py-10 sm:py-16" style="background: linear-gradient(135deg, var(--primary) 0%, rgba(0, 0, 0, 0.8) 100%); color: white;">
     <div class="container mx-auto px-4 max-w-7xl">
       <div class="max-w-5xl mx-auto">
         <h2 class="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 animate-on-scroll">Next Steps</h2>
 
-        ${immediate.length > 0 ? `
-          <div class="mb-8">
-            <h3 class="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 animate-on-scroll">Immediate Actions</h3>
+        <div class="mb-8">
+          <h3 class="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 animate-on-scroll">Immediate Actions</h3>
 
+        ${immediate.length > 0 ? `
             <div class="grid gap-3 sm:gap-4">
               ${immediate.filter((s: any) => s).map((step: any, index: number) => `
                 <div class="card p-4 sm:p-5 stagger-item flex items-start gap-3" style="background-color: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2);">
@@ -1064,13 +1107,19 @@ export function renderNextSteps(content: any): string {
                 </div>
               `).join('')}
             </div>
-          </div>
-        ` : ''}
+        ` : `
+            <div class="card p-6 sm:p-8 animate-on-scroll" style="background-color: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2);">
+              <p class="text-sm opacity-90">
+                Immediate next steps will be discussed and confirmed during our initial consultation.
+              </p>
+            </div>
+        `}
+        </div>
+
+        <div class="mb-8">
+          <h3 class="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 animate-on-scroll">Onboarding Process</h3>
 
         ${onboarding.length > 0 ? `
-          <div class="mb-8">
-            <h3 class="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 animate-on-scroll">Onboarding Process</h3>
-
             <div class="grid gap-3 sm:gap-4">
               ${onboarding.filter((s: any) => s).map((step: any) => `
                 <div class="card p-4 sm:p-5 stagger-item flex items-start gap-3" style="background-color: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2);">
@@ -1083,8 +1132,14 @@ export function renderNextSteps(content: any): string {
                 </div>
               `).join('')}
             </div>
-          </div>
-        ` : ''}
+        ` : `
+            <div class="card p-6 sm:p-8 animate-on-scroll" style="background-color: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2);">
+              <p class="text-sm opacity-90">
+                Our onboarding process will be customized to your specific needs and goals.
+              </p>
+            </div>
+        `}
+        </div>
 
         <div class="card p-6 sm:p-8 animate-on-scroll text-center" style="background-color: white; color: var(--foreground);">
           <h3 class="font-bold text-lg sm:text-xl mb-3" style="color: var(--primary);">Ready to Get Started?</h3>
