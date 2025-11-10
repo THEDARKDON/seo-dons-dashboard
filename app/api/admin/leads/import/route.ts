@@ -162,18 +162,25 @@ export async function POST(req: NextRequest) {
             if (Object.keys(updateData).length > 0) {
               console.log(`[Import] Updating duplicate lead ${existing.id} with data:`, updateData);
               console.log(`[Import] Fields being updated:`, updatedFields.join(', '));
+              console.log(`[Import] CATEGORY UPDATE CHECK:`, {
+                'has_category_in_updateData': 'category' in updateData,
+                'category_value': updateData.category,
+                'existing_category': existing.category,
+                'new_category': leadData.category
+              });
 
               const { error: updateError, data: updatedLead } = await supabase
                 .from('leads')
                 .update(updateData)
                 .eq('id', existing.id)
-                .select('id, phone, company, job_title');
+                .select('id, phone, company, job_title, category');
 
               if (updateError) {
                 console.error('[Import] Error updating duplicate lead:', updateError);
                 errors.push(`Row ${i + 1}: Failed to update duplicate - ${updateError.message}`);
               } else {
                 console.log('[Import] Successfully updated lead:', updatedLead);
+                console.log('[Import] Updated lead category:', updatedLead?.[0]?.category);
               }
             } else {
               console.log('[Import] No new data to update for duplicate lead');
