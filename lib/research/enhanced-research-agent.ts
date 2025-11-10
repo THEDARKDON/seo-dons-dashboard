@@ -1364,9 +1364,11 @@ async function generateTargetKeywords(
     }
 
     // Related terms for broader reach
-    services.relatedTerms.slice(0, 2).forEach(term => {
-      keywords.push(term);
-    });
+    if (services.relatedTerms && Array.isArray(services.relatedTerms)) {
+      services.relatedTerms.slice(0, 2).forEach(term => {
+        keywords.push(term);
+      });
+    }
   }
 
   // ============================================================================

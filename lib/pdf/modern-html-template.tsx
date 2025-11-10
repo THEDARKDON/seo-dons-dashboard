@@ -60,15 +60,40 @@ export function generateModernProposalHTML(
 ): string {
   const isConcise = 'competition' in content;
 
-  // Debug logging to see content structure
-  console.log('[Modern Template] generateModernProposalHTML called:', {
-    isConcise,
+  // Enhanced debug logging to see content structure
+  console.log('\n[Modern Template] ═══════════════════════════════════════════════════════');
+  console.log('[Modern Template] PROPOSAL GENERATION STARTED');
+  console.log('[Modern Template] ═══════════════════════════════════════════════════════');
+  console.log('[Modern Template] Template Type:', isConcise ? 'CONCISE' : 'DETAILED');
+  console.log('[Modern Template] Content Structure:', {
     hasContent: !!content,
-    hasExecutiveSummary: !!(content as any)?.executiveSummary,
-    hasCurrentSituation: !!(content as any)?.currentSituation,
+    contentType: isConcise ? 'ConciseProposalContent' : 'ProposalContent',
     contentKeys: content ? Object.keys(content) : [],
-    hasResearch: !!research,
   });
+
+  if (!isConcise) {
+    // For detailed proposals, log critical sections
+    console.log('[Modern Template] Detailed Proposal Sections:', {
+      executiveSummary: !!(content as any)?.executiveSummary,
+      currentSituation: !!(content as any)?.currentSituation,
+      technicalSEO: !!(content as any)?.technicalSEO,
+      contentStrategy: !!(content as any)?.contentStrategy,
+      localSEO: !!(content as any)?.localSEO,
+      linkBuilding: !!(content as any)?.linkBuilding,
+      nextSteps: !!(content as any)?.nextSteps,
+      packageOptions: !!content?.packageOptions,
+    });
+  }
+
+  console.log('[Modern Template] Research Data:', {
+    hasResearch: !!research,
+    hasEnhancedResearch: !!research?.enhancedResearch,
+    keywordAnalysisCount: research?.enhancedResearch?.keywordAnalysis?.length || 0,
+    competitorsCount: research?.enhancedResearch?.competitors?.length || 0,
+    locationOpportunitiesCount: research?.enhancedResearch?.locationOpportunities?.length || 0,
+    contentOpportunitiesCount: research?.enhancedResearch?.contentOpportunities?.length || 0,
+  });
+  console.log('[Modern Template] ═══════════════════════════════════════════════════════\n');
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -773,37 +798,60 @@ function renderProjectedResults(content: any, research: any, recommendedPackage:
   // Extract actual package data for accurate projections
   const monthlyInvestment = recommendedPackage.pricing?.monthly || recommendedPackage.monthlyInvestment || recommendedPackage.price || 2000;
   const packageTier = recommendedPackage.tier || 'local';
-
-  // Get current metrics from research
-  const currentTraffic = research?.companyAnalysis?.metrics?.monthlyVisitors || 4200;
-  const currentConversionRate = research?.roiProjection?.conversionRate || 0.06; // 6% visitor to lead
-  const leadToCustomerRate = research?.roiProjection?.leadToCustomerRate || 0.35; // 35% lead to customer
   const avgDealValue = research?.roiProjection?.averageDealValue || 5000;
 
-  // Calculate expected traffic growth based on package tier (matching basic template logic)
-  const trafficMultipliers: Record<string, number> = {
-    'local': 2.0,    // 2x traffic growth (4,200 → 8,400)
-    'regional': 3.0, // 3x traffic growth (4,200 → 12,600)
-    'national': 4.0  // 4x traffic growth (4,200 → 16,800)
+  // Package-specific monthly lead projections (matching basic template logic)
+  const projectionsByTier: Record<string, { month1: string; month23: string; month36: string; customers1: number; customers23: number; customers36: number }> = {
+    'local': {
+      month1: '2-3',
+      month23: '4-5',
+      month36: '5-8',
+      customers1: 2,
+      customers23: 4,
+      customers36: 5
+    },
+    'regional': {
+      month1: '5-8',
+      month23: '10-15',
+      month36: '15-20',
+      customers1: 5,
+      customers23: 10,
+      customers36: 15
+    },
+    'national': {
+      month1: '10-15',
+      month23: '20-30',
+      month36: '30-50',
+      customers1: 10,
+      customers23: 20,
+      customers36: 30
+    }
   };
 
-  const targetTraffic = Math.round(currentTraffic * (trafficMultipliers[packageTier] || 2.0));
-  const targetMonthlyLeads = Math.round(targetTraffic * currentConversionRate);
-  const targetMonthlyCustomers = Math.round(targetMonthlyLeads * leadToCustomerRate);
-  const targetMonthlyRevenue = targetMonthlyCustomers * avgDealValue;
+  const projections = projectionsByTier[packageTier] || projectionsByTier['local'];
 
-  // 12-month calculations (matching basic template)
+  // Calculate revenue based on customer projections
+  const revenue1 = avgDealValue * projections.customers1;
+  const revenue23 = avgDealValue * projections.customers23;
+  const revenue36 = avgDealValue * projections.customers36;
+
+  // 12-month calculations
   const investment12Month = monthlyInvestment * 12;
-  const revenue12Month = targetMonthlyRevenue * 12;
+  // Conservative estimate: avg of months 1-6 customer numbers * 12 months
+  const avgCustomersPerMonth = (projections.customers1 + projections.customers23 + projections.customers36) / 3;
+  const revenue12Month = avgCustomersPerMonth * avgDealValue * 12;
   const roi = Math.round((revenue12Month / investment12Month) * 100);
 
-  // Calculate break-even (how many months until revenue covers investment)
-  const breakEvenMonths = Math.ceil(monthlyInvestment / targetMonthlyRevenue);
+  // Calculate break-even (how many months until cumulative revenue covers investment)
+  const breakEvenMonths = Math.ceil(monthlyInvestment / (avgDealValue * avgCustomersPerMonth));
 
   return `
   <div class="space-y-6">
     <div class="card p-5 sm:p-6">
-      <h4 class="font-semibold mb-4 text-base sm:text-lg">Projected Results</h4>
+      <h4 class="font-semibold mb-4 text-base sm:text-lg">Projected Results - ${escapeHTML(recommendedPackage.name)}</h4>
+      <p class="text-xs sm:text-sm mb-4" style="color: var(--muted-foreground);">
+        Based on your ${packageTier} package tier and £${avgDealValue.toLocaleString()} average deal value
+      </p>
       <div class="overflow-x-auto">
         <table class="w-full text-xs sm:text-sm min-w-[500px]">
           <thead>
@@ -811,24 +859,24 @@ function renderProjectedResults(content: any, research: any, recommendedPackage:
               <th class="text-left py-2 font-semibold">Metric</th>
               <th class="text-left py-2 font-semibold">Current</th>
               <th class="text-left py-2 font-semibold">Month 1</th>
-              <th class="text-left py-2 font-semibold">Month 2-3</th>
-              <th class="text-left py-2 font-semibold">Month 3-6</th>
+              <th class="text-left py-2 font-semibold">Months 2-3</th>
+              <th class="text-left py-2 font-semibold">Months 3-6</th>
             </tr>
           </thead>
           <tbody>
             <tr style="border-bottom: 1px solid var(--border);">
               <td class="py-2" style="color: var(--muted-foreground);">Enquiries/Leads</td>
               <td class="py-2">0</td>
-              <td class="py-2 font-semibold" style="color: var(--accent);">6-10</td>
-              <td class="py-2 font-semibold" style="color: var(--accent);">15</td>
-              <td class="py-2 font-semibold" style="color: var(--accent);">15-20</td>
+              <td class="py-2 font-semibold" style="color: var(--accent);">${escapeHTML(projections.month1)}</td>
+              <td class="py-2 font-semibold" style="color: var(--accent);">${escapeHTML(projections.month23)}</td>
+              <td class="py-2 font-semibold" style="color: var(--accent);">${escapeHTML(projections.month36)}</td>
             </tr>
             <tr>
               <td class="py-2" style="color: var(--muted-foreground);">Revenue</td>
               <td class="py-2">£0</td>
-              <td class="py-2 font-semibold" style="color: var(--accent);">£${(avgDealValue * 2).toLocaleString()}</td>
-              <td class="py-2 font-semibold" style="color: var(--accent);">£${(avgDealValue * 4).toLocaleString()}</td>
-              <td class="py-2 font-semibold" style="color: var(--accent);">£${(avgDealValue * 5).toLocaleString()}</td>
+              <td class="py-2 font-semibold" style="color: var(--accent);">£${revenue1.toLocaleString()}</td>
+              <td class="py-2 font-semibold" style="color: var(--accent);">£${revenue23.toLocaleString()}</td>
+              <td class="py-2 font-semibold" style="color: var(--accent);">£${revenue36.toLocaleString()}</td>
             </tr>
           </tbody>
         </table>
@@ -861,9 +909,16 @@ function renderProjectedResults(content: any, research: any, recommendedPackage:
 
 /**
  * Render summary section
+ * For concise proposals: renders full summary with benefits and next steps
+ * For detailed proposals: only renders key benefits (dedicated next steps section exists)
  */
 function renderSummary(content: any, isConcise: boolean): string {
   const summary = content.summary || {};
+
+  // For detailed proposals without a summary object, don't render empty section
+  if (!isConcise && !content.summary) {
+    return '';
+  }
 
   return `
   <section class="py-10 sm:py-16" style="background-color: rgba(0, 0, 0, 0.02);">
@@ -872,7 +927,7 @@ function renderSummary(content: any, isConcise: boolean): string {
         <h2 class="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Summary</h2>
 
         ${renderKeyBenefits(summary)}
-        ${renderNextSteps(summary)}
+        ${isConcise ? renderNextSteps(summary) : ''}
       </div>
     </div>
   </section>`;
