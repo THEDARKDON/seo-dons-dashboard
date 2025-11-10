@@ -25,12 +25,14 @@ interface Lead {
   id: string;
   first_name: string;
   last_name: string;
-  email: string;
-  phone: string;
-  company: string;
+  email?: string;
+  phone?: string;
+  company?: string;
+  job_title?: string;
   status: string;
-  category: string;
-  lead_source: string;
+  lead_score: number;
+  lead_source?: string;
+  category?: string;
   created_at: string;
   users?: {
     id: string;
