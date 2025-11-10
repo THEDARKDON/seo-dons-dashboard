@@ -1,70 +1,130 @@
-import { Suspense } from 'react';
-import { createClient } from '@/lib/supabase/server';
-import { auth } from '@clerk/nextjs/server';
+'use client';
+
+import { useState, useEffect } from 'react';
 import { LeadsList } from '@/components/leads/leads-list';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Plus, Upload, Kanban } from 'lucide-react';
 import Link from 'next/link';
 
-async function getLeadsData(userId: string) {
-  try {
-    const supabase = await createClient();
-
-    // Get user's Supabase ID and role
-    const { data: user } = await supabase
-      .from('users')
-      .select('id, role')
-      .eq('clerk_id', userId)
-      .single();
-
-    if (!user) {
-      return { leads: [], stats: { total: 0, new: 0, contacted: 0, qualified: 0, converted: 0 } };
-    }
-
-    // Get leads - BDRs/SDRs see only their own, managers/admins see all
-    let query = supabase
-      .from('leads')
-      .select(`
-        *,
-        users!leads_assigned_to_fkey (id, first_name, last_name)
-      `)
-      .order('created_at', { ascending: false });
-
-    // Admins and managers see all leads, everyone else sees only their assigned leads
-    if (user.role !== 'admin' && user.role !== 'manager') {
-      query = query.eq('assigned_to', user.id);
-    }
-
-    // Add high limit to ensure all leads are fetched (Supabase default is 1000)
-    query = query.limit(100000);
-
-    const { data: leads } = await query;
-
-    // Calculate stats
-    const stats = {
-      total: leads?.length || 0,
-      new: leads?.filter(l => l.status === 'new').length || 0,
-      contacted: leads?.filter(l => l.status === 'contacted').length || 0,
-      qualified: leads?.filter(l => l.status === 'qualified').length || 0,
-      converted: leads?.filter(l => l.status === 'converted').length || 0,
-    };
-
-    return { leads: leads || [], stats };
-  } catch (error) {
-    console.error('Error fetching leads:', error);
-    return { leads: [], stats: { total: 0, new: 0, contacted: 0, qualified: 0, converted: 0 } };
-  }
+interface User {
+  id: string;
+  first_name: string;
+  last_name: string;
+  role: string;
 }
 
-export default async function LeadsPage() {
-  const { userId } = await auth();
+interface Lead {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  company: string;
+  status: string;
+  category: string;
+  lead_source: string;
+  created_at: string;
+  users?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+  };
+}
 
-  if (!userId) {
-    return <div>Please sign in</div>;
+interface LeadStats {
+  total: number;
+  new: number;
+  contacted: number;
+  qualified: number;
+  converted: number;
+}
+
+export default function LeadsPage() {
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filterUser, setFilterUser] = useState<string>('all');
+  const [stats, setStats] = useState<LeadStats>({
+    total: 0,
+    new: 0,
+    contacted: 0,
+    qualified: 0,
+    converted: 0,
+  });
+
+  useEffect(() => {
+    loadUsers();
+    loadLeads();
+  }, [filterUser]);
+
+  const loadUsers = async () => {
+    try {
+      const response = await fetch('/api/admin/users');
+      const data = await response.json();
+
+      if (data.users) {
+        // Filter for BDRs, managers, and admins
+        const leadUsers = data.users.filter((u: User) =>
+          ['bdr', 'manager', 'admin'].includes(u.role)
+        );
+        setUsers(leadUsers);
+      }
+    } catch (error) {
+      console.error('Error loading users:', error);
+    }
+  };
+
+  const loadLeads = async () => {
+    try {
+      let url = '/api/leads';
+      const params = new URLSearchParams();
+
+      if (filterUser !== 'all') {
+        params.append('assignedTo', filterUser);
+      }
+
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.leads) {
+        setLeads(data.leads);
+
+        // Calculate stats
+        const newStats = {
+          total: data.leads.length,
+          new: data.leads.filter((l: Lead) => l.status === 'new').length,
+          contacted: data.leads.filter((l: Lead) => l.status === 'contacted').length,
+          qualified: data.leads.filter((l: Lead) => l.status === 'qualified').length,
+          converted: data.leads.filter((l: Lead) => l.status === 'converted').length,
+        };
+        setStats(newStats);
+      }
+    } catch (error) {
+      console.error('Error loading leads:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-[calc(100vh-8rem)]">
+        <p className="text-gray-500">Loading leads...</p>
+      </div>
+    );
   }
-
-  const { leads, stats } = await getLeadsData(userId);
 
   return (
     <div className="space-y-6">
@@ -75,6 +135,19 @@ export default async function LeadsPage() {
           <p className="text-muted-foreground">Manage and qualify your prospects</p>
         </div>
         <div className="flex gap-2">
+          <Select value={filterUser} onValueChange={setFilterUser}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Filter by user" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Users</SelectItem>
+              {users.map((user) => (
+                <SelectItem key={user.id} value={user.id}>
+                  {user.first_name} {user.last_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Link href="/dashboard/leads/pipeline">
             <Button variant="outline" className="gap-2">
               <Kanban className="h-4 w-4" />
@@ -145,9 +218,7 @@ export default async function LeadsPage() {
       </div>
 
       {/* Leads List */}
-      <Suspense fallback={<div>Loading leads...</div>}>
-        <LeadsList initialLeads={leads} />
-      </Suspense>
+      <LeadsList initialLeads={leads} />
     </div>
   );
 }

@@ -106,6 +106,11 @@ export function LeadsList({ initialLeads }: LeadsListProps) {
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(null);
 
+  // Update leads when initialLeads changes (e.g., when filter changes)
+  useEffect(() => {
+    setLeads(initialLeads);
+  }, [initialLeads]);
+
   // Get unique sources and categories
   const sources = Array.from(new Set(leads.map(l => l.lead_source).filter(Boolean)));
   const categories = Array.from(new Set(leads.map(l => l.category).filter(Boolean)));

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   DndContext,
@@ -63,6 +63,11 @@ export function PipelineBoard({ initialDeals }: PipelineBoardProps) {
   const router = useRouter();
   const [deals, setDeals] = useState(initialDeals);
   const [activeId, setActiveId] = useState<string | null>(null);
+
+  // Update deals when initialDeals changes (e.g., when filter changes)
+  useEffect(() => {
+    setDeals(initialDeals);
+  }, [initialDeals]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
