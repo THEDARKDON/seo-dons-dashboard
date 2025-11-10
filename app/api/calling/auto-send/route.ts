@@ -46,8 +46,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Determine call outcome
-    // Successful = call completed AND lasted more than 5 seconds (catches quick hangups/wrong numbers)
-    const isSuccessful = callStatus === 'completed' && (call.duration_seconds || 0) > 5;
+    // Successful = call completed AND lasted more than 10 seconds (catches quick hangups/wrong numbers)
+    const isSuccessful = callStatus === 'completed' && (call.duration_seconds || 0) > 10;
     const category = isSuccessful ? 'successful_call' : 'missed_call';
 
     console.log(`[Auto-Send] Call ${callSid} - Status: ${callStatus}, Duration: ${call.duration_seconds}s, Category: ${category}`);
@@ -171,14 +171,26 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        // ALWAYS send immediately (delays disabled for free tier - no cron support)
-        await sendSMSNow(message.id);
-
-        results.sms.push({
-          template: template.name,
-          sentAt: new Date().toISOString(),
-          messageId: message.id,
-        });
+        // Send with delay based on call outcome
+        if (isSuccessful) {
+          // Successful calls: Send after 2 minutes (120 seconds)
+          console.log(`[Auto-Send] SMS will be sent after 2 minutes for successful call`);
+          setTimeout(() => sendSMSNow(message.id), 120000);
+          results.sms.push({
+            template: template.name,
+            scheduledFor: new Date(Date.now() + 120000).toISOString(),
+            messageId: message.id,
+          });
+        } else {
+          // Failed/missed calls: Send immediately
+          console.log(`[Auto-Send] SMS sending immediately for missed call`);
+          await sendSMSNow(message.id);
+          results.sms.push({
+            template: template.name,
+            sentAt: new Date().toISOString(),
+            messageId: message.id,
+          });
+        }
       } catch (error) {
         console.error('[Auto-Send] Error processing SMS template:', error);
       }
@@ -233,14 +245,26 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        // Send email immediately via Gmail API
-        await sendEmailNow(email.id);
-
-        results.email.push({
-          template: template.name,
-          sentAt: new Date().toISOString(),
-          emailId: email.id,
-        });
+        // Send with delay based on call outcome
+        if (isSuccessful) {
+          // Successful calls: Send after 2 minutes (120 seconds)
+          console.log(`[Auto-Send] Email will be sent after 2 minutes for successful call`);
+          setTimeout(() => sendEmailNow(email.id), 120000);
+          results.email.push({
+            template: template.name,
+            scheduledFor: new Date(Date.now() + 120000).toISOString(),
+            emailId: email.id,
+          });
+        } else {
+          // Failed/missed calls: Send immediately
+          console.log(`[Auto-Send] Email sending immediately for missed call`);
+          await sendEmailNow(email.id);
+          results.email.push({
+            template: template.name,
+            sentAt: new Date().toISOString(),
+            emailId: email.id,
+          });
+        }
       } catch (error) {
         console.error('[Auto-Send] Error processing email template:', error);
       }
