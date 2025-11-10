@@ -32,11 +32,11 @@ export function ActivityLeaderboard() {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      // Get all SDRs
+      // Get all SDRs, managers, and admins
       const { data: users } = await supabase
         .from('users')
         .select('id, first_name, last_name')
-        .in('role', ['bdr', 'manager']);
+        .in('role', ['bdr', 'manager', 'admin']);
 
       if (!users) {
         setStats([]);

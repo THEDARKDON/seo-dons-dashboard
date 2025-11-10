@@ -30,11 +30,11 @@ async function getSDRData(userId: string) {
     return null;
   }
 
-  // Get all SDRs and managers
+  // Get all SDRs, managers, and admins
   const { data: sdrs } = await supabase
     .from('users')
     .select('*')
-    .in('role', ['bdr', 'manager'])
+    .in('role', ['bdr', 'manager', 'admin'])
     .order('created_at', { ascending: false});
 
   // Get all calls
