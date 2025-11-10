@@ -28,15 +28,19 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
     const category = searchParams.get('category');
+    const assignedTo = searchParams.get('assignedTo');
 
     let query = supabase
       .from('leads')
       .select('*')
       .order('created_at', { ascending: false });
 
-    // Admins can see all leads, SDRs only see their own
+    // Admins can see all leads or filter by SDR, SDRs only see their own
     if (user.role !== 'admin') {
       query = query.eq('assigned_to', user.id);
+    } else if (assignedTo) {
+      // Admin filtering by specific SDR
+      query = query.eq('assigned_to', assignedTo);
     }
 
     if (status) {

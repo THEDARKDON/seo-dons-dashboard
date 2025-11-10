@@ -27,6 +27,13 @@ interface Lead {
   created_at: string;
 }
 
+interface User {
+  id: string;
+  first_name: string;
+  last_name: string;
+  role: string;
+}
+
 const PREDEFINED_CATEGORIES = [
   { value: 'cold', label: 'Cold Lead', color: 'bg-gray-100 text-gray-700' },
   { value: 'warm', label: 'Warm Lead', color: 'bg-blue-100 text-blue-700' },
@@ -45,14 +52,52 @@ export default function LeadCategoriesPage() {
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [selectedLeads, setSelectedLeads] = useState<Set<string>>(new Set());
   const [bulkCategory, setBulkCategory] = useState<string>('');
+  const [sdrs, setSdrs] = useState<User[]>([]);
+  const [filterSdr, setFilterSdr] = useState<string>('all');
+  const [currentUserRole, setCurrentUserRole] = useState<string>('');
 
   useEffect(() => {
+    loadSdrs();
     loadLeads();
-  }, []);
+  }, [filterSdr]);
+
+  const loadSdrs = async () => {
+    try {
+      const response = await fetch('/api/admin/users');
+      const data = await response.json();
+
+      if (data.users) {
+        // Filter for BDRs, managers, and admins
+        const sdrUsers = data.users.filter((u: User) =>
+          ['bdr', 'manager', 'admin'].includes(u.role)
+        );
+        setSdrs(sdrUsers);
+
+        // Set current user role (assume first admin in list is current user for now)
+        const currentUser = data.users.find((u: User) => u.role === 'admin');
+        if (currentUser) {
+          setCurrentUserRole(currentUser.role);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading SDRs:', error);
+    }
+  };
 
   const loadLeads = async () => {
     try {
-      const response = await fetch('/api/leads');
+      let url = '/api/leads';
+      const params = new URLSearchParams();
+
+      if (filterSdr !== 'all') {
+        params.append('assignedTo', filterSdr);
+      }
+
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+
+      const response = await fetch(url);
       const data = await response.json();
 
       if (data.leads) {
@@ -257,6 +302,19 @@ export default function LeadCategoriesPage() {
             className="pl-10"
           />
         </div>
+        <Select value={filterSdr} onValueChange={setFilterSdr}>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="Filter by SDR" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All SDRs</SelectItem>
+            {sdrs.map((sdr) => (
+              <SelectItem key={sdr.id} value={sdr.id}>
+                {sdr.first_name} {sdr.last_name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <Select value={filterCategory} onValueChange={setFilterCategory}>
           <SelectTrigger className="w-48">
             <SelectValue placeholder="Filter by category" />
