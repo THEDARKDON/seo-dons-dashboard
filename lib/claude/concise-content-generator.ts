@@ -5,6 +5,7 @@
  */
 
 import { sanitizeForPrompt, callClaudeForContent } from './utils';
+import { CLAUDE_CONFIG } from './client';
 import { ContentGenerationRequest } from './content-generator';
 import { sanitizeObjectEncoding } from '@/lib/utils/encoding';
 import { calculateProjections, type ProjectionCalculation } from '@/lib/pdf/html-template-improvements';
@@ -138,7 +139,7 @@ When SDR notes are provided, they are ABSOLUTE TRUTH - use those exact numbers.`
 export async function generateConciseProposalContent(
   request: ConciseContentGenerationRequest
 ): Promise<ConciseProposalContent> {
-  const { companyName, packageTier, notes, averageDealSize, profitPerDeal, conversionRate, researchData } = request;
+  const { companyName, packageTier, notes, averageDealSize, profitPerDeal, conversionRate, researchData, preferOpus } = request;
 
   // Extract current traffic for projections
   const currentTraffic = researchData?.competitorAnalysis?.clientCurrentMetrics?.monthlyTraffic
@@ -373,12 +374,16 @@ Generate a CONCISE proposal with this EXACT structure:
 REMEMBER: Keep it CONCISE. No long explanations. Focus on impact and numbers.
   `);
 
+  // Determine which model to use based on preferOpus flag
+  const selectedModel = preferOpus ? CLAUDE_CONFIG.RESEARCH_MODEL : CLAUDE_CONFIG.CONTENT_MODEL;
+
+  console.log(`[Concise Generator] Using ${preferOpus ? 'Opus 4 (maximum quality)' : 'Sonnet 4 (cost-effective)'} for content generation`);
+
   // Call Claude API for content generation
-  console.log('[Concise Generator] Calling Claude API...');
   const response = await callClaudeForContent(
     CONCISE_SYSTEM_PROMPT,
     userPrompt,
-    {} // No reference PDF needed for concise
+    { model: selectedModel } // No reference PDF needed for concise
   );
 
   console.log('[Concise Generator] Parsing Claude response...');

@@ -59,6 +59,9 @@ export interface ProposalGenerationRequest {
 
   // Proposal Format Mode
   proposalMode?: 'concise' | 'detailed';
+
+  // Model Selection - Force use of Opus 4 for maximum quality (default: Sonnet 4 for cost savings)
+  preferOpus?: boolean;
 }
 
 export interface ProposalResult {
@@ -183,6 +186,7 @@ export async function generateCompleteProposal(
         averageDealSize: request.averageDealSize,
         profitPerDeal: request.profitPerDeal,
         conversionRate: request.conversionRate,
+        preferOpus: request.preferOpus,
       };
 
       contentResult = await generateConciseProposalContent(conciseRequest);
@@ -203,6 +207,7 @@ export async function generateCompleteProposal(
         averageDealSize: request.averageDealSize,
         profitPerDeal: request.profitPerDeal,
         conversionRate: request.conversionRate,
+        preferOpus: request.preferOpus,
       };
 
       contentResult = await generateProposalContent(contentRequest);

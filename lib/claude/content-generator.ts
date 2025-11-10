@@ -6,6 +6,7 @@
  */
 
 import { callClaudeForContent, sanitizeForPrompt } from './utils';
+import { CLAUDE_CONFIG } from './client';
 import { getReferencePDF, hasReferencePDF, getReferenceHTML, hasReferenceHTML } from './reference-pdf';
 import { sanitizeObjectEncoding, getCorruptionStats } from '@/lib/utils/encoding';
 import type { ResearchResult } from './research-agent';
@@ -260,6 +261,9 @@ export interface ContentGenerationRequest {
   averageDealSize?: number;
   profitPerDeal?: number;
   conversionRate?: number;
+
+  // Model Selection - Force use of Opus 4 for maximum quality (default: Sonnet 4 for cost savings)
+  preferOpus?: boolean;
 }
 
 // ============================================================================
@@ -478,7 +482,7 @@ Your JSON must be parseable by standard JSON.parse(). Any Unicode special charac
 export async function generateProposalContent(
   request: ContentGenerationRequest
 ): Promise<ProposalContent> {
-  const { researchData, companyName, packageTier, customInstructions, contactName, jobTitle, email, phoneNumber, linkedInUrl, notes, averageDealSize, profitPerDeal, conversionRate } = request;
+  const { researchData, companyName, packageTier, customInstructions, contactName, jobTitle, email, phoneNumber, linkedInUrl, notes, averageDealSize, profitPerDeal, conversionRate, preferOpus } = request;
 
   // Build comprehensive context for Claude
   const userPrompt = sanitizeForPrompt(`
@@ -900,9 +904,17 @@ IMPORTANT:
     description: img.description || img.name,
   }));
 
+  // Determine which model to use based on preferOpus flag
+  // Opus 4: Maximum quality, best at following complex instructions (5x cost)
+  // Sonnet 4: Cost-effective, 95% quality (default)
+  const selectedModel = preferOpus ? CLAUDE_CONFIG.RESEARCH_MODEL : CLAUDE_CONFIG.CONTENT_MODEL;
+
+  console.log(`[Content Generator] Using ${preferOpus ? 'Opus 4 (maximum quality)' : 'Sonnet 4 (cost-effective)'} for content generation`);
+
   // Call Claude with reference PDF, HTML, and any uploaded images
   // PDF shows visual design, HTML shows exact structure, images provide real data
   const response = await callClaudeForContent(GOD_PROMPT, userPrompt, {
+    model: selectedModel,
     pdfBase64: referencePdfBase64,
     htmlContent: referenceHtmlContent,
     images,
