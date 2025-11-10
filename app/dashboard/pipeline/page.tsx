@@ -1,82 +1,114 @@
-import { Suspense } from 'react';
-import { createClient } from '@/lib/supabase/server';
-import { auth } from '@clerk/nextjs/server';
+'use client';
+
+import { useState, useEffect } from 'react';
 import { PipelineBoard } from '@/components/pipeline/pipeline-board';
 import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
 
-async function getPipelineData(userId: string) {
-  try {
-    const supabase = await createClient();
-
-    // Get user's Supabase ID and role
-    const { data: user } = await supabase
-      .from('users')
-      .select('id, role')
-      .eq('clerk_id', userId)
-      .single();
-
-    if (!user) {
-      return { deals: [] };
-    }
-
-    // Get deals - BDRs/SDRs see only their own, managers/admins see all
-    let query = supabase
-      .from('deals')
-      .select(`
-        *,
-        customers (id, first_name, last_name, company, email, phone),
-        users!deals_assigned_to_fkey (id, first_name, last_name, email)
-      `)
-      .order('stage_position', { ascending: true })
-      .order('created_at', { ascending: false });
-
-    // Filter for BDRs/SDRs only - managers and admins see everything
-    if (user.role === 'bdr') {
-      query = query.eq('assigned_to', user.id);
-    }
-
-    const { data: deals } = await query;
-
-    // Get upcoming appointments for these deals
-    if (deals && deals.length > 0) {
-      const dealIds = deals.map(d => d.id);
-      const { data: appointments } = await supabase
-        .from('activities')
-        .select('deal_id, scheduled_at, subject')
-        .eq('activity_type', 'appointment')
-        .in('deal_id', dealIds)
-        .gte('scheduled_at', new Date().toISOString())
-        .order('scheduled_at', { ascending: true });
-
-      // Attach the next appointment to each deal
-      const dealsWithAppointments = deals.map(deal => {
-        const nextAppointment = appointments?.find(apt => apt.deal_id === deal.id);
-        return {
-          ...deal,
-          nextAppointment: nextAppointment || null,
-        };
-      });
-
-      return { deals: dealsWithAppointments };
-    }
-
-    return { deals: deals || [] };
-  } catch (error) {
-    console.error('Error fetching pipeline data:', error);
-    return { deals: [] };
-  }
+interface User {
+  id: string;
+  first_name: string;
+  last_name: string;
+  role: string;
 }
 
-export default async function PipelinePage() {
-  const { userId } = await auth();
+interface Deal {
+  id: string;
+  deal_name: string;
+  deal_value: number;
+  stage: string;
+  stage_position: number;
+  probability?: number;
+  expected_close_date?: string;
+  customers?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    company?: string;
+    email?: string;
+    phone?: string;
+  };
+  users?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+  };
+  nextAppointment?: {
+    deal_id: string;
+    scheduled_at: string;
+    subject?: string;
+  } | null;
+}
 
-  if (!userId) {
-    return <div>Please sign in</div>;
+export default function PipelinePage() {
+  const [deals, setDeals] = useState<Deal[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filterUser, setFilterUser] = useState<string>('all');
+
+  useEffect(() => {
+    loadUsers();
+    loadDeals();
+  }, [filterUser]);
+
+  const loadUsers = async () => {
+    try {
+      const response = await fetch('/api/admin/users');
+      const data = await response.json();
+
+      if (data.users) {
+        // Filter for BDRs, managers, and admins
+        const dealUsers = data.users.filter((u: User) =>
+          ['bdr', 'manager', 'admin'].includes(u.role)
+        );
+        setUsers(dealUsers);
+      }
+    } catch (error) {
+      console.error('Error loading users:', error);
+    }
+  };
+
+  const loadDeals = async () => {
+    try {
+      let url = '/api/deals';
+      const params = new URLSearchParams();
+
+      if (filterUser !== 'all') {
+        params.append('assignedTo', filterUser);
+      }
+
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.deals) {
+        setDeals(data.deals);
+      }
+    } catch (error) {
+      console.error('Error loading deals:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-[calc(100vh-8rem)]">
+        <p className="text-gray-500">Loading pipeline...</p>
+      </div>
+    );
   }
-
-  const { deals } = await getPipelineData(userId);
 
   return (
     <div className="space-y-6">
@@ -85,17 +117,30 @@ export default async function PipelinePage() {
           <h1 className="text-3xl font-bold">Sales Pipeline</h1>
           <p className="text-muted-foreground">Drag and drop deals to update their stage</p>
         </div>
-        <Link href="/dashboard/deals/new">
-          <Button className="gap-2">
-            <Plus className="h-4 w-4" />
-            New Deal
-          </Button>
-        </Link>
+        <div className="flex items-center gap-4">
+          <Select value={filterUser} onValueChange={setFilterUser}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Filter by user" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Users</SelectItem>
+              {users.map((user) => (
+                <SelectItem key={user.id} value={user.id}>
+                  {user.first_name} {user.last_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Link href="/dashboard/deals/new">
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              New Deal
+            </Button>
+          </Link>
+        </div>
       </div>
 
-      <Suspense fallback={<div>Loading pipeline...</div>}>
-        <PipelineBoard initialDeals={deals} />
-      </Suspense>
+      <PipelineBoard initialDeals={deals} />
     </div>
   );
 }
