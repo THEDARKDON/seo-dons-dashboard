@@ -248,14 +248,15 @@ export async function performDeepResearch(
   let totalCost = 0;
   let thinkingTokensUsed = 0;
 
-  // Stage 0: Enhanced Real-World Research (5%) - NEW
+  // Stage 0: Enhanced Real-World Research (5%) - MANDATORY FOR QUALITY
   let enhancedResearch: EnhancedResearchResult | undefined;
 
-  // Only attempt enhanced research if API keys are configured and website is available
+  // Enhanced research is now MANDATORY when API keys are configured
+  // This ensures we use REAL data instead of AI estimates
   if (process.env.PERPLEXITY_API_KEY && process.env.SERPAPI_KEY && request.website) {
     try {
       await onProgress?.('Conducting real-world research', 5);
-      console.log('[Research Agent] Starting enhanced research with Perplexity & SerpAPI...');
+      console.log('[Research Agent] ⚡ Starting MANDATORY enhanced research with Perplexity & SerpAPI...');
 
       const enhancedRequest: EnhancedResearchRequest = {
         companyName: request.companyName,
@@ -263,17 +264,31 @@ export async function performDeepResearch(
         industry: request.industry,
         location: request.location,
         notes: request.notes,
-        packageTier: request.packageTier, // NEW: Pass through package tier for intelligent keyword generation
+        packageTier: request.packageTier,
       };
 
       enhancedResearch = await conductEnhancedResearch(enhancedRequest);
-      console.log('[Research Agent] Enhanced research complete - Real data gathered');
+      console.log('[Research Agent] ✅ Enhanced research complete - Real data gathered from SerpAPI & Perplexity');
+      console.log('[Research Agent] Enhanced research results:', {
+        keywordCount: enhancedResearch.keywordAnalysis?.length || 0,
+        competitorCount: enhancedResearch.competitors?.length || 0,
+        locationCount: enhancedResearch.locationOpportunities?.length || 0,
+        contentOpportunities: enhancedResearch.contentOpportunities?.length || 0,
+      });
     } catch (error) {
-      console.warn('[Research Agent] Enhanced research failed, continuing with Claude-only analysis:', error);
+      console.error('[Research Agent] ⚠️ CRITICAL: Enhanced research FAILED - Proposal will use AI estimates instead of real data');
+      console.error('[Research Agent] Error details:', error);
       // Continue without enhanced research - Claude will use its knowledge
+      // But log this as a quality issue
     }
   } else {
-    console.log('[Research Agent] Enhanced research skipped - API keys not configured or no website');
+    const missingKeys = [];
+    if (!process.env.PERPLEXITY_API_KEY) missingKeys.push('PERPLEXITY_API_KEY');
+    if (!process.env.SERPAPI_KEY) missingKeys.push('SERPAPI_KEY');
+    if (!request.website) missingKeys.push('website URL');
+
+    console.warn('[Research Agent] ⚠️ QUALITY WARNING: Enhanced research skipped - Missing:', missingKeys.join(', '));
+    console.warn('[Research Agent] Proposal will use AI estimates instead of real Google ranking data');
   }
 
   // Stage 1: Company Analysis (25%)

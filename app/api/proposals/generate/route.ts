@@ -29,7 +29,8 @@ interface GenerateProposalRequest {
   contactName?: string;
   customInstructions?: string;
   proposalMode?: 'concise' | 'detailed';
-  templateStyle?: TemplateStyle; // NEW: 'classic' or 'modern'
+  templateStyle?: TemplateStyle; // 'classic' or 'modern'
+  preferOpus?: boolean; // Use Opus 4 for maximum quality (5x cost)
 }
 
 export async function POST(request: NextRequest) {
@@ -77,6 +78,7 @@ export async function POST(request: NextRequest) {
       packageTier: body.packageTier,
       proposalMode: body.proposalMode || 'detailed',
       templateStyle: body.templateStyle || 'classic',
+      preferOpus: body.preferOpus || false,
       hasCustomInstructions: !!body.customInstructions,
       contactName: body.contactName,
     });
@@ -145,6 +147,9 @@ export async function POST(request: NextRequest) {
       averageDealSize: customer.average_deal_size,
       profitPerDeal: customer.profit_per_deal,
       conversionRate: customer.conversion_rate,
+
+      // Model selection for content generation quality
+      preferOpus: body.preferOpus || false,
     };
 
     const validation = validateProposalRequest(proposalRequest);

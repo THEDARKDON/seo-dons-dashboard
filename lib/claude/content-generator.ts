@@ -942,6 +942,65 @@ IMPORTANT:
   const sanitizedContent = sanitizeObjectEncoding(undefinedFreeContent);
   console.log('[Content Generator] Content sanitization complete');
 
+  // ============================================================================
+  // QUALITY MONITORING: Check for empty arrays (Issue tracking for Sonnet 4)
+  // ============================================================================
+  const qualityIssues: string[] = [];
+
+  // Check critical arrays that MUST have content
+  const criticalArrays = {
+    'technicalSEO.priorities': sanitizedContent.technicalSEO?.priorities || [],
+    'contentStrategy.contentPillars': sanitizedContent.contentStrategy?.contentPillars || [],
+    'linkBuilding.tactics': sanitizedContent.linkBuilding?.tactics || [],
+    'nextSteps.immediate': sanitizedContent.nextSteps?.immediate || [],
+    'nextSteps.onboarding': sanitizedContent.nextSteps?.onboarding || [],
+  };
+
+  const requiredLengths: Record<string, number> = {
+    'technicalSEO.priorities': 4,
+    'contentStrategy.contentPillars': 4,
+    'linkBuilding.tactics': 5,
+    'nextSteps.immediate': 3,
+    'nextSteps.onboarding': 4,
+  };
+
+  for (const [arrayName, arrayValue] of Object.entries(criticalArrays)) {
+    const required = requiredLengths[arrayName];
+    const actual = Array.isArray(arrayValue) ? arrayValue.length : 0;
+
+    if (actual === 0) {
+      qualityIssues.push(`${arrayName} is EMPTY (required: ${required})`);
+      console.error(`[Content Generator] ❌ CRITICAL QUALITY ISSUE: ${arrayName} is empty!`);
+    } else if (actual < required) {
+      qualityIssues.push(`${arrayName} has only ${actual} items (required: ${required})`);
+      console.warn(`[Content Generator] ⚠️ QUALITY WARNING: ${arrayName} has ${actual} items but should have ${required}`);
+    } else {
+      console.log(`[Content Generator] ✅ ${arrayName}: ${actual} items (required: ${required})`);
+    }
+  }
+
+  // Log overall quality assessment
+  if (qualityIssues.length > 0) {
+    console.error('\n[Content Generator] ═══════════════════════════════════════════════════════');
+    console.error('[Content Generator] ⚠️ QUALITY ISSUES DETECTED - Proposal may need regeneration');
+    console.error('[Content Generator] ═══════════════════════════════════════════════════════');
+    console.error(`[Content Generator] Model used: ${preferOpus ? 'Opus 4' : 'Sonnet 4'}`);
+    console.error('[Content Generator] Issues found:');
+    qualityIssues.forEach(issue => console.error(`  - ${issue}`));
+    console.error('[Content Generator] ═══════════════════════════════════════════════════════');
+
+    if (!preferOpus) {
+      console.error('[Content Generator] 💡 RECOMMENDATION: Regenerate with preferOpus=true for better quality');
+    } else {
+      console.error('[Content Generator] ⚠️ CRITICAL: Even Opus 4 generated incomplete content - check prompt');
+    }
+    console.error('[Content Generator] ═══════════════════════════════════════════════════════\n');
+  } else {
+    console.log('\n[Content Generator] ═══════════════════════════════════════════════════════');
+    console.log('[Content Generator] ✅ QUALITY CHECK PASSED - All required arrays populated');
+    console.log('[Content Generator] ═══════════════════════════════════════════════════════\n');
+  }
+
   return sanitizedContent;
 }
 

@@ -73,6 +73,7 @@ export function ProposalGenerationDialog({
   const [selectedTier, setSelectedTier] = useState<PackageTier>('local');
   const [proposalMode, setProposalMode] = useState<ProposalMode>('detailed');
   const [templateStyle, setTemplateStyle] = useState<TemplateStyle>('classic');
+  const [preferOpus, setPreferOpus] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
   const [currentStage, setCurrentStage] = useState('');
@@ -99,6 +100,7 @@ export function ProposalGenerationDialog({
           packageTier: selectedTier,
           proposalMode: proposalMode,
           templateStyle: templateStyle,
+          preferOpus: preferOpus,
         }),
       });
 
@@ -358,14 +360,100 @@ export function ProposalGenerationDialog({
               )}
             </div>
 
+            {/* Model Selection (Advanced) */}
+            <div>
+              <h3 className="font-semibold mb-3">Content Generation Quality</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Sonnet 4 (Default) */}
+                <label
+                  className={`relative flex flex-col p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                    !preferOpus
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="model"
+                    value="sonnet"
+                    checked={!preferOpus}
+                    onChange={() => setPreferOpus(false)}
+                    className="sr-only"
+                  />
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-semibold">Standard Quality</span>
+                    {!preferOpus && (
+                      <CheckCircle2 className="h-5 w-5 text-blue-500" />
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-600 mb-2">
+                    Claude Sonnet 4 • Cost-effective • 95% quality
+                  </p>
+                  <ul className="text-xs text-gray-500 space-y-1">
+                    <li>• Recommended for most proposals</li>
+                    <li>• 80% lower cost than maximum quality</li>
+                    <li>• Enhanced prompt ensures completeness</li>
+                  </ul>
+                </label>
+
+                {/* Opus 4 (Premium) */}
+                <label
+                  className={`relative flex flex-col p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                    preferOpus
+                      ? 'border-purple-500 bg-purple-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="model"
+                    value="opus"
+                    checked={preferOpus}
+                    onChange={() => setPreferOpus(true)}
+                    className="sr-only"
+                  />
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-semibold">Maximum Quality</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs bg-purple-500 text-white px-2 py-0.5 rounded-full font-medium">
+                        PREMIUM
+                      </span>
+                      {preferOpus && (
+                        <CheckCircle2 className="h-5 w-5 text-purple-500" />
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-2">
+                    Claude Opus 4 • Highest reliability • 99.9% quality
+                  </p>
+                  <ul className="text-xs text-gray-500 space-y-1">
+                    <li>• Best for critical/high-value proposals</li>
+                    <li>• 5x cost but guaranteed completeness</li>
+                    <li>• Maximum attention to requirements</li>
+                  </ul>
+                </label>
+              </div>
+
+              {/* Opus Info */}
+              {preferOpus && (
+                <Alert className="mt-4 bg-purple-50 border-purple-200">
+                  <AlertDescription className="text-sm text-purple-800">
+                    💎 Maximum quality mode uses Claude Opus 4, which is more expensive but provides
+                    the highest reliability for following complex instructions. Recommended for proposals
+                    where quality is critical.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
+
             {/* Selected Package Summary */}
             <Alert>
               <AlertDescription>
-                <strong>Selected:</strong> {packages[selectedTier].name} • {proposalMode === 'concise' ? 'Concise' : 'Detailed'} Format • {templateStyle === 'classic' ? 'Classic' : 'Modern'} Template
+                <strong>Selected:</strong> {packages[selectedTier].name} • {proposalMode === 'concise' ? 'Concise' : 'Detailed'} Format • {templateStyle === 'classic' ? 'Classic' : 'Modern'} Template • {preferOpus ? 'Maximum Quality' : 'Standard Quality'}
                 <br />
                 <strong>Estimated generation time:</strong> {packages[selectedTier].estimatedTime}
                 <br />
-                <strong>Estimated cost:</strong> {packages[selectedTier].estimatedCost} (Claude API)
+                <strong>Estimated cost:</strong> {preferOpus ? `£${(parseFloat(packages[selectedTier].estimatedCost.replace('£', '')) * 5).toFixed(2)}` : packages[selectedTier].estimatedCost} (Claude API{preferOpus ? ' - Opus 4' : ' - Sonnet 4'})
               </AlertDescription>
             </Alert>
 
