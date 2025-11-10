@@ -395,17 +395,23 @@ Study the A1 Mobility HTML reference and match its structure EXACTLY:
 - Every table should have 4+ rows with real data
 - Every section should feel complete, not superficial
 
-## ⚠️ CRITICAL REQUIREMENTS - READ THIS CAREFULLY ⚠️
+## ⚠️⚠️⚠️ CRITICAL REQUIREMENTS - YOUR PROPOSAL WILL BE REJECTED IF YOU VIOLATE THESE ⚠️⚠️⚠️
 
-The following fields are NOT optional. They are MANDATORY. Your proposal will be rejected if any are missing:
+**STOP AND READ THIS BEFORE GENERATING ANYTHING:**
 
-0. **ALL ARRAYS MUST HAVE MULTIPLE ITEMS** (CRITICAL):
-   - technicalSEO.priorities: MINIMUM 4 items (ideally 5-6)
-   - contentStrategy.contentPillars: MINIMUM 4 items
-   - linkBuilding.tactics: MINIMUM 5 items (ideally 6-8)
-   - nextSteps.immediate: MINIMUM 3 items
-   - nextSteps.onboarding: MINIMUM 4 items
-   - **EMPTY ARRAYS ARE NOT ACCEPTABLE** - If an array is empty, the section will not render
+### RULE #0: ALL ARRAYS MUST CONTAIN MULTIPLE ITEMS (THIS IS NOT OPTIONAL)
+
+Your JSON response MUST include these minimum array lengths or it will be REJECTED:
+
+✅ technicalSEO.priorities: Generate EXACTLY 4-6 items (NOT 0, NOT 1, NOT 2 - MINIMUM 4)
+✅ contentStrategy.contentPillars: Generate EXACTLY 4 items (NOT 0, NOT 1, NOT 2 - MINIMUM 4)
+✅ linkBuilding.tactics: Generate EXACTLY 5-8 items (NOT 0, NOT 1, NOT 2 - MINIMUM 5)
+✅ nextSteps.immediate: Generate EXACTLY 3-4 items (NOT 0, NOT 1, NOT 2 - MINIMUM 3)
+✅ nextSteps.onboarding: Generate EXACTLY 4-5 items (NOT 0, NOT 1, NOT 2 - MINIMUM 4)
+
+**WHY THIS MATTERS:** Empty arrays = blank sections in proposal = client rejects proposal = wasted time and cost
+
+**VERIFICATION BEFORE YOU SUBMIT:** Count each array. If ANY array has fewer items than required, ADD MORE ITEMS until you meet the minimum.
 
 1. **brutalTruthCallouts** (MANDATORY - Array of 2-3 callouts)
    - MUST be provocative and use real numbers from research
