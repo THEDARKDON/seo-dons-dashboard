@@ -54,6 +54,10 @@ export default function LeaderboardPage() {
             </li>
             <li className="flex items-start gap-2">
               <span className="text-blue-600">•</span>
+              <span>Each entry shows: <strong>Deals Closed, Calls Made, Appointments Booked, Customers Converted</strong></span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-blue-600">•</span>
               <span>Updates happen in <strong>real-time</strong> when deals are marked as won</span>
             </li>
             <li className="flex items-start gap-2">

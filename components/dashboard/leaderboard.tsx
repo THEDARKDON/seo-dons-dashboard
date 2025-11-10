@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/lib/supabase/client';
-import { Trophy, TrendingUp } from 'lucide-react';
+import { Trophy, TrendingUp, Phone, Calendar, Users } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 
 interface LeaderboardEntry {
@@ -14,6 +14,9 @@ interface LeaderboardEntry {
   avatar_url: string | null;
   total_revenue: number;
   deals_closed: number;
+  calls_made: number;
+  appointments_booked: number;
+  customers_converted: number;
   rank: number;
 }
 
@@ -49,43 +52,70 @@ export function Leaderboard() {
       const currentDate = new Date();
       const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
 
-      const { data: deals } = await supabase
-        .from('deals')
-        .select(`
-          assigned_to,
-          deal_value,
-          users!inner(first_name, last_name, avatar_url)
-        `)
-        .eq('stage', 'closed_won')
-        .gte('actual_close_date', monthStart.toISOString());
+      // Get all users (BDRs, managers, admins)
+      const { data: users } = await supabase
+        .from('users')
+        .select('id, first_name, last_name, avatar_url')
+        .in('role', ['bdr', 'manager', 'admin']);
 
-      if (!deals) {
+      if (!users) {
         setLeaderboard([]);
         return;
       }
 
-      // Aggregate by user
-      const userTotals = deals.reduce((acc: any, deal: any) => {
-        const userId = deal.assigned_to;
-        if (!acc[userId]) {
-          acc[userId] = {
-            user_id: userId,
-            first_name: deal.users.first_name,
-            last_name: deal.users.last_name,
-            avatar_url: deal.users.avatar_url,
-            total_revenue: 0,
-            deals_closed: 0
-          };
-        }
-        acc[userId].total_revenue += Number(deal.deal_value);
-        acc[userId].deals_closed += 1;
-        return acc;
-      }, {});
+      // Fetch stats for each user in parallel
+      const statsPromises = users.map(async (user) => {
+        // Get deals closed this month
+        const { data: deals } = await supabase
+          .from('deals')
+          .select('deal_value')
+          .eq('assigned_to', user.id)
+          .eq('stage', 'closed_won')
+          .gte('actual_close_date', monthStart.toISOString());
+
+        const total_revenue = deals?.reduce((sum, deal) => sum + Number(deal.deal_value), 0) || 0;
+        const deals_closed = deals?.length || 0;
+
+        // Get calls made this month
+        const { count: calls_made } = await supabase
+          .from('call_recordings')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .gte('created_at', monthStart.toISOString());
+
+        // Get appointments booked this month
+        const { count: appointments_booked } = await supabase
+          .from('appointments')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .gte('created_at', monthStart.toISOString());
+
+        // Get customers converted this month (leads converted to customers)
+        const { count: customers_converted } = await supabase
+          .from('customers')
+          .select('*', { count: 'exact', head: true })
+          .eq('created_by', user.id)
+          .gte('created_at', monthStart.toISOString());
+
+        return {
+          user_id: user.id,
+          first_name: user.first_name,
+          last_name: user.last_name,
+          avatar_url: user.avatar_url,
+          total_revenue,
+          deals_closed,
+          calls_made: calls_made || 0,
+          appointments_booked: appointments_booked || 0,
+          customers_converted: customers_converted || 0,
+        };
+      });
+
+      const results = await Promise.all(statsPromises);
 
       // Sort by revenue and add ranks
-      const sorted = Object.values(userTotals)
-        .sort((a: any, b: any) => b.total_revenue - a.total_revenue)
-        .map((entry: any, index) => ({ ...entry, rank: index + 1 }));
+      const sorted = results
+        .sort((a, b) => b.total_revenue - a.total_revenue)
+        .map((entry, index) => ({ ...entry, rank: index + 1 }));
 
       setLeaderboard(sorted);
     } catch (error) {
@@ -173,20 +203,35 @@ export function Leaderboard() {
                     {entry.first_name[0]}{entry.last_name[0]}
                   </AvatarFallback>
                 </Avatar>
-                <div>
+                <div className="flex-1">
                   <p className="font-semibold">
                     {entry.first_name} {entry.last_name}
                   </p>
-                  <p className="text-sm text-muted-foreground flex items-center gap-1">
-                    <TrendingUp className="h-3 w-3" />
-                    {entry.deals_closed} {entry.deals_closed === 1 ? 'deal' : 'deals'}
-                  </p>
+                  <div className="flex items-center gap-3 mt-1">
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground" title="Deals Closed">
+                      <TrendingUp className="h-3 w-3" />
+                      <span>{entry.deals_closed}</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground" title="Calls Made">
+                      <Phone className="h-3 w-3" />
+                      <span>{entry.calls_made}</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground" title="Appointments Booked">
+                      <Calendar className="h-3 w-3" />
+                      <span>{entry.appointments_booked}</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground" title="Customers Converted">
+                      <Users className="h-3 w-3" />
+                      <span>{entry.customers_converted}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-2xl font-bold">
+                <p className="text-xl font-bold">
                   {formatCurrency(entry.total_revenue)}
                 </p>
+                <p className="text-xs text-muted-foreground">Revenue</p>
               </div>
             </div>
           ))}
