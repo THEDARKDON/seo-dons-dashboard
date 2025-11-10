@@ -1063,10 +1063,31 @@ export async function conductEnhancedResearch(
   console.log('Notes:', notes ? notes.substring(0, 100) + '...' : 'None');
   console.log('═══════════════════════════════════════════════════════════════\n');
 
+  // BACKSTOP: If industry is vague or missing, analyze website first to extract actual services
+  let extractedIndustry = industry;
+  let websiteServicesForKeywords: string[] = [];
+
+  if (website && (!industry || industry === 'United Kingdom' || industry === 'Unknown' || industry?.length < 5)) {
+    console.log('⚠️  Industry not specified or too vague - analyzing website to extract services first...\n');
+    try {
+      const preliminaryAnalysis = await analyzeWebsiteWithPerplexity(website, companyName);
+      websiteServicesForKeywords = preliminaryAnalysis.mainServices.filter(s => s !== 'Services not analyzed' && s !== 'Service information not found');
+
+      if (websiteServicesForKeywords.length > 0) {
+        console.log('✅ Extracted services from website:', websiteServicesForKeywords.join(', '));
+        // Use the first service as the industry hint for better keyword generation
+        extractedIndustry = websiteServicesForKeywords[0];
+        console.log('✅ Using extracted industry:', extractedIndustry, '\n');
+      }
+    } catch (error) {
+      console.warn('⚠️  Could not extract services from website, will use generic approach:', error);
+    }
+  }
+
   // Generate intelligent keywords if not provided
   const keywords = targetKeywords && targetKeywords.length > 0
     ? targetKeywords
-    : await generateTargetKeywords(companyName, industry, location, packageTier || 'local');
+    : await generateTargetKeywords(companyName, extractedIndustry, location, packageTier || 'local', websiteServicesForKeywords);
 
   console.log('🎯 Target Keywords:', keywords.join(', '));
   console.log('\n🚀 Starting parallel research across 5 data sources...\n');
@@ -1218,15 +1239,27 @@ async function generateTargetKeywords(
   companyName: string,
   industry?: string,
   location?: string,
-  packageTier: 'local' | 'regional' | 'national' = 'local'
+  packageTier: 'local' | 'regional' | 'national' = 'local',
+  extractedServices?: string[]
 ): Promise<string[]> {
   // Import keyword templates (dynamic to avoid circular dependency)
   const { getServicesForIndustry, parseLocation } = await import('./keyword-templates');
 
   const keywords: string[] = [];
 
-  // Get service keywords for industry
-  const services = getServicesForIndustry(industry);
+  // Get service keywords - prioritize extracted services from website
+  let services;
+  if (extractedServices && extractedServices.length > 0) {
+    console.log('[Keyword Generation] Using extracted services from website:', extractedServices);
+    services = {
+      primaryServices: extractedServices.slice(0, 5),
+      secondaryServices: extractedServices.slice(5, 10),
+      localModifiers: ['near me', 'nearby', 'local'],
+    };
+  } else {
+    services = getServicesForIndustry(industry);
+  }
+
   const locationParts = parseLocation(location);
 
   console.log('[Keyword Generation] Configuration:', {
