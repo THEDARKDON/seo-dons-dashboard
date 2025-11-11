@@ -34,6 +34,9 @@ export default function AutoSendPage() {
   const [smsTemplates, setSmsTemplates] = useState<SMSTemplate[]>([]);
   const [emailTemplates, setEmailTemplates] = useState<EmailTemplate[]>([]);
   const [globalEnabled, setGlobalEnabled] = useState(true);
+  const [smsGlobalEnabled, setSmsGlobalEnabled] = useState(true);
+  const [emailGlobalEnabled, setEmailGlobalEnabled] = useState(true);
+  const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
     loadTemplates();
@@ -50,12 +53,15 @@ export default function AutoSendPage() {
       const emailData = await emailRes.json();
 
       // Filter only auto-send templates
-      setSmsTemplates(
-        smsData.templates?.filter((t: SMSTemplate) => t.auto_send_after_call) || []
-      );
-      setEmailTemplates(
-        emailData.templates?.filter((t: EmailTemplate) => t.auto_send_after_call) || []
-      );
+      const smsAutoSendTemplates = smsData.templates?.filter((t: SMSTemplate) => t.auto_send_after_call) || [];
+      const emailAutoSendTemplates = emailData.templates?.filter((t: EmailTemplate) => t.auto_send_after_call) || [];
+
+      setSmsTemplates(smsAutoSendTemplates);
+      setEmailTemplates(emailAutoSendTemplates);
+
+      // Set global enabled states based on if any templates are active
+      setSmsGlobalEnabled(smsAutoSendTemplates.some((t: SMSTemplate) => t.is_active));
+      setEmailGlobalEnabled(emailAutoSendTemplates.some((t: EmailTemplate) => t.is_active));
     } catch (error) {
       console.error('Error loading templates:', error);
     } finally {
@@ -102,6 +108,54 @@ export default function AutoSendPage() {
       }
     } catch (error) {
       console.error('Error updating email template:', error);
+    }
+  };
+
+  const toggleAllSMS = async (enabled: boolean) => {
+    setUpdating(true);
+    try {
+      const promises = smsTemplates.map((template) =>
+        fetch('/api/sms/templates', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...template,
+            is_active: enabled,
+          }),
+        })
+      );
+
+      await Promise.all(promises);
+      setSmsTemplates((prev) => prev.map((t) => ({ ...t, is_active: enabled })));
+      setSmsGlobalEnabled(enabled);
+    } catch (error) {
+      console.error('Error updating all SMS templates:', error);
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const toggleAllEmails = async (enabled: boolean) => {
+    setUpdating(true);
+    try {
+      const promises = emailTemplates.map((template) =>
+        fetch('/api/email/templates', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...template,
+            is_active: enabled,
+          }),
+        })
+      );
+
+      await Promise.all(promises);
+      setEmailTemplates((prev) => prev.map((t) => ({ ...t, is_active: enabled })));
+      setEmailGlobalEnabled(enabled);
+    } catch (error) {
+      console.error('Error updating all email templates:', error);
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -171,15 +225,36 @@ export default function AutoSendPage() {
       {/* SMS Auto-Send Templates */}
       <Card>
         <CardHeader>
-          <div className="flex items-center gap-2">
-            <MessageSquare className="h-5 w-5 text-blue-600" />
-            <CardTitle>SMS Auto-Send Templates</CardTitle>
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5 text-blue-600" />
+                <CardTitle>SMS Auto-Send Templates</CardTitle>
+              </div>
+              <CardDescription>
+                SMS messages automatically sent after calls based on call outcome
+              </CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700">
+                {smsGlobalEnabled ? 'Enabled' : 'Disabled'}
+              </span>
+              <Switch
+                checked={smsGlobalEnabled}
+                onCheckedChange={toggleAllSMS}
+                disabled={updating || !globalEnabled}
+              />
+            </div>
           </div>
-          <CardDescription>
-            SMS messages automatically sent after calls based on call outcome
-          </CardDescription>
         </CardHeader>
         <CardContent>
+          {!smsGlobalEnabled && (
+            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-sm text-yellow-800">
+                ⚠️ SMS auto-send is currently disabled. Toggle the switch above to enable.
+              </p>
+            </div>
+          )}
           {smsTemplates.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <MessageSquare className="h-12 w-12 mx-auto mb-3 text-gray-400" />
@@ -226,9 +301,9 @@ export default function AutoSendPage() {
                     </div>
                   </div>
                   <Switch
-                    checked={template.is_active && globalEnabled}
+                    checked={template.is_active && globalEnabled && smsGlobalEnabled}
                     onCheckedChange={() => toggleSMSTemplate(template)}
-                    disabled={!globalEnabled}
+                    disabled={!globalEnabled || !smsGlobalEnabled}
                   />
                 </div>
               ))}
@@ -240,15 +315,36 @@ export default function AutoSendPage() {
       {/* Email Auto-Send Templates */}
       <Card>
         <CardHeader>
-          <div className="flex items-center gap-2">
-            <Mail className="h-5 w-5 text-purple-600" />
-            <CardTitle>Email Auto-Send Templates</CardTitle>
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-2">
+                <Mail className="h-5 w-5 text-purple-600" />
+                <CardTitle>Email Auto-Send Templates</CardTitle>
+              </div>
+              <CardDescription>
+                Emails automatically sent after calls based on call outcome
+              </CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700">
+                {emailGlobalEnabled ? 'Enabled' : 'Disabled'}
+              </span>
+              <Switch
+                checked={emailGlobalEnabled}
+                onCheckedChange={toggleAllEmails}
+                disabled={updating || !globalEnabled}
+              />
+            </div>
           </div>
-          <CardDescription>
-            Emails automatically sent after calls based on call outcome
-          </CardDescription>
         </CardHeader>
         <CardContent>
+          {!emailGlobalEnabled && (
+            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-sm text-yellow-800">
+                ⚠️ Email auto-send is currently disabled. Toggle the switch above to enable.
+              </p>
+            </div>
+          )}
           {emailTemplates.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <Mail className="h-12 w-12 mx-auto mb-3 text-gray-400" />
@@ -292,9 +388,9 @@ export default function AutoSendPage() {
                     </div>
                   </div>
                   <Switch
-                    checked={template.is_active && globalEnabled}
+                    checked={template.is_active && globalEnabled && emailGlobalEnabled}
                     onCheckedChange={() => toggleEmailTemplate(template)}
-                    disabled={!globalEnabled}
+                    disabled={!globalEnabled || !emailGlobalEnabled}
                   />
                 </div>
               ))}
@@ -309,6 +405,11 @@ export default function AutoSendPage() {
           <CardTitle className="text-blue-900">How Auto-Send Works</CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-blue-800 space-y-2">
+          <p>
+            <strong>Quick Controls:</strong> Use the toggles in the SMS and Email sections above to
+            quickly enable/disable all auto-send messages for that type. Individual templates can
+            also be toggled separately.
+          </p>
           <p>
             <strong>Automatic Triggering:</strong> When a call completes, the system automatically
             sends enabled SMS and Email templates <strong>immediately</strong> to the contact.
