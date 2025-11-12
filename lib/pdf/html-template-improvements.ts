@@ -11,6 +11,7 @@ import { ProposalContent } from '@/lib/claude/content-generator';
 
 export interface ProjectionCalculation {
   currentTraffic: number;
+  actualCurrentTraffic?: number;  // Optional: the real current traffic before baseline adjustments
   projectedTraffic: number;
   multiplier: number;
   monthlyLeads: number;
@@ -34,7 +35,8 @@ export interface ProjectionCalculation {
 export function calculateProjections(
   currentTraffic: number,
   packageName: string,
-  avgDealValue: number = 5000
+  avgDealValue: number = 5000,
+  actualCurrentTraffic?: number  // Optional: the real current traffic for display
 ): ProjectionCalculation {
   // Realistic traffic multipliers based on industry benchmarks
   // 100% = conservative, 200% = moderate, 300% = aggressive
@@ -87,6 +89,7 @@ export function calculateProjections(
 
   return {
     currentTraffic,
+    actualCurrentTraffic,
     projectedTraffic,
     multiplier,
     monthlyLeads,
@@ -107,7 +110,8 @@ export function calculateMonthlyProgression(
   currentTraffic: number,
   finalMultiplier: number,
   conversionRate: number = 0.06,  // Updated to 6% visitor-to-lead
-  avgDealValue: number = 5000
+  avgDealValue: number = 5000,
+  actualCurrentTraffic?: number  // Optional: actual traffic for display (when currentTraffic is a baseline)
 ): Array<{month: number; traffic: number; leads: number; customers: number; revenue: number}> {
   const progression = [];
 
@@ -118,6 +122,13 @@ export function calculateMonthlyProgression(
     let growthFactor: number;
     if (month === 0) {
       growthFactor = 1.0; // Current state
+      // Use actual current traffic for display if provided (e.g., when actual is 0 but we use baseline for calculations)
+      const traffic = actualCurrentTraffic !== undefined ? actualCurrentTraffic : currentTraffic;
+      const leads = Math.round(traffic * conversionRate);
+      const customers = Math.round(leads * 0.35);
+      const revenue = customers * avgDealValue;
+      progression.push({ month, traffic, leads, customers, revenue });
+      continue;
     } else if (month <= 3) {
       growthFactor = 1.0 + (finalMultiplier - 1.0) * 0.3; // 30% of total growth by month 3
     } else if (month <= 6) {
@@ -608,11 +619,13 @@ export function renderEnhancedProjections(
   pageNumber: number
 ): string {
   // Calculate month-by-month progression using the National package multiplier
+  // Pass actualCurrentTraffic so month 0 shows the real current traffic (e.g., 0) instead of baseline (e.g., 100)
   const progression = calculateMonthlyProgression(
     nationalProjection.currentTraffic,
     nationalProjection.multiplier,
     nationalProjection.conversionRates.visitorToLead,
-    nationalProjection.avgDealValue
+    nationalProjection.avgDealValue,
+    nationalProjection.actualCurrentTraffic
   );
 
   // Extract key milestones for easy reference

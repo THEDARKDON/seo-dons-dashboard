@@ -44,6 +44,9 @@ export function generateProposalHTML(content: ProposalContent, research?: any): 
     ? parseInt(research.competitorAnalysis.clientCurrentMetrics.monthlyTraffic.replace(/[^\d]/g, ''))
     : 200; // Fallback default
 
+  // Store the actual current traffic for display purposes (before any modifications)
+  const actualCurrentTraffic = currentTraffic;
+
   // SAFETY VALIDATION: Detect hallucinated traffic numbers
   // If traffic is suspiciously high (>10,000) and there's no enhanced research data validating it, cap it
   if (currentTraffic > 10000) {
@@ -66,9 +69,9 @@ export function generateProposalHTML(content: ProposalContent, research?: any): 
   const avgDealValue = research?.roiProjection?.averageDealValue || 5000;
 
   // Calculate projections for all three packages ONCE
-  const localProjection = calculateProjections(currentTraffic, 'Local Dominance', avgDealValue);
-  const regionalProjection = calculateProjections(currentTraffic, 'Regional Authority', avgDealValue);
-  const nationalProjection = calculateProjections(currentTraffic, 'National Leader', avgDealValue);
+  const localProjection = calculateProjections(currentTraffic, 'Local Dominance', avgDealValue, actualCurrentTraffic);
+  const regionalProjection = calculateProjections(currentTraffic, 'Regional Authority', avgDealValue, actualCurrentTraffic);
+  const nationalProjection = calculateProjections(currentTraffic, 'National Leader', avgDealValue, actualCurrentTraffic);
 
   console.log('\n🎯 PROPOSAL GENERATION: Projections calculated - using throughout proposal');
   console.log(`   Current Traffic: ${currentTraffic.toLocaleString()}`);
