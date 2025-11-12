@@ -168,8 +168,8 @@ export function renderExecutiveSummary(content: any): string {
 
   return `
   <section class="py-10 sm:py-16" style="background-color: rgba(0, 0, 0, 0.02);">
-    <div class="container mx-auto px-4 max-w-7xl">
-      <div class="max-w-5xl mx-auto">
+    <div class="container mx-auto px-8">
+      <div class="mx-auto">
         <h2 class="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 animate-on-scroll">Executive Summary</h2>
 
         <div class="card p-6 sm:p-8 mb-6 sm:mb-8 animate-on-scroll">
@@ -334,8 +334,8 @@ export function renderCurrentSituation(content: any): string {
 
   return `
   <section class="py-10 sm:py-16">
-    <div class="container mx-auto px-4 max-w-7xl">
-      <div class="max-w-5xl mx-auto">
+    <div class="container mx-auto px-8">
+      <div class="mx-auto">
         <h2 class="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 animate-on-scroll">Current Situation</h2>
 
         <div class="card p-6 sm:p-8 mb-6 sm:mb-8 animate-on-scroll">
@@ -472,8 +472,8 @@ export function renderKeywordRankingAnalysis(research: any): string {
 
   return `
   <section class="py-10 sm:py-16" style="background-color: rgba(0, 0, 0, 0.02);">
-    <div class="container mx-auto px-4 max-w-7xl">
-      <div class="max-w-6xl mx-auto">
+    <div class="container mx-auto px-8">
+      <div class="mx-auto">
         <h2 class="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 animate-on-scroll">Keyword Ranking Analysis</h2>
 
         <div class="card p-6 sm:p-8 mb-6 animate-on-scroll">
@@ -566,8 +566,8 @@ export function renderContentOpportunities(research: any): string {
 
   return `
   <section class="py-10 sm:py-16">
-    <div class="container mx-auto px-4 max-w-7xl">
-      <div class="max-w-5xl mx-auto">
+    <div class="container mx-auto px-8">
+      <div class="mx-auto">
         <h2 class="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 animate-on-scroll">Content Opportunities</h2>
 
         <div class="card p-6 sm:p-8 mb-6 animate-on-scroll">
@@ -631,8 +631,8 @@ export function renderLocationOpportunities(research: any): string {
 
   return `
   <section class="py-10 sm:py-16" style="background-color: rgba(0, 0, 0, 0.02);">
-    <div class="container mx-auto px-4 max-w-7xl">
-      <div class="max-w-5xl mx-auto">
+    <div class="container mx-auto px-8">
+      <div class="mx-auto">
         <h2 class="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 animate-on-scroll">Location Opportunities</h2>
 
         <div class="card p-6 sm:p-8 mb-6 animate-on-scroll">
@@ -717,8 +717,8 @@ export function renderTechnicalSEO(content: any): string {
 
   return `
   <section class="py-10 sm:py-16" style="background-color: rgba(0, 0, 0, 0.02);">
-    <div class="container mx-auto px-4 max-w-7xl">
-      <div class="max-w-5xl mx-auto">
+    <div class="container mx-auto px-8">
+      <div class="mx-auto">
         <h2 class="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 animate-on-scroll">Technical SEO Foundation</h2>
 
         <div class="card p-6 sm:p-8 mb-6 animate-on-scroll">
@@ -807,8 +807,8 @@ export function renderContentStrategy(content: any): string {
 
   return `
   <section class="py-10 sm:py-16">
-    <div class="container mx-auto px-4 max-w-7xl">
-      <div class="max-w-5xl mx-auto">
+    <div class="container mx-auto px-8">
+      <div class="mx-auto">
         <h2 class="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 animate-on-scroll">Content Strategy</h2>
 
         <div class="card p-6 sm:p-8 mb-6 animate-on-scroll">
@@ -904,8 +904,8 @@ export function renderLocalSEO(content: any): string {
 
   return `
   <section class="py-10 sm:py-16" style="background-color: rgba(0, 0, 0, 0.02);">
-    <div class="container mx-auto px-4 max-w-7xl">
-      <div class="max-w-5xl mx-auto">
+    <div class="container mx-auto px-8">
+      <div class="mx-auto">
         <h2 class="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 animate-on-scroll">Local SEO Strategy</h2>
 
         <div class="card p-6 sm:p-8 mb-6 animate-on-scroll">
@@ -1005,8 +1005,8 @@ export function renderLinkBuilding(content: any): string {
 
   return `
   <section class="py-10 sm:py-16">
-    <div class="container mx-auto px-4 max-w-7xl">
-      <div class="max-w-5xl mx-auto">
+    <div class="container mx-auto px-8">
+      <div class="mx-auto">
         <h2 class="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 animate-on-scroll">Link Building Strategy</h2>
 
         <div class="card p-6 sm:p-8 mb-6 animate-on-scroll">
@@ -1089,8 +1089,8 @@ export function renderNextSteps(content: any): string {
 
   return `
   <section class="py-10 sm:py-16" style="background: linear-gradient(135deg, var(--primary) 0%, rgba(0, 0, 0, 0.8) 100%); color: white;">
-    <div class="container mx-auto px-4 max-w-7xl">
-      <div class="max-w-5xl mx-auto">
+    <div class="container mx-auto px-8">
+      <div class="mx-auto">
         <h2 class="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 animate-on-scroll">Next Steps</h2>
 
         <div class="mb-8">

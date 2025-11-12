@@ -226,7 +226,7 @@ function getCustomCSS(): string {
 function renderHeader(): string {
   return `
   <header class="border-b sticky top-0 z-50 bg-white/80 backdrop-blur-sm" style="border-color: var(--border);">
-    <div class="container mx-auto px-4 py-4 flex items-center justify-between max-w-7xl">
+    <div class="container mx-auto px-8 py-4 flex items-center justify-between">
       <div class="text-lg sm:text-xl font-semibold tracking-tight">seodons.co.uk</div>
       <a href="mailto:contact@seodons.co.uk" class="btn btn-outline text-xs sm:text-sm">Contact Us</a>
     </div>
@@ -239,8 +239,8 @@ function renderHeader(): string {
 function renderHero(coverPage: any): string {
   return `
   <section class="relative overflow-hidden py-12 sm:py-16 md:py-32">
-    <div class="container mx-auto px-4 max-w-7xl">
-      <div class="max-w-4xl mx-auto text-center space-y-4 sm:space-y-6">
+    <div class="container mx-auto px-8">
+      <div class="max-w-6xl mx-auto text-center space-y-4 sm:space-y-6">
         <span class="badge" style="background-color: rgba(0, 128, 128, 0.1); color: var(--accent); border: 1px solid rgba(0, 128, 128, 0.2);">
           Prepared for ${escapeHTML(coverPage.preparedFor)} • ${formatDate(coverPage.date)}
         </span>
@@ -277,8 +277,8 @@ function renderIntroduction(content: any, research: any, isConcise: boolean): st
 
   return `
   <section class="py-10 sm:py-16" style="background-color: rgba(0, 0, 0, 0.02);">
-    <div class="container mx-auto px-4 max-w-7xl">
-      <div class="max-w-5xl mx-auto">
+    <div class="container mx-auto px-8">
+      <div class="mx-auto">
         <h2 class="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Introduction</h2>
         <div class="grid md:grid-cols-2 gap-6 sm:gap-8">
           ${renderCurrentLandscape(intro, research)}
@@ -411,8 +411,8 @@ function renderConciseCompetition(competition: any, research: any): string {
 
   return `
   <section class="py-10 sm:py-16">
-    <div class="container mx-auto px-4 max-w-7xl">
-      <div class="max-w-5xl mx-auto">
+    <div class="container mx-auto px-8">
+      <div class="mx-auto">
         <h2 class="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Competition Analysis</h2>
         <p class="mb-6 sm:mb-8 leading-relaxed text-sm sm:text-base" style="color: var(--muted-foreground);">
           ${escapeHTML(competition.summary)}
@@ -438,8 +438,8 @@ function renderDetailedCompetition(competitorComparison: any, research: any): st
 
   return `
   <section class="py-10 sm:py-16">
-    <div class="container mx-auto px-4 max-w-7xl">
-      <div class="max-w-5xl mx-auto">
+    <div class="container mx-auto px-8">
+      <div class="mx-auto">
         <h2 class="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Competitive Analysis</h2>
         <p class="mb-6 sm:mb-8 leading-relaxed text-sm sm:text-base" style="color: var(--muted-foreground);">
           Your position versus key competitors in the market:
@@ -571,8 +571,8 @@ function renderStrategy(content: any, isConcise: boolean): string {
 
   return `
   <section class="py-10 sm:py-16" style="background-color: rgba(0, 0, 0, 0.02);">
-    <div class="container mx-auto px-4 max-w-7xl">
-      <div class="max-w-5xl mx-auto">
+    <div class="container mx-auto px-8">
+      <div class="mx-auto">
         <h2 class="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Strategy</h2>
 
         <div class="card mb-6 sm:mb-8 p-6 sm:p-8">
@@ -681,8 +681,8 @@ function renderInvestment(content: any, research: any, isConcise: boolean): stri
 
   return `
   <section class="py-10 sm:py-16">
-    <div class="container mx-auto px-4 max-w-7xl">
-      <div class="max-w-5xl mx-auto">
+    <div class="container mx-auto px-8">
+      <div class="mx-auto">
         <h2 class="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Investment & Results</h2>
 
         ${packageOptions.length > 1 ? renderPackageComparison(packageOptions) : ''}
@@ -931,8 +931,8 @@ function renderSummary(content: any, isConcise: boolean): string {
 
   return `
   <section class="py-10 sm:py-16" style="background-color: rgba(0, 0, 0, 0.02);">
-    <div class="container mx-auto px-4 max-w-7xl">
-      <div class="max-w-5xl mx-auto">
+    <div class="container mx-auto px-8">
+      <div class="mx-auto">
         <h2 class="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Summary</h2>
 
         ${renderKeyBenefits(summary)}
@@ -1013,8 +1013,8 @@ function renderTestimonials(): string {
 
   return `
   <section class="py-8 md:py-20" style="background: linear-gradient(to bottom, rgba(0, 0, 0, 0.02), var(--background));">
-    <div class="container mx-auto px-4 md:px-6 max-w-7xl">
-      <div class="max-w-6xl mx-auto">
+    <div class="container mx-auto px-8">
+      <div class="mx-auto">
         <div class="text-center mb-8 md:mb-12">
           <div class="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full mb-3 md:mb-4" style="background-color: rgba(0, 128, 128, 0.1); border: 1px solid rgba(0, 128, 128, 0.2);">
             <svg class="icon" style="width: 0.75rem; height: 0.75rem; color: var(--accent);">
@@ -1059,7 +1059,7 @@ function renderTestimonials(): string {
 function renderFooter(): string {
   return `
   <footer class="py-6 sm:py-8" style="border-top: 1px solid var(--border);">
-    <div class="container mx-auto px-4 max-w-7xl">
+    <div class="container mx-auto px-8">
       <div class="max-w-5xl mx-auto text-center text-sm" style="color: var(--muted-foreground);">
         <div class="font-semibold mb-2" style="color: var(--foreground);">seodons.co.uk</div>
         <p class="text-xs sm:text-sm">Contact us today to get started • <a href="mailto:contact@seodons.co.uk" class="underline">contact@seodons.co.uk</a></p>
