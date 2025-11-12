@@ -323,22 +323,17 @@ async function normalizeSerpAPILocation(
 
   // LOCAL: Use most specific location available (city > county > country)
   if (packageTier === 'local') {
-    if (locationParts.city && locationParts.county) {
-      const serpLocation = `${locationParts.city}, ${locationParts.county}, UK`;
-      console.log(`[SerpAPI Location] LOCAL tier - Using: "${serpLocation}"`);
-      return serpLocation;
-    }
-
-    if (locationParts.city) {
-      const serpLocation = `${locationParts.city}, UK`;
-      console.log(`[SerpAPI Location] LOCAL tier - Using city: "${serpLocation}"`);
-      return serpLocation;
-    }
-
+    // Try county first (more reliable with SerpAPI)
     if (locationParts.county) {
       const serpLocation = `${locationParts.county}, UK`;
       console.log(`[SerpAPI Location] LOCAL tier - Using county: "${serpLocation}"`);
       return serpLocation;
+    }
+
+    // City-only locations may not be supported - fallback to UK
+    if (locationParts.city) {
+      console.log(`[SerpAPI Location] LOCAL tier - City "${locationParts.city}" without county, using UK fallback`);
+      return 'United Kingdom';
     }
   }
 
@@ -350,10 +345,11 @@ async function normalizeSerpAPILocation(
       return serpLocation;
     }
 
+    // For regional tier, if we only have a city without county, use UK as fallback
+    // Some cities (like Milton Keynes) aren't recognized by SerpAPI's location parameter
     if (locationParts.city) {
-      const serpLocation = `${locationParts.city}, UK`;
-      console.log(`[SerpAPI Location] REGIONAL tier - Using city fallback: "${serpLocation}"`);
-      return serpLocation;
+      console.log(`[SerpAPI Location] REGIONAL tier - City "${locationParts.city}" may not be supported, using UK fallback`);
+      return 'United Kingdom';
     }
   }
 
