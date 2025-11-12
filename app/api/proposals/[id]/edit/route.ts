@@ -115,13 +115,29 @@ Return the updated proposal content in the exact same JSON structure.`;
     // Parse JSON from response
     let editedContent;
     try {
-      const jsonMatch = responseText.match(/```json\n([\s\S]*?)\n```/);
-      const jsonString = jsonMatch ? jsonMatch[1] : responseText;
-      editedContent = JSON.parse(jsonString.trim());
+      // Try multiple patterns to extract JSON
+      // Pattern 1: ```json ... ``` with various whitespace
+      let jsonMatch = responseText.match(/```json\s*([\s\S]*?)\s*```/);
+
+      // Pattern 2: Just ``` ... ``` (no language specified)
+      if (!jsonMatch) {
+        jsonMatch = responseText.match(/```\s*([\s\S]*?)\s*```/);
+      }
+
+      // Extract the JSON string
+      let jsonString = jsonMatch ? jsonMatch[1] : responseText;
+
+      // Clean up the string - remove any leading/trailing whitespace and backticks
+      jsonString = jsonString.trim().replace(/^`+|`+$/g, '');
+
+      console.log('[Edit API] Parsing JSON response, length:', jsonString.length);
+      editedContent = JSON.parse(jsonString);
+      console.log('[Edit API] ✅ Successfully parsed edited content');
     } catch (parseError) {
       console.error('[Edit API] Failed to parse edited content:', parseError);
+      console.error('[Edit API] Response text preview:', responseText.substring(0, 200));
       return NextResponse.json(
-        { error: 'Failed to parse edited content from AI' },
+        { error: 'Failed to parse edited content from AI', details: parseError instanceof Error ? parseError.message : 'Unknown error' },
         { status: 500 }
       );
     }
