@@ -38,12 +38,30 @@ export function calculateProjections(
   avgDealValue: number = 5000,
   actualCurrentTraffic?: number  // Optional: the real current traffic for display
 ): ProjectionCalculation {
-  // Realistic traffic multipliers based on industry benchmarks
-  // 100% = conservative, 200% = moderate, 300% = aggressive
-  const trafficMultipliers: Record<string, number> = {
-    'Local Dominance': 2.0,      // 100% growth (2x traffic, conservative local focus)
-    'Regional Authority': 3.0,    // 200% growth (3x traffic, moderate regional expansion)
-    'National Leader': 4.0        // 300% growth (4x traffic, aggressive national reach)
+  // ADAPTIVE traffic multipliers based on baseline traffic
+  // Smaller firms get more aggressive growth targets (easier to grow from 50 to 600 than 2000 to 8000)
+  const getMultiplier = (traffic: number, packageName: string): number => {
+    const baseMultipliers: Record<string, number> = {
+      'Local Dominance': 2.0,      // 100% growth (conservative local focus)
+      'Regional Authority': 3.0,    // 200% growth (moderate regional expansion)
+      'National Leader': 4.0        // 300% growth (aggressive national reach)
+    };
+
+    const baseMultiplier = baseMultipliers[packageName] || 1.5;
+
+    // For very small firms (< 100 visitors), apply bonus multiplier
+    // From 50 visitors: Local 2x → 4x, Regional 3x → 6x, National 4x → 12x
+    if (traffic <= 100) {
+      return baseMultiplier * 3;  // Triple the growth rate for startups
+    }
+    // For small firms (100-500 visitors), apply moderate bonus
+    else if (traffic <= 500) {
+      return baseMultiplier * 2;  // Double the growth rate
+    }
+    // For medium firms (500-2000 visitors), standard multipliers
+    else {
+      return baseMultiplier;
+    }
   };
 
   // Conversion rates - industry standard for high-ticket services
@@ -53,11 +71,9 @@ export function calculateProjections(
     visitorToCustomer: 0.021  // 2.1% combined (6% × 35% = 2.1%)
   };
 
-  const multiplier = trafficMultipliers[packageName] || 1.5;
+  const multiplier = getMultiplier(currentTraffic, packageName);
 
   // Calculate projected traffic
-  // Multipliers ARE the cap - they're designed to be realistic growth targets
-  // Local: 2x (conservative), Regional: 3x (moderate), National: 4x (aggressive)
   const projectedTraffic = Math.round(currentTraffic * multiplier);
 
   // Calculate conversion funnel
@@ -635,10 +651,16 @@ export function renderEnhancedProjections(
   const month12 = progression[6];  // Month 12
 
   // Calculate ROI metrics
-  const annualInvestment = 5000 * 12; // National package
-  const roi = month12.revenue > annualInvestment
-    ? Math.round(((month12.revenue * 12 - annualInvestment) / annualInvestment) * 100)
+  const annualInvestment = 5000 * 12; // National package (£60,000)
+  const annualRevenue = month12.revenue * 12; // Convert monthly to annual
+  const netProfit = annualRevenue - annualInvestment;
+
+  // ROI = (Net Profit / Investment) × 100
+  // Example: £420,000 profit / £60,000 investment = 700% ROI
+  const roi = annualInvestment > 0
+    ? Math.round((netProfit / annualInvestment) * 100)
     : 0;
+
   const paybackPeriod = nationalProjection.monthlyRevenue > 0
     ? `${Math.max(1, Math.ceil(annualInvestment / nationalProjection.monthlyRevenue))} months`
     : '12+ months';
@@ -746,21 +768,21 @@ export function renderEnhancedProjections(
             <td>${month3.traffic.toLocaleString()}</td>
             <td>${month3.leads.toLocaleString()}</td>
             <td>£${month3.revenue.toLocaleString()}</td>
-            <td style="color: #28a745;">+${Math.round(((month3.traffic / current.traffic) - 1) * 100)}%</td>
+            <td style="color: #28a745;">${current.traffic > 0 ? `+${Math.round(((month3.traffic / current.traffic) - 1) * 100)}%` : 'New'}</td>
           </tr>
           <tr>
             <td><strong>Month 6</strong></td>
             <td>${month6.traffic.toLocaleString()}</td>
             <td>${month6.leads.toLocaleString()}</td>
             <td>£${month6.revenue.toLocaleString()}</td>
-            <td style="color: #28a745;">+${Math.round(((month6.traffic / current.traffic) - 1) * 100)}%</td>
+            <td style="color: #28a745;">${current.traffic > 0 ? `+${Math.round(((month6.traffic / current.traffic) - 1) * 100)}%` : 'New'}</td>
           </tr>
           <tr>
             <td><strong>Month 12</strong></td>
             <td>${month12.traffic.toLocaleString()}</td>
             <td>${month12.leads.toLocaleString()}</td>
             <td>£${month12.revenue.toLocaleString()}</td>
-            <td style="color: #28a745;">+${Math.round(((month12.traffic / current.traffic) - 1) * 100)}%</td>
+            <td style="color: #28a745;">${current.traffic > 0 ? `+${Math.round(((month12.traffic / current.traffic) - 1) * 100)}%` : 'New'}</td>
           </tr>
         </tbody>
       </table>
