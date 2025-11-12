@@ -40,9 +40,27 @@ export function generateProposalHTML(content: ProposalContent, research?: any): 
   // CALCULATE PROJECTIONS ONCE - SINGLE SOURCE OF TRUTH
   // ============================================================================
   // Extract base metrics from research or content
-  const currentTraffic = research?.competitorAnalysis?.clientCurrentMetrics?.monthlyTraffic
+  let currentTraffic = research?.competitorAnalysis?.clientCurrentMetrics?.monthlyTraffic
     ? parseInt(research.competitorAnalysis.clientCurrentMetrics.monthlyTraffic.replace(/[^\d]/g, ''))
     : 200; // Fallback default
+
+  // SAFETY VALIDATION: Detect hallucinated traffic numbers
+  // If traffic is suspiciously high (>10,000) and there's no enhanced research data validating it, cap it
+  if (currentTraffic > 10000) {
+    const hasEnhancedData = research?.enhancedResearch?.keywordAnalysis?.length > 0;
+    if (!hasEnhancedData) {
+      console.warn(`[HTML Template] ⚠️ WARNING: Suspiciously high traffic baseline detected (${currentTraffic.toLocaleString()})`);
+      console.warn(`[HTML Template] No enhanced research validation found - this may be hallucinated`);
+      console.warn(`[HTML Template] Capping at conservative 1,000 to prevent fantasy projections`);
+      currentTraffic = 1000;
+    }
+  }
+
+  // SAFETY VALIDATION: If traffic is 0, use small baseline for projections to show growth potential
+  if (currentTraffic === 0) {
+    console.log(`[HTML Template] ℹ️ Current traffic is 0 - using minimal baseline (100) for projection calculations`);
+    currentTraffic = 100; // Use 100 as minimum baseline when actual is 0
+  }
 
   // Get average deal value from research ROI projection (includes customer's actual deal size)
   const avgDealValue = research?.roiProjection?.averageDealValue || 5000;

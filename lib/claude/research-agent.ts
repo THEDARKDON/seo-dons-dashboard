@@ -623,7 +623,7 @@ Provide competitive analysis in the following JSON format:
   ],
 
   "clientCurrentMetrics": {
-    "monthlyTraffic": "YOUR CLIENT's estimated current monthly traffic (be realistic, e.g., '174 visitors/month')",
+    "monthlyTraffic": "⚠️ CRITICAL: If SEMrush screenshot is provided, USE THE EXACT ORGANIC TRAFFIC NUMBER shown. If it shows 0, use '0 visitors/month'. If it shows 500, use '500 visitors/month'. DO NOT ESTIMATE OR HALLUCINATE. Only estimate if NO screenshot provided (e.g., '174 visitors/month')",
     "rankingKeywords": "YOUR CLIENT's current ranking keywords (e.g., '71 keywords')",
     "domainAuthority": "YOUR CLIENT's estimated DA (e.g., 'DA 25')",
     "contentPages": "YOUR CLIENT's current content pages (e.g., '20 pages')"
@@ -675,6 +675,7 @@ CRITICAL INSTRUCTIONS:
 - Include 3-5 top competitors with REAL estimated metrics
 - Use "Top Competitor A", "Top Competitor B", "Market Leader" naming in competitiveGaps
 - Metrics should be realistic educated guesses based on industry norms
+- ⚠️⚠️⚠️ FOR CLIENT TRAFFIC: If SEMrush screenshot provided, READ IT and use EXACT number (even if 0). DO NOT estimate/hallucinate traffic when real data exists in screenshots
 - clientCurrentMetrics should be conservative/realistic for a business needing SEO help
 - competitiveGaps MUST have at least 3-4 rows with specific numbers
   `);
