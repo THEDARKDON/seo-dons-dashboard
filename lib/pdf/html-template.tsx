@@ -59,11 +59,11 @@ export function generateProposalHTML(content: ProposalContent, research?: any): 
     }
   }
 
-  // SAFETY VALIDATION: If traffic is 0, use small baseline for projections to show growth potential
-  // Use 50 as baseline for small firms (more realistic for startups with no current traffic)
-  if (currentTraffic === 0) {
-    console.log(`[HTML Template] ℹ️ Current traffic is 0 - using minimal baseline (50) for projection calculations`);
-    currentTraffic = 50; // Use 50 as minimum baseline when actual is 0
+  // SAFETY VALIDATION: If traffic is very low (< 10), use realistic baseline for projections
+  // Use 50 as baseline for small firms (more realistic for startups with minimal/no current traffic)
+  if (currentTraffic < 10) {
+    console.log(`[HTML Template] ℹ️ Current traffic is ${currentTraffic} - using minimal baseline (50) for projection calculations`);
+    currentTraffic = 50; // Use 50 as minimum baseline when actual is < 10
   }
 
   // Get average deal value from research ROI projection (includes customer's actual deal size)
