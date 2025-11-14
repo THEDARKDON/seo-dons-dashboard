@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from('leads')
       .select('*')
-      .order('created_at', { ascending: false });
+      .order('updated_at', { ascending: false });
 
     // Admins can see all leads or filter by SDR, SDRs only see their own
     if (user.role !== 'admin') {

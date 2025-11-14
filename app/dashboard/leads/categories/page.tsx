@@ -39,6 +39,7 @@ const PREDEFINED_CATEGORIES = [
   { value: 'warm', label: 'Warm Lead', color: 'bg-blue-100 text-blue-700' },
   { value: 'hot', label: 'Hot Lead', color: 'bg-orange-100 text-orange-700' },
   { value: 'instantly_opened', label: 'Instantly Opened', color: 'bg-purple-100 text-purple-700' },
+  { value: 'seo_instantly_opened', label: 'SEO - Instantly Opened', color: 'bg-indigo-100 text-indigo-700' },
   { value: 'email_replied', label: 'Email Replied', color: 'bg-green-100 text-green-700' },
   { value: 'meeting_scheduled', label: 'Meeting Scheduled', color: 'bg-teal-100 text-teal-700' },
   { value: 'follow_up', label: 'Follow Up', color: 'bg-yellow-100 text-yellow-700' },

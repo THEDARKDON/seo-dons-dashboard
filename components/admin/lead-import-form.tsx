@@ -52,6 +52,7 @@ const PREDEFINED_CATEGORIES = [
   { value: 'warm', label: 'Warm Lead' },
   { value: 'hot', label: 'Hot Lead' },
   { value: 'instantly_opened', label: 'Instantly Opened' },
+  { value: 'seo_instantly_opened', label: 'SEO - Instantly Opened' },
   { value: 'email_replied', label: 'Email Replied' },
   { value: 'meeting_scheduled', label: 'Meeting Scheduled' },
   { value: 'follow_up', label: 'Follow Up' },
