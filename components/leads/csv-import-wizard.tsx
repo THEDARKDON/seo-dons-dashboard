@@ -442,7 +442,10 @@ export function CSVImportWizard() {
               }}>
                 Import Another File
               </Button>
-              <Button onClick={() => router.push('/dashboard/leads')}>
+              <Button onClick={() => {
+                router.push('/dashboard/leads');
+                router.refresh();
+              }}>
                 View All Leads
               </Button>
             </div>
