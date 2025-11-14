@@ -82,6 +82,7 @@ const categoryConfig: Record<string, { label: string; color: string }> = {
   warm: { label: 'Warm Lead', color: 'bg-blue-100 text-blue-700 border-blue-300' },
   hot: { label: 'Hot Lead', color: 'bg-orange-100 text-orange-700 border-orange-300' },
   instantly_opened: { label: 'Instantly Opened', color: 'bg-purple-100 text-purple-700 border-purple-300' },
+  seo_instantly_opened: { label: 'SEO - Instantly Opened', color: 'bg-indigo-100 text-indigo-700 border-indigo-300' },
   email_replied: { label: 'Email Replied', color: 'bg-green-100 text-green-700 border-green-300' },
   meeting_scheduled: { label: 'Meeting Scheduled', color: 'bg-teal-100 text-teal-700 border-teal-300' },
   follow_up: { label: 'Follow Up', color: 'bg-yellow-100 text-yellow-700 border-yellow-300' },
