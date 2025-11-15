@@ -1,69 +1,132 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { createClient } from '@/lib/supabase/server';
-import { auth } from '@clerk/nextjs/server';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { formatDate } from '@/lib/utils';
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
 import { ACTIVE_STAGES } from '@/lib/constants/pipeline-stages';
 
-async function getCustomers(userId: string) {
-  const supabase = await createClient();
-
-  // Get user's Supabase ID and role
-  const { data: user } = await supabase
-    .from('users')
-    .select('id, role')
-    .eq('clerk_id', userId)
-    .single();
-
-  if (!user) {
-    return [];
-  }
-
-  // Build query - BDRs see only their customers, managers/admins see all
-  let query = supabase
-    .from('customers')
-    .select(`
-      *,
-      deals (id, deal_name, deal_value, stage)
-    `)
-    .order('created_at', { ascending: false });
-
-  // Filter for BDRs only - managers and admins see everything
-  if (user.role === 'bdr') {
-    query = query.eq('owned_by', user.id);
-  }
-
-  const { data: customers } = await query;
-
-  return customers || [];
+interface User {
+  id: string;
+  first_name: string;
+  last_name: string;
+  role: string;
 }
 
-export default async function CustomersPage() {
-  const { userId } = await auth();
+interface Customer {
+  id: string;
+  first_name: string;
+  last_name: string;
+  company: string | null;
+  email: string | null;
+  phone: string | null;
+  status: string;
+  created_at: string;
+  owned_by: string;
+  deals: Array<{
+    id: string;
+    deal_name: string;
+    deal_value: number;
+    stage: string;
+  }>;
+}
 
-  if (!userId) {
-    return <div>Please sign in</div>;
+interface CustomerWithStats extends Customer {
+  totalDeals: number;
+  activeDeals: number;
+  totalValue: number;
+}
+
+export default function CustomersPage() {
+  const [customers, setCustomers] = useState<CustomerWithStats[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filterUser, setFilterUser] = useState<string>('all');
+  const [currentUserRole, setCurrentUserRole] = useState<string>('');
+
+  useEffect(() => {
+    loadUsers();
+    loadCustomers();
+  }, [filterUser]);
+
+  const loadUsers = async () => {
+    try {
+      const response = await fetch('/api/admin/users');
+      const data = await response.json();
+
+      if (data.users) {
+        const sdrUsers = data.users.filter((u: User) =>
+          ['bdr', 'manager', 'admin'].includes(u.role)
+        );
+        setUsers(sdrUsers);
+
+        const currentUser = data.users.find((u: User) => u.role === 'admin' || u.role === 'manager');
+        if (currentUser) {
+          setCurrentUserRole(currentUser.role);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading users:', error);
+    }
+  };
+
+  const loadCustomers = async () => {
+    try {
+      let url = '/api/customers';
+      const params = new URLSearchParams();
+
+      if (filterUser !== 'all') {
+        params.append('ownedBy', filterUser);
+      }
+
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.customers) {
+        const customersWithStats = data.customers.map((customer: Customer) => {
+          const deals = customer.deals || [];
+          const totalDeals = deals.length;
+          const activeDeals = deals.filter((d) => ACTIVE_STAGES.includes(d.stage)).length;
+          const totalValue = deals.reduce((sum, d) => sum + Number(d.deal_value || 0), 0);
+
+          return {
+            ...customer,
+            totalDeals,
+            activeDeals,
+            totalValue,
+          };
+        });
+
+        setCustomers(customersWithStats);
+      }
+    } catch (error) {
+      console.error('Error loading customers:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-[calc(100vh-8rem)]">
+        <p className="text-gray-500">Loading customers...</p>
+      </div>
+    );
   }
-
-  const customers = await getCustomers(userId);
-
-  // Calculate stats for each customer
-  const customersWithStats = customers.map((customer) => {
-    const deals = customer.deals as any[];
-    const totalDeals = deals?.length || 0;
-    const activeDeals = deals?.filter((d) => ACTIVE_STAGES.includes(d.stage)).length || 0;
-    const totalValue = deals?.reduce((sum, d) => sum + Number(d.deal_value || 0), 0) || 0;
-
-    return {
-      ...customer,
-      totalDeals,
-      activeDeals,
-      totalValue,
-    };
-  });
 
   return (
     <div className="space-y-6">
@@ -72,17 +135,34 @@ export default async function CustomersPage() {
           <h1 className="text-3xl font-bold">Customers</h1>
           <p className="text-muted-foreground">Manage your customer database</p>
         </div>
-        <Link href="/dashboard/customers/new">
-          <Button className="gap-2">
-            <Plus className="h-4 w-4" />
-            Add Customer
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+          {(currentUserRole === 'admin' || currentUserRole === 'manager') && users.length > 0 && (
+            <Select value={filterUser} onValueChange={setFilterUser}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Filter by SDR" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All SDRs</SelectItem>
+                {users.map((user) => (
+                  <SelectItem key={user.id} value={user.id}>
+                    {user.first_name} {user.last_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          <Link href="/dashboard/customers/new">
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              Add Customer
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>All Customers ({customersWithStats.length})</CardTitle>
+          <CardTitle>All Customers ({customers.length})</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -100,14 +180,14 @@ export default async function CustomersPage() {
                 </tr>
               </thead>
               <tbody>
-                {customersWithStats.length === 0 ? (
+                {customers.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="py-8 text-center text-muted-foreground">
                       No customers found. Create your first customer to get started.
                     </td>
                   </tr>
                 ) : (
-                  customersWithStats.map((customer) => (
+                  customers.map((customer) => (
                     <tr key={customer.id} className="border-b last:border-0 hover:bg-muted/50">
                       <td className="py-4">
                         <Link
