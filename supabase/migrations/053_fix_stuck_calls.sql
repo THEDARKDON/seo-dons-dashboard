@@ -35,10 +35,8 @@ COMMENT ON FUNCTION fix_stuck_calls() IS 'Fixes calls stuck in in-progress or in
 
 -- Create a scheduled job to run this periodically (if using pg_cron extension)
 -- Uncomment if you have pg_cron installed:
-/*
-SELECT cron.schedule(
-    'fix-stuck-calls',
-    '*/30 * * * *', -- Run every 30 minutes
-    'SELECT fix_stuck_calls();'
-);
-*/
+-- SELECT cron.schedule(
+--     'fix-stuck-calls',
+--     '*/30 * * * *',  -- Run every 30 minutes
+--     'SELECT fix_stuck_calls();'
+-- );
