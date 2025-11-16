@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     // Generate TwiML to dial the destination number
     const twiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Dial callerId="${callerId}" record="record-from-answer" recordingStatusCallback="${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/twilio/recording" recordingStatusCallbackEvent="completed" action="${process.env.NEXT_PUBLIC_APP_URL}/api/calling/webhook" method="POST">
+  <Dial callerId="${callerId}" record="record-from-answer" recordingStatusCallback="${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/twilio/recording" recordingStatusCallbackEvent="completed" action="${process.env.NEXT_PUBLIC_APP_URL}/api/calling/webhook" method="POST" statusCallback="${process.env.NEXT_PUBLIC_APP_URL}/api/calling/webhook" statusCallbackEvent="initiated ringing answered completed" statusCallbackMethod="POST">
     <Number>${to}</Number>
   </Dial>
 </Response>`;
