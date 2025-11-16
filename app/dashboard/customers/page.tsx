@@ -55,9 +55,25 @@ export default function CustomersPage() {
   const [currentUserRole, setCurrentUserRole] = useState<string>('');
 
   useEffect(() => {
+    loadCurrentUserRole();
     loadUsers();
+  }, []);
+
+  useEffect(() => {
     loadCustomers();
   }, [filterUser]);
+
+  const loadCurrentUserRole = async () => {
+    try {
+      const response = await fetch('/api/user/role');
+      const data = await response.json();
+      if (data.role) {
+        setCurrentUserRole(data.role);
+      }
+    } catch (error) {
+      console.error('Error loading current user role:', error);
+    }
+  };
 
   const loadUsers = async () => {
     try {
@@ -69,11 +85,6 @@ export default function CustomersPage() {
           ['bdr', 'manager', 'admin'].includes(u.role)
         );
         setUsers(sdrUsers);
-
-        const currentUser = data.users.find((u: User) => u.role === 'admin' || u.role === 'manager');
-        if (currentUser) {
-          setCurrentUserRole(currentUser.role);
-        }
       }
     } catch (error) {
       console.error('Error loading users:', error);
