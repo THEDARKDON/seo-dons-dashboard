@@ -1,0 +1,248 @@
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { createClient } from '@/lib/supabase/server';
+import { auth } from '@clerk/nextjs/server';
+import { formatDate } from '@/lib/utils';
+import { Phone, Download, FileText, TrendingUp, Filter } from 'lucide-react';
+import Link from 'next/link';
+import { SdrFilterDropdown } from '@/components/calls/sdr-filter-dropdown';
+
+async function getCallHistory(userId: string, filterUserId?: string) {
+  try {
+    const supabase = await createClient();
+
+    // Get user's Supabase ID
+    const { data: user } = await supabase
+      .from('users')
+      .select('id, role')
+      .eq('clerk_id', userId)
+      .single();
+
+    if (!user) {
+      return [];
+    }
+
+    // Try to get call recordings - may fail if table doesn't exist
+    try {
+      const query = supabase
+        .from('call_recordings')
+        .select(`
+          *,
+          customers (first_name, last_name, company),
+          deals (deal_name),
+          leads (first_name, last_name, company),
+          users!call_recordings_user_id_fkey (first_name, last_name)
+        `)
+        .order('created_at', { ascending: false });
+
+      // Apply role-based filters
+      if (user.role === 'bdr') {
+        query.eq('user_id', user.id);
+      } else if (filterUserId) {
+        // Admin filtering by specific SDR
+        query.eq('user_id', filterUserId);
+      }
+
+      const { data: calls } = await query;
+      return calls || [];
+    } catch (e) {
+      console.warn('call_recordings table not found - skipping');
+      return [];
+    }
+  } catch (error) {
+    console.error('Error fetching call history:', error);
+    return [];
+  }
+}
+
+const statusColors = {
+  completed: 'success',
+  'in-progress': 'default',
+  failed: 'destructive',
+  'no-answer': 'secondary',
+} as const;
+
+const sentimentColors = {
+  positive: 'success',
+  neutral: 'default',
+  negative: 'destructive',
+} as const;
+
+async function getAllUsers() {
+  try {
+    const supabase = await createClient();
+    const { data: users } = await supabase
+      .from('users')
+      .select('id, first_name, last_name, role')
+      .in('role', ['admin', 'bdr'])
+      .order('first_name');
+    return users || [];
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    return [];
+  }
+}
+
+export default async function CallHistoryPage({
+  searchParams,
+}: {
+  searchParams: { sdr?: string };
+}) {
+  const { userId } = await auth();
+
+  if (!userId) {
+    return <div>Please sign in</div>;
+  }
+
+  const supabase = await createClient();
+  const { data: currentUser } = await supabase
+    .from('users')
+    .select('role')
+    .eq('clerk_id', userId)
+    .single();
+
+  const filterUserId = searchParams.sdr;
+  const calls = await getCallHistory(userId, filterUserId);
+  const users = currentUser?.role === 'admin' ? await getAllUsers() : [];
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Call History</h1>
+          <p className="text-muted-foreground">
+            View and analyze your call recordings
+          </p>
+        </div>
+        {currentUser?.role === 'admin' && users.length > 0 && (
+          <SdrFilterDropdown users={users} currentFilter={filterUserId} />
+        )}
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>All Calls ({calls.length})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {calls.length === 0 ? (
+            <div className="text-center py-12">
+              <Phone className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+              <p className="text-muted-foreground">No calls recorded yet</p>
+              <p className="text-sm text-muted-foreground mt-2">
+                Make your first call to see it here
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {calls.map((call) => {
+                const customer = call.customers as any;
+                const lead = call.leads as any;
+                const deal = call.deals as any;
+                const sdr = call.users as any;
+                const durationMin = call.duration_seconds
+                  ? Math.floor(call.duration_seconds / 60)
+                  : 0;
+                const durationSec = call.duration_seconds
+                  ? call.duration_seconds % 60
+                  : 0;
+
+                return (
+                  <Link
+                    key={call.id}
+                    href={`/dashboard/calls/history/${call.id}`}
+                    className="flex items-center justify-between rounded-lg border p-4 hover:bg-muted/50"
+                  >
+                    <div className="flex items-start gap-4 flex-1">
+                      <div className="rounded-full bg-muted p-3">
+                        <Phone className="h-5 w-5" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          {customer ? (
+                            <>
+                              <p className="font-medium">
+                                {customer.first_name} {customer.last_name}
+                              </p>
+                              {customer.company && (
+                                <span className="text-sm text-muted-foreground">
+                                  · {customer.company}
+                                </span>
+                              )}
+                            </>
+                          ) : lead ? (
+                            <>
+                              <p className="font-medium">
+                                {lead.first_name} {lead.last_name}
+                              </p>
+                              <Badge variant="outline" className="text-xs">Lead</Badge>
+                              {lead.company && (
+                                <span className="text-sm text-muted-foreground">
+                                  · {lead.company}
+                                </span>
+                              )}
+                            </>
+                          ) : (
+                            <p className="font-mono text-sm">{call.to_number}</p>
+                          )}
+                        </div>
+                        {deal && (
+                          <p className="text-sm text-muted-foreground">
+                            Deal: {deal.deal_name}
+                          </p>
+                        )}
+                        <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                          {sdr && (
+                            <span>
+                              by {sdr.first_name} {sdr.last_name}
+                            </span>
+                          )}
+                          <span>
+                            {call.direction === 'outbound' ? '→' : '←'}{' '}
+                            {call.direction}
+                          </span>
+                          <span>
+                            {durationMin}m {durationSec}s
+                          </span>
+                          <span>{formatDate(call.created_at)}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      {call.sentiment_label && (
+                        <Badge
+                          variant={
+                            sentimentColors[
+                              call.sentiment_label as keyof typeof sentimentColors
+                            ]
+                          }
+                        >
+                          {call.sentiment_label}
+                        </Badge>
+                      )}
+                      <Badge
+                        variant={
+                          statusColors[call.status as keyof typeof statusColors] ||
+                          'default'
+                        }
+                      >
+                        {call.status}
+                      </Badge>
+                      {call.transcription && (
+                        <FileText className="h-4 w-4 text-muted-foreground" />
+                      )}
+                      {call.recording_url && (
+                        <Download className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
