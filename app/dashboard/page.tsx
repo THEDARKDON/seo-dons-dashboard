@@ -4,18 +4,79 @@ import { DashboardClient } from '@/components/dashboard/dashboard-client';
 import { ACTIVE_STAGES } from '@/lib/constants/pipeline-stages';
 
 export default async function DashboardPage() {
-  const { userId } = await auth();
-  const supabase = await createClient();
+  console.log('=== DASHBOARD PAGE START ===');
+  console.log('Timestamp:', new Date().toISOString());
 
-  const { data: user } = await supabase
+  const { userId } = await auth();
+  console.log('🔐 Clerk Auth Result:', {
+    userId,
+    userIdType: typeof userId,
+    userIdLength: userId?.length,
+    hasUserId: !!userId,
+  });
+
+  const supabase = await createClient();
+  console.log('📊 Supabase client created');
+
+  // Log the exact query being executed
+  console.log('🔍 Looking up user with clerk_id:', userId);
+
+  const { data: user, error: userError, count } = await supabase
     .from('users')
-    .select('id, first_name, last_name, email, role')
+    .select('id, first_name, last_name, email, role, clerk_id', { count: 'exact' })
     .eq('clerk_id', userId)
     .single();
 
+  console.log('👤 User Lookup Result:', {
+    found: !!user,
+    error: userError?.message,
+    errorCode: userError?.code,
+    errorDetails: userError?.details,
+    errorHint: userError?.hint,
+    count,
+    userData: user ? {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      clerk_id_matches: user.clerk_id === userId,
+      clerk_id_in_db: user.clerk_id,
+      clerk_id_from_clerk: userId,
+    } : null,
+  });
+
+  // If user not found, try to get diagnostic info
   if (!user) {
+    console.error('❌ USER NOT FOUND - Running diagnostics...');
+
+    // Check if ANY users exist
+    const { data: allUsers, error: allError } = await supabase
+      .from('users')
+      .select('id, clerk_id, email')
+      .limit(5);
+
+    console.error('📋 Sample users in database:', {
+      totalSample: allUsers?.length || 0,
+      error: allError?.message,
+      sampleUsers: allUsers?.map(u => ({
+        id: u.id,
+        email: u.email,
+        clerk_id: u.clerk_id,
+        clerk_id_length: u.clerk_id?.length,
+      })),
+    });
+
+    // Check if clerk_id might have changed
+    console.error('🔎 Clerk ID comparison:', {
+      lookingFor: userId,
+      lengthLookingFor: userId?.length,
+      sampleClerkIds: allUsers?.map(u => u.clerk_id),
+    });
+
+    console.error('=== DASHBOARD PAGE END (USER NOT FOUND) ===');
     return <div>User not found</div>;
   }
+
+  console.log('✅ User found successfully, continuing to load dashboard...');
 
   // Get current month's start date
   const now = new Date();
