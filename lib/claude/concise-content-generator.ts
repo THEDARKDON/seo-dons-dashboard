@@ -141,10 +141,34 @@ export async function generateConciseProposalContent(
 ): Promise<ConciseProposalContent> {
   const { companyName, packageTier, notes, averageDealSize, profitPerDeal, conversionRate, researchData, preferOpus } = request;
 
-  // Extract current traffic for projections
-  const currentTraffic = researchData?.competitorAnalysis?.clientCurrentMetrics?.monthlyTraffic
-    ? parseInt(researchData.competitorAnalysis.clientCurrentMetrics.monthlyTraffic.replace(/[^\d]/g, ''))
-    : 200; // Default low traffic if unknown
+  // Extract current traffic for projections with validation
+  let currentTraffic = 200; // Default low traffic if unknown
+  const rawTrafficString = researchData?.competitorAnalysis?.clientCurrentMetrics?.monthlyTraffic;
+
+  if (rawTrafficString) {
+    const parsedTraffic = parseInt(rawTrafficString.replace(/[^\d]/g, ''));
+
+    // Validate traffic is realistic for a client needing SEO help
+    // CRITICAL FIX: Prevent AI from using inflated/summed competitor traffic as client traffic
+    if (parsedTraffic > 10000) {
+      console.warn(`⚠️ [Traffic Validation] Unrealistic client traffic detected: ${parsedTraffic.toLocaleString()}`);
+      console.warn(`   This is likely competitor traffic or an AI hallucination.`);
+      console.warn(`   For clients needing SEO help, traffic should be < 10,000/month`);
+      console.warn(`   Capping at 2,000 visitors/month for realistic projections.`);
+
+      currentTraffic = 2000; // Cap at 2k for businesses with some existing traffic
+    } else if (parsedTraffic < 10) {
+      console.warn(`⚠️ [Traffic Validation] Extremely low traffic detected: ${parsedTraffic}`);
+      console.warn(`   Using minimum baseline of 50 visitors/month`);
+
+      currentTraffic = 50; // Minimum baseline
+    } else {
+      currentTraffic = parsedTraffic;
+      console.log(`✅ [Traffic Validation] Using parsed traffic: ${currentTraffic.toLocaleString()} visitors/month`);
+    }
+  } else {
+    console.log(`ℹ️  [Traffic Validation] No traffic data provided, using default: 200 visitors/month`);
+  }
 
   const dealValue = averageDealSize || 5000;
 

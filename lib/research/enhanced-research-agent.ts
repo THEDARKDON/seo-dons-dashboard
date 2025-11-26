@@ -6,6 +6,7 @@
  */
 
 import { getJson } from 'serpapi';
+import OpenAI from 'openai';
 
 // ============================================================================
 // TYPES
@@ -237,7 +238,7 @@ Be specific and factual based on what you find.`;
 
   // Parse the response (this is simplified - you might want more robust parsing)
   return {
-    mainServices: extractServices(analysis),
+    mainServices: await extractServices(analysis),
     targetAudience: extractTargetAudience(analysis),
     uniqueValue: extractUniqueValue(analysis),
     technicalQuality: extractTechnicalQuality(analysis),
@@ -681,20 +682,236 @@ function detectIntent(keyword: string): string {
 // PARSING HELPERS
 // ============================================================================
 
-function extractServices(text: string): string[] {
+/**
+ * Extract concise service names from Perplexity analysis text
+ *
+ * Handles both structured (bullet points) and unstructured text
+ * Uses AI to extract concise service names when needed
+ */
+async function extractServices(text: string): Promise<string[]> {
   if (!text) return ['Service information not found'];
 
+  console.log('[extractServices] Analyzing text for services...');
+
+  // Step 1: Try to extract structured bullet points
   const services: string[] = [];
   const lines = text.split('\n');
 
   for (const line of lines) {
-    if (line?.toLowerCase().includes('service') || line?.toLowerCase().includes('offer')) {
-      const match = line.match(/[-•]\s*(.+)/);
-      if (match && match[1]) services.push(match[1].trim());
+    // Match bullet points: "- service name" or "• service name"
+    const bulletMatch = line.match(/^[\s]*[-•*]\s*([^.,\n]+)/);
+    if (bulletMatch && bulletMatch[1]) {
+      const service = bulletMatch[1].trim();
+
+      // Only keep concise service names (< 60 chars, no verbose descriptions)
+      if (service.length < 60 &&
+          !service.toLowerCase().includes('however') &&
+          !service.toLowerCase().includes('they may') &&
+          !service.toLowerCase().includes('focus on')) {
+        services.push(service);
+        console.log('[extractServices] Found bullet point service:', service);
+      }
     }
   }
 
-  return services.length > 0 ? services : ['Service information not found'];
+  // If we found good structured services, return them
+  if (services.length > 0) {
+    console.log('[extractServices] Using structured services:', services);
+    return services;
+  }
+
+  // Step 2: No structured list found - use AI to extract concise service names
+  console.log('[extractServices] No structured list found, using AI extraction...');
+
+  try {
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [{
+        role: 'user',
+        content: `Extract ONLY the core service names from this text. Return 1-5 concise service names (2-5 words each).
+
+Example inputs and outputs:
+
+Input: "certified installation with a focus on quality, reliability, and customer service. They may highlight bespoke system design tailored to customer needs, compliance with UK standards, and ongoing support post-installation for solar panels"
+Output: ["solar panel installation", "solar system design", "solar maintenance"]
+
+Input: "They offer plumbing services including emergency repairs, boiler installation, and bathroom fitting with a focus on quality workmanship"
+Output: ["emergency plumbing", "boiler installation", "bathroom fitting"]
+
+Input: "Based on typical offerings for solar companies in the Midlands: certified installation with a focus on quality, reliability, and customer service. They may highlight bespoke system design tailored to customer needs, compliance with UK standards, and ongoing support post-installation. Their local Midlands focus could also be a unique selling point, offering regional expertise and service."
+Output: ["solar panel installation", "solar system design", "solar maintenance", "solar energy systems"]
+
+Text to analyze:
+${text.substring(0, 1500)}
+
+IMPORTANT: Return ONLY a JSON array of strings with concise service names. No explanations, no markdown, just the JSON array.`
+      }],
+      temperature: 0.3,
+      max_tokens: 200,
+    });
+
+    const result = completion.choices[0].message.content?.trim();
+    if (result) {
+      // Remove markdown code blocks if present
+      const cleanResult = result.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      const parsed = JSON.parse(cleanResult);
+
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        console.log('[extractServices] AI extracted services:', parsed);
+        return parsed;
+      }
+    }
+  } catch (error) {
+    console.error('[extractServices] AI extraction failed:', error);
+  }
+
+  // Last resort: try to find service-related phrases manually
+  console.log('[extractServices] AI extraction failed, trying manual fallback...');
+
+  const fallbackServices: string[] = [];
+  const lowerText = text.toLowerCase();
+
+  // Common service patterns
+  const servicePatterns = [
+    /(\w+\s+installation)/gi,
+    /(\w+\s+repair)/gi,
+    /(\w+\s+maintenance)/gi,
+    /(\w+\s+service)/gi,
+    /(\w+\s+design)/gi,
+  ];
+
+  for (const pattern of servicePatterns) {
+    const matches = text.match(pattern);
+    if (matches) {
+      for (const match of matches.slice(0, 3)) { // Max 3 per pattern
+        if (match.length < 40) {
+          fallbackServices.push(match.trim());
+        }
+      }
+    }
+  }
+
+  if (fallbackServices.length > 0) {
+    console.log('[extractServices] Manual fallback found services:', fallbackServices);
+    return fallbackServices.slice(0, 5);
+  }
+
+  // Absolute last resort
+  console.warn('[extractServices] Could not extract any services, returning fallback');
+  return ['Service information not found'];
+}
+
+/**
+ * Normalize extracted service name to match industry template
+ *
+ * Maps verbose service descriptions to concise industry names
+ * that exist in INDUSTRY_TO_SERVICES mapping
+ *
+ * Examples:
+ * "solar panel installation" → "Solar"
+ * "certified electrician services" → "Electrical"
+ * "plumbing repairs and maintenance" → "Plumbing"
+ * "walk in bath installation" → "Walk in Baths"
+ */
+function normalizeServiceToIndustry(service: string): string {
+  if (!service || service.length < 3) {
+    console.warn('[normalizeServiceToIndustry] Empty or too short service, using "Services"');
+    return 'Services';
+  }
+
+  const serviceLower = service.toLowerCase();
+  console.log('[normalizeServiceToIndustry] Normalizing:', service);
+
+  // Direct keyword matching - order matters (most specific first)
+  const industryKeywords: Record<string, string> = {
+    // Energy
+    'solar panel': 'Solar',
+    'solar pv': 'Solar',
+    'solar': 'Solar',
+    'renewable energy': 'Renewable Energy',
+    'wind energy': 'Renewable Energy',
+    'green energy': 'Renewable Energy',
+
+    // Home services
+    'plumb': 'Plumbing',
+    'electric': 'Electrical',
+    'hvac': 'HVAC',
+    'air conditioning': 'HVAC',
+    'heating and cooling': 'HVAC',
+    'roof': 'Roofing',
+
+    // Construction
+    'construction': 'Construction',
+    'build': 'Construction',
+    'renovation': 'Home Improvement',
+    'remodel': 'Home Improvement',
+
+    // Professional services
+    'account': 'Accounting',
+    'bookkeeping': 'Accounting',
+    'legal': 'Legal',
+    'law': 'Legal',
+    'attorney': 'Legal',
+    'solicitor': 'Legal',
+    'market': 'Marketing',
+    'seo': 'Marketing',
+    'digital marketing': 'Marketing',
+
+    // Healthcare
+    'dental': 'Dental',
+    'dentist': 'Dental',
+    'medical': 'Medical',
+    'doctor': 'Medical',
+    'healthcare': 'Medical',
+
+    // Automotive
+    'auto repair': 'Auto Repair',
+    'car repair': 'Auto Repair',
+    'mechanic': 'Auto Repair',
+
+    // Real estate
+    'real estate': 'Real Estate',
+    'property': 'Real Estate',
+    'estate agent': 'Real Estate',
+
+    // Cleaning & maintenance
+    'clean': 'Cleaning',
+    'landscape': 'Landscaping',
+    'garden': 'Landscaping',
+    'lawn care': 'Landscaping',
+
+    // Specialty
+    'walk in bath': 'Walk in Baths',
+    'walk-in bath': 'Walk in Baths',
+    'mobility bath': 'Walk in Baths',
+
+    // Food
+    'restaurant': 'Restaurant',
+    'catering': 'Restaurant',
+    'dining': 'Restaurant',
+
+    // Technology
+    'it support': 'IT Services',
+    'it service': 'IT Services',
+    'managed it': 'IT Services',
+    'web design': 'Web Design',
+    'web development': 'Web Design',
+    'website': 'Web Design',
+  };
+
+  // Check for keyword matches (most specific first)
+  for (const [keyword, industry] of Object.entries(industryKeywords)) {
+    if (serviceLower.includes(keyword)) {
+      console.log(`[normalizeServiceToIndustry] "${service}" → "${industry}" (matched: "${keyword}")`);
+      return industry;
+    }
+  }
+
+  // Fallback to generic
+  console.warn(`[normalizeServiceToIndustry] Could not normalize "${service}", using "Services"`);
+  return 'Services';
 }
 
 function extractTargetAudience(text: string): string {
@@ -1073,9 +1290,10 @@ export async function conductEnhancedResearch(
 
       if (websiteServicesForKeywords.length > 0) {
         console.log('✅ Extracted services from website:', websiteServicesForKeywords.join(', '));
-        // Use the first service as the industry hint for better keyword generation
-        extractedIndustry = websiteServicesForKeywords[0];
-        console.log('✅ Using extracted industry:', extractedIndustry, '\n');
+        // Normalize the first service to match industry template
+        const rawService = websiteServicesForKeywords[0];
+        extractedIndustry = normalizeServiceToIndustry(rawService);
+        console.log(`✅ Normalized "${rawService}" → Industry: "${extractedIndustry}"\n`);
       }
     } catch (error) {
       console.warn('⚠️  Could not extract services from website, will use generic approach:', error);
