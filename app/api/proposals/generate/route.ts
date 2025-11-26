@@ -123,6 +123,15 @@ export async function POST(request: NextRequest) {
     // 4. VALIDATE PROPOSAL REQUEST
     // ========================================================================
     console.log('[PROPOSAL API] STAGE 4: Proposal Request Validation');
+
+    // CRITICAL: Log business metrics from customer record
+    console.log('[PROPOSAL API] 💰 Business Metrics from Customer Record:', {
+      average_deal_size: customer.average_deal_size,
+      average_deal_size_type: typeof customer.average_deal_size,
+      profit_per_deal: customer.profit_per_deal,
+      conversion_rate: customer.conversion_rate,
+    });
+
     const proposalRequest = {
       companyName: customer.company || `${customer.first_name} ${customer.last_name}`,
       website: customer.website,
@@ -144,13 +153,21 @@ export async function POST(request: NextRequest) {
       postalCode: customer.postal_code,
 
       // Business metrics for accurate ROI calculations
-      averageDealSize: customer.average_deal_size,
-      profitPerDeal: customer.profit_per_deal,
-      conversionRate: customer.conversion_rate,
+      // Convert string to number if needed (Supabase returns DECIMAL as string)
+      averageDealSize: customer.average_deal_size ? Number(customer.average_deal_size) : undefined,
+      profitPerDeal: customer.profit_per_deal ? Number(customer.profit_per_deal) : undefined,
+      conversionRate: customer.conversion_rate ? Number(customer.conversion_rate) : undefined,
 
       // Model selection for content generation quality
       preferOpus: body.preferOpus || false,
     };
+
+    console.log('[PROPOSAL API] 💰 Business Metrics being passed to generator:', {
+      averageDealSize: proposalRequest.averageDealSize,
+      averageDealSize_type: typeof proposalRequest.averageDealSize,
+      profitPerDeal: proposalRequest.profitPerDeal,
+      conversionRate: proposalRequest.conversionRate,
+    });
 
     const validation = validateProposalRequest(proposalRequest);
     if (!validation.valid) {
