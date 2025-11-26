@@ -170,7 +170,20 @@ export async function generateConciseProposalContent(
     console.log(`ℹ️  [Traffic Validation] No traffic data provided, using default: 200 visitors/month`);
   }
 
+  // CRITICAL: Use customer's average deal size, NOT default
   const dealValue = averageDealSize || 5000;
+
+  console.log('💰 [Revenue Calculation] Deal Value Configuration:', {
+    providedAverageDealSize: averageDealSize,
+    usingDealValue: dealValue,
+    isDefault: !averageDealSize,
+    source: averageDealSize ? 'Customer Record' : 'Default Fallback',
+  });
+
+  if (!averageDealSize) {
+    console.warn('⚠️  [Revenue Calculation] No average_deal_size provided from customer record!');
+    console.warn('   Using default £5,000 - Update customer record with correct AOV');
+  }
 
   // Calculate projections using single source of truth
   const packageName = packageTier === 'local' ? 'Local Dominance' :
