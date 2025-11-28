@@ -67,7 +67,21 @@ export function generateProposalHTML(content: ProposalContent, research?: any): 
   }
 
   // Get average deal value from research ROI projection (includes customer's actual deal size)
+  console.log('[HTML Template] 💰 AOV DEBUG - Research data:', {
+    hasResearch: !!research,
+    hasRoiProjection: !!research?.roiProjection,
+    roiProjectionAverageDealValue: research?.roiProjection?.averageDealValue,
+    roiProjectionAverageDealValueType: typeof research?.roiProjection?.averageDealValue,
+  });
+
   const avgDealValue = research?.roiProjection?.averageDealValue || 5000;
+
+  console.log('[HTML Template] 💰 AOV DEBUG - Final value:', {
+    avgDealValue,
+    avgDealValueType: typeof avgDealValue,
+    isUsingDefault: avgDealValue === 5000,
+    source: research?.roiProjection?.averageDealValue ? 'research.roiProjection' : 'default (5000)',
+  });
 
   // Calculate projections for all three packages ONCE
   const localProjection = calculateProjections(currentTraffic, 'Local Dominance', avgDealValue, actualCurrentTraffic);
