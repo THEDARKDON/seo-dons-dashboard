@@ -303,6 +303,19 @@ Focus on factual, verifiable information.`;
  * @param packageTier - Package tier to determine location specificity
  * @returns Formatted location string for SerpAPI
  */
+/**
+ * Normalize location for SerpAPI
+ *
+ * SerpAPI accepts specific location formats:
+ * - "London, England, United Kingdom" (full canonical)
+ * - "Hull, United Kingdom" (city + country)
+ * - "United Kingdom" (country only - nationwide)
+ *
+ * INVALID formats that cause errors:
+ * - "United Kingdom, UK" ❌
+ * - "null, UK" ❌
+ * - Empty strings ❌
+ */
 async function normalizeSerpAPILocation(
   location?: string,
   packageTier: 'local' | 'regional' | 'national' = 'local'
@@ -312,6 +325,7 @@ async function normalizeSerpAPILocation(
 
   // National packages should search nationwide
   if (packageTier === 'national') {
+    console.log('[SerpAPI Location] NATIONAL tier - Using: "United Kingdom"');
     return 'United Kingdom';
   }
 
@@ -322,42 +336,53 @@ async function normalizeSerpAPILocation(
 
   const locationParts = parseLocation(location);
 
-  // LOCAL: Use most specific location available
-  // SerpAPI supports most UK cities - try them first
+  // Helper to check if a value is a valid location part (not null, undefined, empty, or "United Kingdom")
+  const isValidLocationPart = (part?: string): boolean => {
+    if (!part) return false;
+    const normalized = part.trim().toLowerCase();
+    // Filter out invalid values
+    if (normalized === 'null' || normalized === 'undefined' || normalized === '') return false;
+    // Filter out country-level values (we'll handle those separately)
+    if (normalized === 'united kingdom' || normalized === 'uk' || normalized === 'england' ||
+        normalized === 'scotland' || normalized === 'wales' || normalized === 'northern ireland') return false;
+    return true;
+  };
+
+  // LOCAL: Use most specific location available (city)
   if (packageTier === 'local') {
-    // Try city first - SerpAPI understands most major UK cities like "Milton Keynes, UK"
-    if (locationParts.city) {
-      const serpLocation = `${locationParts.city}, UK`;
+    if (isValidLocationPart(locationParts.city)) {
+      const serpLocation = `${locationParts.city}, United Kingdom`;
       console.log(`[SerpAPI Location] LOCAL tier - Using city: "${serpLocation}"`);
       return serpLocation;
     }
 
-    // Fall back to county if no city
-    if (locationParts.county) {
-      const serpLocation = `${locationParts.county}, UK`;
+    // Fall back to county if no valid city
+    if (isValidLocationPart(locationParts.county)) {
+      const serpLocation = `${locationParts.county}, United Kingdom`;
       console.log(`[SerpAPI Location] LOCAL tier - Using county: "${serpLocation}"`);
       return serpLocation;
     }
   }
 
-  // REGIONAL: Use county-level location
+  // REGIONAL: Use county-level location, or city as fallback
   if (packageTier === 'regional') {
-    if (locationParts.county) {
-      const serpLocation = `${locationParts.county}, UK`;
-      console.log(`[SerpAPI Location] REGIONAL tier - Using: "${serpLocation}"`);
+    // For regional, prefer city over county for better SerpAPI results
+    // Many UK counties aren't well supported by SerpAPI
+    if (isValidLocationPart(locationParts.city)) {
+      const serpLocation = `${locationParts.city}, United Kingdom`;
+      console.log(`[SerpAPI Location] REGIONAL tier - Using city: "${serpLocation}"`);
       return serpLocation;
     }
 
-    // Fall back to city if no county (less ideal for regional but better than UK-wide)
-    if (locationParts.city) {
-      const serpLocation = `${locationParts.city}, UK`;
-      console.log(`[SerpAPI Location] REGIONAL tier - Using city: "${serpLocation}"`);
+    if (isValidLocationPart(locationParts.county)) {
+      const serpLocation = `${locationParts.county}, United Kingdom`;
+      console.log(`[SerpAPI Location] REGIONAL tier - Using county: "${serpLocation}"`);
       return serpLocation;
     }
   }
 
-  // Fallback: Use whatever we have
-  console.warn('[SerpAPI Location] Could not parse specific location, using United Kingdom');
+  // Fallback: Use United Kingdom (not "United Kingdom, UK" which is invalid!)
+  console.warn('[SerpAPI Location] No valid specific location found, using "United Kingdom"');
   return 'United Kingdom';
 }
 
