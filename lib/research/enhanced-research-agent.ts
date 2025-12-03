@@ -306,15 +306,19 @@ Focus on factual, verifiable information.`;
 /**
  * Normalize location for SerpAPI
  *
- * SerpAPI accepts specific location formats:
- * - "London, England, United Kingdom" (full canonical)
- * - "Hull, United Kingdom" (city + country)
- * - "United Kingdom" (country only - nationwide)
+ * SerpAPI ONLY accepts specific cities or "United Kingdom" for UK searches.
+ *
+ * VALID formats:
+ * - "London, England, United Kingdom" ✅
+ * - "Cardiff, United Kingdom" ✅
+ * - "Manchester, United Kingdom" ✅
+ * - "United Kingdom" ✅ (nationwide)
  *
  * INVALID formats that cause errors:
- * - "United Kingdom, UK" ❌
- * - "null, UK" ❌
- * - Empty strings ❌
+ * - "Wales, UK" ❌ (region, not city)
+ * - "Scotland, UK" ❌ (region, not city)
+ * - "United Kingdom, UK" ❌ (redundant)
+ * - "null, UK" ❌ (invalid data)
  */
 async function normalizeSerpAPILocation(
   location?: string,
@@ -322,6 +326,25 @@ async function normalizeSerpAPILocation(
 ): Promise<string> {
   // Import location parser
   const { parseLocation } = await import('./keyword-templates');
+
+  // Map UK regions/countries to their major cities for SerpAPI
+  // SerpAPI doesn't support "Wales" or "Scotland" as locations, only cities
+  const regionToCity: Record<string, string> = {
+    'wales': 'Cardiff',
+    'scotland': 'Edinburgh',
+    'northern ireland': 'Belfast',
+    'england': 'London',
+    // Common regions that aren't valid SerpAPI locations
+    'midlands': 'Birmingham',
+    'west midlands': 'Birmingham',
+    'east midlands': 'Nottingham',
+    'yorkshire': 'Leeds',
+    'north west': 'Manchester',
+    'north east': 'Newcastle upon Tyne',
+    'south west': 'Bristol',
+    'south east': 'Brighton',
+    'east anglia': 'Norwich',
+  };
 
   // National packages should search nationwide
   if (packageTier === 'national') {
@@ -336,53 +359,68 @@ async function normalizeSerpAPILocation(
 
   const locationParts = parseLocation(location);
 
-  // Helper to check if a value is a valid location part (not null, undefined, empty, or "United Kingdom")
-  const isValidLocationPart = (part?: string): boolean => {
+  // Check if any part of the location is a region that needs mapping to a city
+  const checkAndMapRegion = (part?: string): string | null => {
+    if (!part) return null;
+    const normalized = part.trim().toLowerCase();
+    if (regionToCity[normalized]) {
+      console.log(`[SerpAPI Location] Mapping region "${part}" → city "${regionToCity[normalized]}"`);
+      return regionToCity[normalized];
+    }
+    return null;
+  };
+
+  // Helper to check if a value is a valid city (not a region or invalid value)
+  const isValidCity = (part?: string): boolean => {
     if (!part) return false;
     const normalized = part.trim().toLowerCase();
     // Filter out invalid values
     if (normalized === 'null' || normalized === 'undefined' || normalized === '') return false;
-    // Filter out country-level values (we'll handle those separately)
-    if (normalized === 'united kingdom' || normalized === 'uk' || normalized === 'england' ||
-        normalized === 'scotland' || normalized === 'wales' || normalized === 'northern ireland') return false;
+    // Filter out country/region-level values (these need to be mapped to cities)
+    if (normalized === 'united kingdom' || normalized === 'uk') return false;
+    if (regionToCity[normalized]) return false; // It's a region, not a city
     return true;
   };
 
-  // LOCAL: Use most specific location available (city)
-  if (packageTier === 'local') {
-    if (isValidLocationPart(locationParts.city)) {
-      const serpLocation = `${locationParts.city}, United Kingdom`;
-      console.log(`[SerpAPI Location] LOCAL tier - Using city: "${serpLocation}"`);
-      return serpLocation;
-    }
-
-    // Fall back to county if no valid city
-    if (isValidLocationPart(locationParts.county)) {
-      const serpLocation = `${locationParts.county}, United Kingdom`;
-      console.log(`[SerpAPI Location] LOCAL tier - Using county: "${serpLocation}"`);
-      return serpLocation;
-    }
+  // First, check if city is valid
+  if (isValidCity(locationParts.city)) {
+    const serpLocation = `${locationParts.city}, United Kingdom`;
+    console.log(`[SerpAPI Location] ${packageTier.toUpperCase()} tier - Using city: "${serpLocation}"`);
+    return serpLocation;
   }
 
-  // REGIONAL: Use county-level location, or city as fallback
-  if (packageTier === 'regional') {
-    // For regional, prefer city over county for better SerpAPI results
-    // Many UK counties aren't well supported by SerpAPI
-    if (isValidLocationPart(locationParts.city)) {
-      const serpLocation = `${locationParts.city}, United Kingdom`;
-      console.log(`[SerpAPI Location] REGIONAL tier - Using city: "${serpLocation}"`);
-      return serpLocation;
-    }
-
-    if (isValidLocationPart(locationParts.county)) {
-      const serpLocation = `${locationParts.county}, United Kingdom`;
-      console.log(`[SerpAPI Location] REGIONAL tier - Using county: "${serpLocation}"`);
-      return serpLocation;
-    }
+  // If city is actually a region, map it to the major city
+  const mappedFromCity = checkAndMapRegion(locationParts.city);
+  if (mappedFromCity) {
+    const serpLocation = `${mappedFromCity}, United Kingdom`;
+    console.log(`[SerpAPI Location] ${packageTier.toUpperCase()} tier - Using mapped city: "${serpLocation}"`);
+    return serpLocation;
   }
 
-  // Fallback: Use United Kingdom (not "United Kingdom, UK" which is invalid!)
-  console.warn('[SerpAPI Location] No valid specific location found, using "United Kingdom"');
+  // Check if county is a valid city or can be mapped
+  if (isValidCity(locationParts.county)) {
+    const serpLocation = `${locationParts.county}, United Kingdom`;
+    console.log(`[SerpAPI Location] ${packageTier.toUpperCase()} tier - Using county as city: "${serpLocation}"`);
+    return serpLocation;
+  }
+
+  const mappedFromCounty = checkAndMapRegion(locationParts.county);
+  if (mappedFromCounty) {
+    const serpLocation = `${mappedFromCounty}, United Kingdom`;
+    console.log(`[SerpAPI Location] ${packageTier.toUpperCase()} tier - Using mapped from county: "${serpLocation}"`);
+    return serpLocation;
+  }
+
+  // Check country field for regions
+  const mappedFromCountry = checkAndMapRegion(locationParts.country);
+  if (mappedFromCountry) {
+    const serpLocation = `${mappedFromCountry}, United Kingdom`;
+    console.log(`[SerpAPI Location] ${packageTier.toUpperCase()} tier - Using mapped from country: "${serpLocation}"`);
+    return serpLocation;
+  }
+
+  // Fallback: Use United Kingdom for nationwide search
+  console.warn('[SerpAPI Location] No valid city found, using "United Kingdom" for nationwide search');
   return 'United Kingdom';
 }
 
