@@ -554,6 +554,54 @@ export function getServicesForIndustry(industry?: string): ServiceKeywordTemplat
     }
   }
 
+  // Check for industry keyword indicators
+  // This catches things like "Domestic + Commercial Installer" → Solar
+  const industryKeywordMap: Record<string, string> = {
+    // Solar indicators
+    'solar': 'Solar',
+    'pv': 'Solar',
+    'photovoltaic': 'Solar',
+    'panel installer': 'Solar',
+    'panel installation': 'Solar',
+    // When "installer" is combined with domestic/commercial, usually solar
+    'domestic installer': 'Solar',
+    'commercial installer': 'Solar',
+    'domestic + commercial installer': 'Solar',
+    'domestic and commercial installer': 'Solar',
+    // Electrical indicators
+    'electrician': 'Electrical',
+    'electrical': 'Electrical',
+    'ev charger': 'Electrical',
+    // Plumbing indicators
+    'plumber': 'Plumbing',
+    'plumbing': 'Plumbing',
+    'heating': 'Plumbing',
+    'boiler': 'Plumbing',
+    // HVAC indicators
+    'hvac': 'HVAC',
+    'air conditioning': 'HVAC',
+    'air con': 'HVAC',
+    // Roofing indicators
+    'roofer': 'Roofing',
+    'roofing': 'Roofing',
+    // Construction indicators
+    'builder': 'Construction',
+    'construction': 'Construction',
+    'contractor': 'Construction',
+    // Renewable energy indicators
+    'renewable': 'Renewable Energy',
+    'green energy': 'Renewable Energy',
+    'wind': 'Renewable Energy',
+  };
+
+  // Check each keyword indicator
+  for (const [keyword, mappedIndustry] of Object.entries(industryKeywordMap)) {
+    if (industryLower.includes(keyword)) {
+      console.log(`[Keyword Templates] Matched "${industry}" → "${mappedIndustry}" (keyword indicator: "${keyword}")`);
+      return INDUSTRY_TO_SERVICES[mappedIndustry];
+    }
+  }
+
   // Fallback to generic services
   console.warn(`[Keyword Templates] Industry "${industry}" not found in mapping, using generic services`);
   return INDUSTRY_TO_SERVICES['Services'];
